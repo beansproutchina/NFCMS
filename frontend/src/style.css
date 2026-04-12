@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-apple-blue: #0071e3;
+  --color-apple-black: #000000;
+  --color-apple-gray: #f5f5f7;
+  --color-apple-text-dark: #1d1d1f;
+  
+  --font-sans: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  --font-text: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+
+body {
+  @apply bg-apple-gray text-apple-text-dark font-sans tracking-tight;
+  margin: 0;
+  padding: 0;
+}
