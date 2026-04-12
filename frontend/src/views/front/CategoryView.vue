@@ -4,10 +4,11 @@
     <div v-else-if="templateComponent" class="animate-fade-in transition-opacity duration-300">
       <component 
          :is="templateComponent" 
-         :article="data.article" 
          :category="data.category" 
+         :articles="data.articles" 
+         :children="data.children" 
          :breadcrumbs="data.breadcrumbs"
-         :user="user"
+         :user="user" 
          :config="configData"
          :api="api"
       />
@@ -19,7 +20,7 @@
 import { ref, watchEffect, markRaw } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../../api';
-import DefaultArticle from './templates/DefaultArticle.vue';
+import DefaultCategory from './templates/DefaultCategory.vue';
 
 const route = useRoute();
 const error = ref('');
@@ -35,7 +36,7 @@ const resolveTemplate = async () => {
     if (!fetchedData) return;
 
     if (!fetchedData.success) {
-        error.value = fetchedData.error || 'Failed to load article';
+        error.value = fetchedData.error || 'Failed to load category';
         return;
     }
 
@@ -44,8 +45,8 @@ const resolveTemplate = async () => {
     try { user.value = JSON.parse(localStorage.getItem('user') || 'null'); } catch(e){}
     const templateName = data.value.template;
 
-    if (templateName === 'DefaultArticle') {
-        templateComponent.value = markRaw(DefaultArticle);
+    if (templateName === 'DefaultCategory') {
+        templateComponent.value = markRaw(DefaultCategory);
     } else {
         try {
             const comps = import.meta.glob('./templates/*.vue');
@@ -54,12 +55,12 @@ const resolveTemplate = async () => {
                 const comp = await comps[path]();
                 templateComponent.value = markRaw((comp as any).default);
             } else {
-                console.warn(`Template ${templateName} not found.`);
-                templateComponent.value = markRaw(DefaultArticle);
+                console.warn(`Template ${templateName} not found, using DefaultCategory`);
+                templateComponent.value = markRaw(DefaultCategory);
             }
         } catch(e) {
             console.error(e);
-            templateComponent.value = markRaw(DefaultArticle);
+            templateComponent.value = markRaw(DefaultCategory);
         }
     }
 };

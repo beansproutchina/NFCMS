@@ -1,9 +1,9 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, Inject } from "dyapi/utils/decorators.js";
+import { Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 
-@CRUD("systemconfig")
+// Removed @CRUD("systemconfig") so it's fully managed via SystemController
 export default class SystemConfigModel extends Model{
     @Inject(testContainer) declare container;
     tablename = "system_config";
@@ -11,9 +11,9 @@ export default class SystemConfigModel extends Model{
         F.String("key").unique().notNull(),
         F.String("value"),
     ];
-    permission = {
+    permission = { // Internal model now, API not exposed directly
         "PUBLIC": "RO",
         "DEFAULT": "R",
-        "admin": "C,R,U,D",
+        "super_admin": "C,R,U,D",
     };
 }

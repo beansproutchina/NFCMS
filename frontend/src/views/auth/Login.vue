@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { authAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Password from 'primevue/password';
+import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const toast = useToast();
+const { t } = useI18n();
 const username = ref('');
 const password = ref('');
 const error = ref('');
@@ -14,24 +18,25 @@ const loading = ref(false);
 
 const performLogin = async () => {
   if (!username.value || !password.value) {
-    error.value = "All fields are required.";
+    error.value = t('auth.fieldsRequired');
     return;
   }
   loading.value = true;
   error.value = '';
   try {
-    const res = await axios.post('/api/user/login', {
+    const res: any = await authAPI.login({
       username: username.value,
       password: password.value
     });
-    if (res.data.code === 200) {
-      localStorage.setItem('user', JSON.stringify(res.data.data));
-      router.push('/');
+    if (res.code === 200 || res.data) {
+      localStorage.setItem('user', JSON.stringify(res.data || res));
+      toast.add({ severity: 'success', summary: 'Success', detail: t('auth.loginSuccess'), life: 3000 });
+      router.push('/admin');
     } else {
-      error.value = res.data.message || "Login failed";
+      error.value = res.message || t('auth.loginFailed');
     }
   } catch (err: any) {
-    error.value = err.response?.data?.message || err.message;
+    error.value = err.message || err.response?.data?.message || err.detail || 'Login Failed';
   } finally {
     loading.value = false;
   }
@@ -42,25 +47,25 @@ const performLogin = async () => {
   <div class="h-screen w-full flex flex-col justify-center items-center bg-[#f5f5f7] text-[#1d1d1f]">
     <div class="max-w-md w-full px-6">
       <div class="text-center mb-10">
-        <h1 class="text-[56px] leading-[1.07] font-semibold tracking-[-0.28px] mb-2">Sign In</h1>
-        <p class="text-[21px] leading-[1.19] opacity-60 font-normal tracking-[0.231px]">Use your NFCMS ID.</p>
+        <h1 class="text-[56px] leading-[1.07] font-semibold tracking-[-0.28px] mb-2">{{ $t('auth.signIn') }}</h1>
+        <p class="text-[21px] leading-[1.19] opacity-60 font-normal tracking-[0.231px]">{{ $t('auth.useId') }}</p>
       </div>
 
       <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
         <div class="flex flex-col gap-2">
-          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Username</label>
-          <InputText v-model="username" class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all" placeholder="admin" />
+          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">{{ $t('auth.username') }}</label>
+          <InputText v-model="username" unstyled class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all" placeholder="admin" autocomplete="username" />
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Password</label>
-          <Password v-model="password" :feedback="false" toggleMask inputClass="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all" placeholder="••••••••" />
+          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">{{ $t('auth.password') }}</label>
+          <Password v-model="password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: 'w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all relative', placeholder: '••••••••', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
         </div>
 
         <div v-if="error" class="text-red-500 text-[14px] text-center">{{ error }}</div>
 
-        <Button :loading="loading" @click="performLogin" unstyled class="mt-4 bg-apple-blue hover:bg-[#0066cc] text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center">
-          Sign In
+        <Button :loading="loading" @click="performLogin" unstyled class="mt-4 bg-apple-blue hover:bg-[#0066cc] text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
+          {{ $t('auth.signIn') }}
         </Button>
       </div>
     </div>

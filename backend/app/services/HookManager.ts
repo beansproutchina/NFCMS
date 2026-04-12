@@ -3,7 +3,12 @@
  * Provides WordPress-style action and filter hooks.
  */
 
+import { Inject } from "dyapi/utils/decorators.js";
+import testContainer from "../containers/testContainer.js";
+
 export class HookManager {
+    @Inject(testContainer) declare container;
+    
     constructor() {
         /** @private @type {Map<string, Array<{ priority: number, callback: Function }>>} */
         this.actions = new Map();
