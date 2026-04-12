@@ -2,11 +2,13 @@ import { ControllerRoute, Route, Inject } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
 import ArticleModel from "../models/ArticleModel.js";
 import CategoryModel from "../models/CategoryModel.js";
+import UserModel from "../models/UserModel.js";
 
 @ControllerRoute("content")
 export default class ContentController extends Controller {
     @Inject(ArticleModel) declare articleModel: ArticleModel;
     @Inject(CategoryModel) declare categoryModel: CategoryModel;
+    @Inject(UserModel) declare userModel: UserModel;
 
     // Helper to generate parent breadcrumbs
     async getBreadcrumbs(categoryId: number | null) {
@@ -50,6 +52,13 @@ export default class ContentController extends Controller {
                 breadcrumbs = await this.getBreadcrumbs(article.category_id);
             }
         }
+
+        if(article.author_id){
+            const userRes = await this.userModel.read({ id: article.author_id, hideFields: ['password'] });
+            if (userRes && userRes.length > 0) {
+                article.author = userRes[0];
+            }
+        }
         
         // Priority: Article's content_template > Category's content_template > DefaultArticle
         const template = article.content_template || category?.content_template || "DefaultArticle";
@@ -82,12 +91,11 @@ export default class ContentController extends Controller {
 
         const breadcrumbs = await this.getBreadcrumbs(category.id);
         const children = await this.categoryModel.read({ filter: { parent_id: category.id } }) || [];
-        const articles = await this.articleModel.read({ filter: { category_id: category.id, visible: 1 }, fields: ['id', 'title', 'description', 'thumbnail', 'is_top', 'weight', 'published_at', 'slug', 'category_id'] }) || [];
+        const articles = await this.articleModel.read({ filter: { category_id: category.id, visible: 1 }, fields: ['id', 'title', 'description', 'thumbnail', 'is_top', 'published_at', 'slug', 'category_id'] }) || [];
         
-        // Sort articles by weight then published_at
+        // Sort articles by is_top then published_at
         articles.sort((a: any, b: any) => {
             if (a.is_top !== b.is_top) return a.is_top ? -1 : 1;
-            if (a.weight !== b.weight) return (a.weight) - (b.weight);
             return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
         });
 

@@ -2,9 +2,11 @@
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="flex justify-between items-end mb-8">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.categories') }}</h1>
+                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.categories') }}
+                </h1>
             </div>
-            <Button unstyled @click="openForm()" class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+            <Button unstyled @click="openForm()"
+                class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                 <LucidePlus :size="16" /> {{ $t('action.new') }}
             </Button>
         </div>
@@ -12,7 +14,7 @@
         <div
             class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.05)] p-6 flex-1 overflow-auto">
             <div v-if="loading" class="text-center py-10 text-[rgba(0,0,0,0.5)]">{{ $t('system.loading') || 'Loading...'
-                }}</div>
+            }}</div>
             <div v-else>
                 <!-- Simple custom tree implementation since PrimeVue TreeTable can be complex to setup perfectly -->
                 <ul class="space-y-2">
@@ -116,19 +118,16 @@ const saveCategory = async (emittedData: any) => {
         }
     }
 
-    try {
-        if (isEditing.value) {
-            await crudAPI.update('categories', payload.id, payload);
-            toast.add({ severity: 'success', summary: 'Success', detail: '分类更新成功', life: 3000 });
-        } else {
-            await crudAPI.create('categories', payload);
-            toast.add({ severity: 'success', summary: 'Success', detail: '分类创建成功', life: 3000 });
-        }
-        showModal.value = false;
-        fetchCategories();
-    } catch (err) {
-        alert("Failed to save category");
+    if (isEditing.value) {
+        await crudAPI.update('categories', payload.id, payload);
+        toast.add({ severity: 'success', summary: 'Success', detail: '分类更新成功', life: 3000 });
+    } else {
+        await crudAPI.create('categories', payload);
+        toast.add({ severity: 'success', summary: 'Success', detail: '分类创建成功', life: 3000 });
     }
+    showModal.value = false;
+    fetchCategories();
+
 };
 
 const deleteCategory = async (id: number) => {

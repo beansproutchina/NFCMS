@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Paginator from 'primevue/paginator';
+
 import { uploadAPI } from '../../api';
 import { LucideUpload, LucideTrash, LucideFile, LucideEye, LucideSearch } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';

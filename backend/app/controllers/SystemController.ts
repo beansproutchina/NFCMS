@@ -3,6 +3,8 @@ import { Controller } from "dyapi/core/controller.js";
 import UserModel from "../models/UserModel.js";
 import SystemConfigModel from "../models/SystemConfigModel.js";
 import CategoryModel from "../models/CategoryModel.js";
+import ArticleModel from "../models/ArticleModel.js";
+import MenuModel from "../models/MenuModel.js";
 
 const VALID_CONFIG_KEYS = [
     "is_initialized",
@@ -20,7 +22,8 @@ export default class SystemController extends Controller {
     @Inject(UserModel) declare userModel: UserModel;
     @Inject(SystemConfigModel) declare configModel: SystemConfigModel;
     @Inject(CategoryModel) declare categoryModel: CategoryModel;
-
+    @Inject(ArticleModel) declare articleModel: ArticleModel;
+    @Inject(MenuModel) declare menuModel: MenuModel;
     async ensureConfigLoaded() {
         if (globalConfigCache === null) {
             globalConfigCache = {};
@@ -123,9 +126,33 @@ export default class SystemController extends Controller {
         await this.categoryModel.create({
             name: "Default",
             slug: "default",
+            list_template: "DefaultCategory",
+            content_template: "DefaultArticle",
             parent_id: 0,
             weight: 50
         });
+
+        await this.articleModel.create({
+            title: "Hello world!",
+            slug: "welcome-to-nfcms",
+            description: "Welcome to NF-CMS!",
+            content: "This is your first article. You can edit or delete it at any time.",
+            category_id: 1,
+            author_id: 1,
+            visible: 1,
+            published_at: new Date(),
+            
+        });
+
+        await this.menuModel.create({
+            name: "Header Menu",
+            location: "header",
+            items: [
+                { label: '首页', url: '/', type: 'custom', refId: 1, children: [] },
+                { label: '分类', url: '/a/default', type: 'custom', refId: 1, children: [] },
+            ]
+        });
+
 
         return { code: 200, message: "Setup completed successfully." };
     }

@@ -1,3 +1,10 @@
+import 'vue-router';
+declare module 'vue-router' {
+  interface RouteMeta {
+    fetchedData?: any;
+  }
+}
+
 import { createRouter, createWebHistory } from 'vue-router';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
@@ -6,36 +13,40 @@ import { systemAPI, contentAPI, crudAPI } from '../api';
 NProgress.configure({ showSpinner: false, speed: 400 });
 
 const fetchHome = async (to: any) => {
-    const [configRes, catRes, artRes] = await Promise.all([
+    const [configRes, catRes, artRes, menuRes] = await Promise.all([
         systemAPI.getConfig().catch(()=>({data:{}})),
         crudAPI.getList('categories').catch(()=>({data:[]})),
-        crudAPI.getList('articles', { filter: { visible: 1 }, orderBy: 'published_at', orderDesc: true }).catch(()=>({data:[]}))
+        crudAPI.getList('articles', { filter: { visible: 1 }, orderBy: 'published_at', orderDesc: true }).catch(()=>({data:[]})),
+        crudAPI.getList('menus').catch(()=>({data:[]}))
     ]);
     to.meta.fetchedData = {
         config: configRes.data || {},
         categories: catRes.data || [],
-        articles: artRes.data || []
+        articles: artRes.data || [],
+        menus: menuRes.data || []
     };
 };
 
 const fetchCategory = async (to: any) => {
     const slug = to.params.category_slug as string;
-    const [configRes, res] = await Promise.all([
+    const [configRes, res, menuRes] = await Promise.all([
         systemAPI.getConfig().catch(()=>({data:{}})),
-        contentAPI.getCategory(slug).catch((e: any) => ({ error: e.response?.data?.message || 'Server error' }))
+        contentAPI.getCategory(slug).catch((e: any) => ({ error: e.response?.data?.message || 'Server error' })),
+        crudAPI.getList('menus').catch(()=>({data:[]}))
     ]);
     const data: any = res;
-    to.meta.fetchedData = data.code === 200 ? { success: true, data: data.data, config: configRes.data || {} } : { success: false, error: data.error || data.message || 'Error loading category', config: configRes.data || {} };
+    to.meta.fetchedData = data.code === 200 ? { success: true, data: data.data, config: configRes.data || {}, menus: menuRes.data || [] } : { success: false, error: data.error || data.message || 'Error loading category', config: configRes.data || {}, menus: menuRes.data || [] };
 };
 
 const fetchArticle = async (to: any) => {
     const slug = to.params.article_slug as string;
-    const [configRes, res] = await Promise.all([
+    const [configRes, res, menuRes] = await Promise.all([
         systemAPI.getConfig().catch(()=>({data:{}})),
-        contentAPI.getArticle(slug).catch((e: any) => ({ error: e.response?.data?.message || 'Server error' }))
+        contentAPI.getArticle(slug).catch((e: any) => ({ error: e.response?.data?.message || 'Server error' })),
+        crudAPI.getList('menus').catch(()=>({data:[]}))
     ]);
     const data: any = res;
-    to.meta.fetchedData = data.code === 200 ? { success: true, data: data.data, config: configRes.data || {} } : { success: false, error: data.error || data.message || 'Error loading article', config: configRes.data || {} };
+    to.meta.fetchedData = data.code === 200 ? { success: true, data: data.data, config: configRes.data || {}, menus: menuRes.data || [] } : { success: false, error: data.error || data.message || 'Error loading article', config: configRes.data || {}, menus: menuRes.data || [] };
 };
 
 const routes = [
@@ -78,13 +89,13 @@ router.beforeEach(async (to, from, next) => {
   if (to.path !== from.path) NProgress.start();
 
   let isInitialized = localStorage.getItem('is_initialized') === '1';
-  let initChecked = false;
+  
 
   try {
     if (!isInitialized) {
       const statusRes: any = await systemAPI.getStatus();
       isInitialized = statusRes.data?.is_initialized || statusRes.is_initialized;
-      initChecked = true;
+      
       if (isInitialized) {
         localStorage.setItem('is_initialized', '1');
       }

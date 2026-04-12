@@ -9,7 +9,7 @@ import { crudAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
-import { LucideChevronLeft, LucideSave, LucideCheck } from 'lucide-vue-next';
+import { LucideChevronLeft, LucideSave, LucideCheck, LucideImage } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 
 const route = useRoute();
@@ -19,10 +19,11 @@ const toast = useToast();
 const isEdit = !!route.params.id;
 const articleId = route.params.id;
 
-const form = ref({ category_id: '', content_template: "", is_top: 0, weight: 50, visible: 1, 
+const form = ref({ category_id: '', content_template: "", is_top: 0, visible: 1, 
     title: '',
     slug: '',
     description: '',
+    thumbnail: '',
     // removed duplicate visible property
     content: ''
 });
@@ -49,12 +50,12 @@ onMounted(async () => {
                     title: item.title || '',
                     slug: item.slug || '',
                     description: item.description || '',
+                    thumbnail: item.thumbnail || '',
                     visible: typeof item.visible === 'number' ? item.visible : 0,
                     content: item.content || '',
                     category_id: item.category_id || '',
                     content_template: item.content_template || '',
-                    is_top: item.is_top || 0,
-                    weight: item.weight
+                    is_top: item.is_top || 0
                 };
             }
         } catch (e) {
@@ -100,22 +101,38 @@ const autoSlug = () => {
 
 import { uploadAPI } from '../../api';
 const onUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+        formData.append('file', file);
+    });
+    
+    const res: any = await uploadAPI.upload(formData);
+    
+    if (res?.data) {
+        callback(res.data.map((item: any) => item.url));
+    }
+};
+
+const thumbnailInput = ref<HTMLInputElement | null>(null);
+const onThumbnailSelected = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (!target.files || target.files.length === 0) return;
+    const file = target.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
     try {
-        const formData = new FormData();
-        files.forEach((file) => {
-            formData.append('file', file);
-        });
-        
         const res: any = await uploadAPI.upload(formData);
         
-        if (res && res.data) {
-            callback(res.data.map((item: any) => item.url));
-        } else {
-            toast.add({ severity: 'error', summary: 'Error', detail: '文件上传返回异常', life: 3000 });
+        if (res?.data?.length > 0) {
+            form.value.thumbnail = res.data[0].url;
+            toast.add({ severity: 'success', summary: 'Success', detail: '缩略图上传成功', life: 3000 });
         }
-    } catch (e) {
-        console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '文件上传失败', life: 3000 });
+    } finally {
+        if (thumbnailInput.value) {
+            thumbnailInput.value.value = '';
+        }
     }
 };
 </script>
@@ -174,13 +191,25 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
                     <input v-model="form.is_top" type="checkbox" :true-value="1" :false-value="0" class="h-5 w-5 rounded border-[rgba(0,0,0,0.15)]" />
                 </div>
 
-                <div class="mt-4">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ $t('form.weight') || 'Weight' }}</label>
-                    <InputText unstyled :modelValue="String(form.weight)" @update:modelValue="(val) => form.weight = Number(val)" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
-                </div>
+                <div class="mt-4 flex flex-col gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.thumbnail') || 'Thumbnail' }}</label>
+                        <div 
+                            class="relative w-full aspect-video border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[12px] flex items-center justify-center overflow-hidden hover:border-apple-blue transition-colors cursor-pointer group" 
+                            @click="thumbnailInput?.click()"
+                        >
+                            <input type="file" ref="thumbnailInput" class="hidden" accept="image/*" @change="onThumbnailSelected" />
+                            <img v-if="form.thumbnail" :src="form.thumbnail" class="w-full h-full object-cover" />
+                            <div v-else class="text-center text-[rgba(0,0,0,0.4)] group-hover:text-apple-blue transition-colors flex flex-col items-center">
+                                <LucideImage :size="24" class="mb-2 opacity-50 group-hover:opacity-100" />
+                                <span class="text-[13px] font-medium">{{ $t('action.upload') || 'Click to Upload' }}</span>
+                            </div>
+                        </div>
+                        <div v-if="form.thumbnail" class="text-right">
+                             <span @click.stop="form.thumbnail = ''" class="text-[12px] text-red-500 cursor-pointer hover:underline">{{ $t('action.remove') || 'Remove' }}</span>
+                        </div>
+                    </div>
 
-                
-                <div class="flex flex-col gap-6">
                     <div class="flex flex-col gap-2">
                         <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.urlSlug') }}</label>
                         <InputText unstyled v-model="form.slug" placeholder="my-awesome-post" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />

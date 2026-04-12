@@ -2,7 +2,7 @@
   <div class="category-page theme-uni">
     <AHeader :context="context" />
 
-    <!-- 顶栏面包屑 -->
+    <!-- 顶栏图 -->
     <div class="banner-min"></div>
     <div class="breadcrumb-container">
       <div class="container">
@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <!-- 列表页主体 (左右分栏，左导航右列表) -->
+    <!-- 列表页主体 (左右分栏，左导航右网格) -->
     <div class="container layout-grid">
       <!-- 左侧边栏导航 -->
       <aside class="sidebar">
@@ -30,20 +30,24 @@
         <div v-else class="side-menu-empty">暂无子分类</div>
       </aside>
 
-      <!-- 右侧文章列表 -->
+      <!-- 右侧图文网格 -->
       <main class="content-main">
-        <h2 class="content-title">{{ category?.name || '文章列表' }}</h2>
+        <h2 class="content-title">{{ category?.name || '图文列表' }}</h2>
         
-        <ul class="article-list" v-if="articles && articles.length > 0">
-          <li v-for="item in articles" :key="item.id">
-            <span class="bullet"></span>
-            <a :href="`/article/${item.id}`" :title="item.title">{{ item.title }}</a>
-            <span class="date">{{ formatDate(item.published_at) }}</span>
-          </li>
-        </ul>
+        <div class="article-grid" v-if="articles && articles.length > 0">
+          <a v-for="item in articles" :key="item.id" :href="`/article/${item.id}`" class="card-item">
+            <div class="img-wrap">
+              <img :src="item.thumbnail || 'https://via.placeholder.com/320x180/8B0000/fff?text=No+Image'" alt="封面" />
+            </div>
+            <div class="card-info">
+              <h3 class="title" :title="item.title">{{ item.title }}</h3>
+              <p class="date">{{ formatDate(item.published_at) }}</p>
+            </div>
+          </a>
+        </div>
         
         <div class="empty-state" v-else>
-          <p>该分类下暂无文章</p>
+          <p>该分类下暂无内容</p>
         </div>
       </main>
     </div>
@@ -71,7 +75,6 @@ const formatDate = (dateStr: string) => {
   --uni-primary: #8B0000;
   --uni-bg-page: #F5F5F5;
   --uni-text-title: #222222;
-  --uni-text-body: #444444;
   --uni-border-light: #E8E8E8;
   font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
   background-color: var(--uni-bg-page);
@@ -87,13 +90,10 @@ const formatDate = (dateStr: string) => {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(139, 0, 0, 0.4);
+  background: rgba(0, 64, 152, 0.4); /* 使用理工蓝点缀改变气氛 */
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+.container { max-width: 1200px; margin: 0 auto; }
 
 /* 面包屑导航 */
 .breadcrumb-container {
@@ -118,10 +118,7 @@ const formatDate = (dateStr: string) => {
 }
 
 /* 侧边栏 */
-.sidebar {
-  background: #fff;
-  border: 1px solid var(--uni-border-light);
-}
+.sidebar { background: #fff; border: 1px solid var(--uni-border-light); }
 .side-title {
   background-color: var(--uni-primary);
   color: #fff;
@@ -134,19 +131,8 @@ const formatDate = (dateStr: string) => {
 .side-menu { list-style: none; padding: 0; margin: 0; }
 .side-menu li { border-bottom: 1px dashed var(--uni-border-light); }
 .side-menu li:last-child { border-bottom: none; }
-.side-menu li a {
-  display: block;
-  padding: 14px 20px;
-  color: var(--uni-text-title);
-  text-decoration: none;
-  font-size: 15px;
-  transition: all 0.3s;
-}
-.side-menu li a:hover {
-  background-color: #f0f5fa;
-  color: var(--uni-primary);
-  padding-left: 25px;
-}
+.side-menu li a { display: block; padding: 14px 20px; color: var(--uni-text-title); text-decoration: none; font-size: 15px; transition: all 0.3s; }
+.side-menu li a:hover { background-color: #f0f5fa; color: var(--uni-primary); padding-left: 25px; }
 .side-menu-empty { padding: 30px; text-align: center; color: #999; }
 
 /* 主区域 */
@@ -161,43 +147,70 @@ const formatDate = (dateStr: string) => {
   color: var(--uni-primary);
   border-bottom: 2px solid var(--uni-primary);
   padding-bottom: 12px;
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
   font-weight: 500;
 }
 
-/* 文章列表 */
-.article-list { list-style: none; padding: 0; margin: 0; }
-.article-list li {
-  display: flex;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px dashed #e8e8e8;
+/* 图文网格 */
+.article-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
-.article-list li .bullet {
-  width: 6px; height: 6px;
-  background-color: var(--uni-primary);
-  margin-right: 12px;
-}
-.article-list li a {
-  flex: 1;
-  color: var(--uni-text-title);
+.card-item {
+  display: block;
   text-decoration: none;
-  font-size: 16px;
-  white-space: nowrap;
+  border: 1px solid var(--uni-border-light);
+  border-radius: 4px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 20px;
+  background: #fff;
+  transition: box-shadow 0.3s, transform 0.3s;
 }
-.article-list li a:hover { color: var(--uni-primary); }
-.article-list li .date {
-  color: #999;
-  font-size: 14px;
+.card-item:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  transform: translateY(-4px);
+  border-color: var(--uni-primary);
 }
+.img-wrap {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+.img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+.card-item:hover .img-wrap img { transform: scale(1.05); }
+
+.card-info { padding: 16px; }
+.card-info .title {
+  color: var(--uni-text-title);
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  font-weight: normal;
+  /* 多行省略 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+.card-info .date { color: #999; font-size: 12px; margin: 0; text-align: right; }
+
+.card-item:hover .title { color: var(--uni-primary); }
+
 .empty-state { text-align: center; padding: 80px 0; color: #999; font-size: 15px; }
 
 @media (max-width: 768px) {
   .layout-grid { grid-template-columns: 1fr; }
-  .article-list li .date { display: block; width: 100%; text-align: left; margin-top: 5px; }
-  .article-list li { flex-wrap: wrap; }
+  .article-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+  .img-wrap { height: 120px; }
+}
+
+@media (max-width: 480px) {
+  .article-grid { grid-template-columns: 1fr; }
 }
 </style>

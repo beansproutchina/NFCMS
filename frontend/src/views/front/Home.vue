@@ -48,10 +48,13 @@ watch(
     <component 
         :is="currentTemplate" 
         v-if="currentTemplate" 
-        :config="siteConfig" 
-        :articles="articles" 
-        :categories="categories"
-        :user="user"
-        :api="api"
+        :context="{
+            config: siteConfig,
+            articles,
+            categories,
+            menus: route.meta.fetchedData?.menus || [],
+            user,
+            api
+        }"
     />
 </template>

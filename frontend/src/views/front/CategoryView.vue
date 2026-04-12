@@ -4,13 +4,16 @@
     <div v-else-if="templateComponent" class="animate-fade-in transition-opacity duration-300">
       <component 
          :is="templateComponent" 
-         :category="data.category" 
-         :articles="data.articles" 
-         :children="data.children" 
-         :breadcrumbs="data.breadcrumbs"
-         :user="user" 
-         :config="configData"
-         :api="api"
+         :context="{
+             category: data.category,
+             articles: data.articles,
+             children: data.children,
+             breadcrumbs: data.breadcrumbs,
+             menus: route.meta.fetchedData?.menus || [],
+             user: user,
+             config: configData,
+             api: api
+         }"
       />
     </div>
   </div>

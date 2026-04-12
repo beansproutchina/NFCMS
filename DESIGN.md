@@ -1,5 +1,9 @@
 # Design System Inspired by Apple
 
+## 0. 实现方式
+
+使用PrimeVue组件库 + Tailwind自定义样式来实现。尽可能不用原生html组件。
+
 ## 1. Visual Theme & Atmosphere
 
 Apple's website is a masterclass in controlled drama — vast expanses of pure black and near-white serve as cinematic backdrops for products that are photographed as if they were sculptures in a gallery. The design philosophy is reductive to its core: every pixel exists in service of the product, and the interface itself retreats until it becomes invisible. This is not minimalism as aesthetic preference; it is minimalism as reverence for the object.

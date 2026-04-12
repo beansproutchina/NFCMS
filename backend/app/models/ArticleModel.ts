@@ -19,7 +19,6 @@ export default class ArticleModel extends Model {
         F.String("thumbnail"),
         F.String("content").notNull(),          // MD content
         F.String("content_template"),           // Vue template for article overrides Category
-        F.Number("weight").default(50),
         F.Number("visible").default(1),
         F.Number("is_top").default(0),
         F.Number("category_id").notNull(),

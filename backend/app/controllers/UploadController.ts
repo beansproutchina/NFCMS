@@ -75,7 +75,7 @@ export default class UploadController extends Controller {
 
         if (records && records.length > 0) {
             const record = records[0];
-            const filePath = path.join(process.cwd(), "static", record.url);
+            const filePath = path.join(process.cwd(),  record.url);
 
             if (fs.existsSync(filePath)) {
                 fs.unlinkSync(filePath);
