@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}=== NFCMS Docker Compose Stop ===${NC}"
+
+# Check if docker-compose is available
+if ! command -v docker-compose &> /dev/null && ! command -v docker &> /dev/null; then
+    echo -e "${RED}Error: docker-compose or docker is not installed${NC}"
+    exit 1
+fi
+
+# Try docker compose (new syntax) first, fallback to docker-compose
+if command -v docker &> /dev/null && docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo -e "${RED}Error: docker compose is not available${NC}"
+    exit 1
+fi
+
+# Stop containers
+echo -e "${YELLOW}Stopping containers...${NC}"
+$COMPOSE_CMD down
+
+# Check if stop was successful
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}Containers stopped successfully${NC}"
+    echo ""
+    echo -e "${GREEN}Current containers:${NC}"
+    $COMPOSE_CMD ps
+else
+    echo -e "${RED}Failed to stop containers${NC}"
+    exit 1
+fi

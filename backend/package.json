@@ -10,6 +10,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "dyapi": "file:../../DYAPI2/dyapi"
+    "dyapi": "^3.0.0"
   }
 }
