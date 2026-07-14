@@ -59,6 +59,23 @@ export default class ContentController extends Controller {
         return { article, category, breadcrumbs, template };
     }
 
+    /** Public homepage data: visible articles + categories. Raw reads (no RBAC), so anonymous visitors work. */
+    @Route("get", "/home")
+    async getHome() {
+        const articles = await this.articleModel.read({
+            filter: { status: "visible" },
+            orderBy: "published_at",
+            orderDesc: true,
+            fields: ["id", "title", "slug", "description", "thumbnail", "is_top", "published_at", "category_id"],
+        }) || [];
+        articles.sort((a: any, b: any) => {
+            if (a.is_top !== b.is_top) return a.is_top ? -1 : 1;
+            return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+        });
+        const categories = await this.categoryModel.read({}) || [];
+        return { code: 200, data: { articles, categories } };
+    }
+
     @Route("get", "/article")
     async getArticle(ctx: any) {
         const slug = ctx.request.query.slug;

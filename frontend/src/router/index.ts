@@ -13,16 +13,16 @@ import { systemAPI, contentAPI, crudAPI } from '../api';
 NProgress.configure({ showSpinner: false, speed: 400 });
 
 const fetchHome = async (to: any) => {
-    const [configRes, catRes, artRes, menuRes] = await Promise.all([
+    // Public reads go through /content (no RBAC), never the admin CRUD /articles endpoint.
+    const [configRes, homeRes, menuRes] = await Promise.all([
         systemAPI.getConfig().catch(()=>({data:{}})),
-        crudAPI.getList('categories').catch(()=>({data:[]})),
-        crudAPI.getList('articles', { filter: { visible: 1 }, orderBy: 'published_at', orderDesc: true }).catch(()=>({data:[]})),
+        contentAPI.getHome().catch(()=>({data:{articles:[],categories:[]}})),
         crudAPI.getList('menus').catch(()=>({data:[]}))
     ]);
     to.meta.fetchedData = {
         config: configRes.data || {},
-        categories: catRes.data || [],
-        articles: artRes.data || [],
+        categories: homeRes.data?.categories || [],
+        articles: homeRes.data?.articles || [],
         menus: menuRes.data || []
     };
 };
@@ -54,6 +54,7 @@ const routes = [
   { path: '/', component: () => import('../views/front/Home.vue'), meta: { fetch: fetchHome } },
   { path: '/a/:category_slug/:article_slug', component: () => import('../views/front/ArticleDetail.vue'), meta: { fetch: fetchArticle } },
   { path: '/a/:category_slug', component: () => import('../views/front/CategoryView.vue'), meta: { fetch: fetchCategory } },
+  { path: '/preview', component: () => import('../views/front/Preview.vue') },
   
   // Setup & Auth
   { path: '/setup', component: () => import('../views/setup/SetupWizard.vue') },
@@ -72,6 +73,7 @@ const routes = [
       { path: 'articles/new', component: () => import('../views/admin/Editor.vue') },
       { path: 'articles/edit/:id', component: () => import('../views/admin/Editor.vue') },
       { path: 'users', component: () => import('../views/admin/Users.vue') },
+      { path: 'roles', component: () => import('../views/admin/Roles.vue') },
       { path: 'schemas', component: () => import('../views/admin/Schemas.vue') },
       { path: 'crud/:modelName', component: () => import('../views/admin/DynamicCrud.vue') },
       { path: 'files', component: () => import('../views/admin/Files.vue') },

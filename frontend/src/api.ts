@@ -6,31 +6,26 @@ export const api = axios.create({
 });
 
 api.interceptors.response.use(
-    (response) => {
-        // Global error handling: if response contains a code and it is not a success code like 200/201, show a generic error toast
-        if (response.data && response.data.code && (response.data.code < 200 || response.data.code >= 300)) {
-             window.dispatchEvent(new CustomEvent('app-error', { detail: response.data.message || `Request failed with code ${response.data.code}` }));
-             return Promise.reject(response.data);
-        }
-        return response.data; // Crucial: standardize response
-    }, 
+    // HTTP 2xx: return the unwrapped body ({ code, data, ... }).
+    (response) => response.data,
+    // dyapi 3.1.0 (S6) returns real HTTP status codes for errors. Extract the backend
+    // `message` here and reject with a real Error so every caller can read err.message.
     (error) => {
-        // Backend (dyapi 3.1.0, S6) now returns real HTTP status codes, so business
-        // errors (400/401/403/404/5xx) land here rather than in the success branch.
-        const url: string = error.config?.url || '';
-        const isLoginRequest = url.includes('/user/login');
-        const message = error.response?.data?.message || error.message || 'API Request Failed';
+        const body: any = error.response?.data;
+        const status: number | undefined = error.response?.status;
+        const message: string = body?.message || error.message || `请求失败${status ? ' (' + status + ')' : ''}`;
+        const code = body?.code ?? status;
+
         window.dispatchEvent(new CustomEvent('app-error', { detail: message }));
 
-        // Session expired / invalid token -> force re-login. Skip when the failing call
-        // IS the login attempt (wrong password), so the login page can show the error in place.
-        const isAuthError = error.response?.status === 401 || error.response?.data?.message?.includes("Invalid token");
-        if (isAuthError && !isLoginRequest) {
+        // Session expired / invalid token -> force re-login (but not on the login request itself).
+        const url: string = error.config?.url || '';
+        const isAuthError = status === 401 || /invalid token/i.test(body?.message || '');
+        if (isAuthError && !url.includes('/user/login')) {
             localStorage.removeItem('user');
             window.location.pathname = '/login';
         }
-        // Reject with the unwrapped body when available, matching the success-branch convention.
-        return Promise.reject(error.response?.data || error);
+        return Promise.reject(Object.assign(new Error(message), { code, data: body }));
     }
 );
 
@@ -58,8 +53,25 @@ export const crudAPI = {
 };
 
 export const contentAPI = {
+    getHome: () => api.get('/content/home'),
     getCategory: (slug: string) => api.get(`/content/category?slug=${slug}`),
-    getArticle: (slug: string) => api.get(`/content/article?slug=${slug}`)
+    getArticle: (slug: string) => api.get(`/content/article?slug=${slug}`),
+    previewToken: (id: string | number) => api.post('/content/preview-token', { id }),
+    preview: (id: string | number, pt: string) => api.get(`/content/preview?id=${id}&pt=${encodeURIComponent(pt)}`)
+};
+
+// Content lifecycle: status transitions, version history/rollback, and resource sharing (ACL).
+export const lifecycleAPI = {
+    transition: (type: string, id: string | number, body: { to: string; publish_at?: string; note?: string }) =>
+        api.post(`/lifecycle/${type}/${id}/transition`, body),
+    revisions: (type: string, id: string | number) => api.get(`/lifecycle/${type}/${id}/revisions`),
+    rollback: (type: string, id: string | number, version_no: number, note?: string) =>
+        api.post(`/lifecycle/${type}/${id}/rollback`, { version_no, note }),
+    grants: (type: string, id: string | number) => api.get(`/lifecycle/${type}/${id}/grants`),
+    share: (type: string, id: string | number, body: { grantee_type: string; grantee_id: number; access: string }) =>
+        api.post(`/lifecycle/${type}/${id}/share`, body),
+    revoke: (type: string, id: string | number, grantId: number) =>
+        api.delete(`/lifecycle/${type}/${id}/share/${grantId}`)
 };
 
 export const systemAPI = {

@@ -1,203 +1,87 @@
-<template>
-  <div class="category-page theme-uni">
-    <AHeader :context="context" />
-
-    <!-- 顶栏面包屑 -->
-    <div class="banner-min"></div>
-    <div class="breadcrumb-container">
-      <div class="container">
-        当前位置：
-        <a href="/">首页</a> 
-        <span class="sep">&gt;</span>
-        <span v-for="(crumb, index) in breadcrumbs" :key="crumb.id">
-          <a v-if="index < breadcrumbs.length - 1" :href="`/category/${crumb.id}`">{{ crumb.name }}</a>
-          <span v-else class="current">{{ crumb.name }}</span>
-          <span class="sep" v-if="index < breadcrumbs.length - 1">&gt;</span>
-        </span>
-      </div>
-    </div>
-
-    <!-- 列表页主体 (左右分栏，左导航右列表) -->
-    <div class="container layout-grid">
-      <!-- 左侧边栏导航 -->
-      <aside class="sidebar">
-        <h3 class="side-title">{{ category?.name || '分类列表' }}</h3>
-        <ul class="side-menu" v-if="children && children.length > 0">
-          <li v-for="child in children" :key="child.id">
-            <a :href="`/category/${child.id}`">{{ child.name }}</a>
-          </li>
-        </ul>
-        <div v-else class="side-menu-empty">暂无子分类</div>
-      </aside>
-
-      <!-- 右侧文章列表 -->
-      <main class="content-main">
-        <h2 class="content-title">{{ category?.name || '文章列表' }}</h2>
-        
-        <ul class="article-list" v-if="articles && articles.length > 0">
-          <li v-for="item in articles" :key="item.id">
-            <span class="bullet"></span>
-            <a :href="`/article/${item.id}`" :title="item.title">{{ item.title }}</a>
-            <span class="date">{{ formatDate(item.published_at) }}</span>
-          </li>
-        </ul>
-        
-        <div class="empty-state" v-else>
-          <p>该分类下暂无文章</p>
-        </div>
-      </main>
-    </div>
-
-    <AFooter :context="context" />
-  </div>
-</template>
-
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import AHeader from './components/AHeader.vue';
 import AFooter from './components/AFooter.vue';
+import { Button } from 'primevue';
 
 const props = defineProps<{ context: any }>();
-const { category, articles, breadcrumbs, children } = props.context || {};
+const { category, articles, breadcrumbs } = props.context || {};
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-};
+const router = useRouter();
+
+
+
 </script>
 
-<style scoped>
-.theme-uni {
-  --uni-primary: #8B0000;
-  --uni-bg-page: #F5F5F5;
-  --uni-text-title: #222222;
-  --uni-text-body: #444444;
-  --uni-border-light: #E8E8E8;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-  background-color: var(--uni-bg-page);
-  min-height: 100vh;
-}
+<template>
+    <div
+        class="min-h-screen bg-[#f5f5f7] flex flex-col font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text',sans-serif]">
+        <a-header :context="context" />
 
-.banner-min {
-  height: 200px;
-  background: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-  position: relative;
-}
-.banner-min::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(139, 0, 0, 0.4);
-}
+        <!-- Main Content -->
+        <main class="flex-1 w-full max-w-[980px] mx-auto py-12 px-6">
+            <!-- Breadcrumbs -->
+            <div class="flex gap-2 text-[14px] text-[rgba(0,0,0,0.48)] mb-8 tracking-[-0.224px]">
+                <span class="hover:text-[#000000] cursor-pointer transition-colors" @click="router.push('/')">首页</span>
+                <template v-for="(crumb, idx) in breadcrumbs" :key="crumb.id">
+                    <span>&gt;</span>
+                    <span class="cursor-pointer hover:text-[#000000] transition-colors"
+                        :class="{ 'text-[#1d1d1f] font-medium': idx === breadcrumbs.length - 1 }"
+                        @click="idx === breadcrumbs.length - 1 ? null : router.push(`/a/${crumb.slug}`)">
+                        {{ crumb.name }}
+                    </span>
+                </template>
+            </div>
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
+            <!-- Category Hero -->
+            <div class="mb-12 pb-6 border-b border-[#d2d2d7]">
+                <h1
+                    class="text-[56px] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display',sans-serif] font-semibold text-[#1d1d1f] leading-[1.07] tracking-[-0.28px]">
+                    {{ category?.name || '分类' }}
+                </h1>
+                <p v-if="category?.data?.description"
+                    class="mt-4 text-[21px] text-[rgba(0,0,0,0.6)] font-normal leading-[1.19] tracking-[0.231px]">
+                    {{ category.data.description }}
+                </p>
+            </div>
 
-/* 面包屑导航 */
-.breadcrumb-container {
-  background-color: #fff;
-  padding: 16px 0;
-  font-size: 14px;
-  color: #666;
-  border-bottom: 1px solid var(--uni-border-light);
-  margin-bottom: 30px;
-}
-.breadcrumb-container a { color: #333; text-decoration: none; }
-.breadcrumb-container a:hover { color: var(--uni-primary); }
-.breadcrumb-container .sep { margin: 0 8px; color: #999; }
-.breadcrumb-container .current { color: var(--uni-primary); }
+            <!-- Articles Grid -->
+            <div v-if="!articles || !articles.length"
+                class="text-center py-20 text-[17px] text-[rgba(0,0,0,0.48)] tracking-[-0.374px]">
+                该分类下暂无文章。
+            </div>
 
-/* 左右结构 */
-.layout-grid {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 30px;
-  align-items: start;
-}
+            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="item in articles" :key="item.id"
+                    class="bg-white rounded-[12px] p-6 shadow-[rgba(0,0,0,0.12)_0px_8px_30px_0px] hover:shadow-[rgba(0,0,0,0.22)_0px_12px_40px_0px] transition-all duration-300 flex flex-col group cursor-pointer hover:scale-[1.01]"
+                    @click="router.push(`/a/${category?.slug}/${item.slug}`)">
+                <div class="flex items-center gap-2 mb-2">
+                    <span v-if="item.is_top" class="text-[10px] bg-[#f5f5f7] text-[#1d1d1f] px-2 py-0.5 border border-[#d2d2d7] rounded-full font-semibold tracking-wide">置顶</span>
+                    <span v-if="item.category_id" class="text-[10px] bg-[#f5f5f7] text-[#1d1d1f] px-2 py-0.5 border border-[#d2d2d7] rounded-full tracking-wide">{{ category?.name }}</span>
+                </div>
+                <h2 class="text-[28px] font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Display',sans-serif] font-normal leading-[1.14] tracking-[0.196px] text-[#1d1d1f] group-hover:text-[#0071e3] transition-colors">
+                    {{ item.title }}
+                </h2>
+                
 
-/* 侧边栏 */
-.sidebar {
-  background: #fff;
-  border: 1px solid var(--uni-border-light);
-}
-.side-title {
-  background-color: var(--uni-primary);
-  color: #fff;
-  margin: 0;
-  padding: 16px 20px;
-  font-size: 20px;
-  font-weight: 500;
-  text-align: center;
-}
-.side-menu { list-style: none; padding: 0; margin: 0; }
-.side-menu li { border-bottom: 1px dashed var(--uni-border-light); }
-.side-menu li:last-child { border-bottom: none; }
-.side-menu li a {
-  display: block;
-  padding: 14px 20px;
-  color: var(--uni-text-title);
-  text-decoration: none;
-  font-size: 15px;
-  transition: all 0.3s;
-}
-.side-menu li a:hover {
-  background-color: #f0f5fa;
-  color: var(--uni-primary);
-  padding-left: 25px;
-}
-.side-menu-empty { padding: 30px; text-align: center; color: #999; }
+                
+                <p class="text-[17px] font-normal leading-[1.47] tracking-[-0.374px] text-[rgba(0,0,0,0.8)] line-clamp-3 mb-4">
+                    {{ item.description || '暂无描述...' }}
+                </p>
+                
+                <div class="flex justify-between items-end mt-auto pt-4">
+                    <span class="text-[12px] text-[rgba(0,0,0,0.48)] font-medium tracking-wide">
+                        {{ item.published_at ? new Date(item.published_at).toLocaleDateString() : '-' }}
+                    </span>
+                    <Button unstyled class="bg-transparent text-[#0066cc] rounded-[980px] border border-[#0066cc] px-[15px] py-[8px] text-[14px] leading-[1.43] tracking-[-0.224px] cursor-pointer">
+                        {{$t('front.readMore') }} &gt;
+                    </Button>
+                </div>
+                </div>
+            </div>
+        </main>
 
-/* 主区域 */
-.content-main {
-  background: #fff;
-  padding: 30px;
-  border: 1px solid var(--uni-border-light);
-  min-height: 500px;
-}
-.content-title {
-  font-size: 24px;
-  color: var(--uni-primary);
-  border-bottom: 2px solid var(--uni-primary);
-  padding-bottom: 12px;
-  margin: 0 0 20px 0;
-  font-weight: 500;
-}
-
-/* 文章列表 */
-.article-list { list-style: none; padding: 0; margin: 0; }
-.article-list li {
-  display: flex;
-  align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px dashed #e8e8e8;
-}
-.article-list li .bullet {
-  width: 6px; height: 6px;
-  background-color: var(--uni-primary);
-  margin-right: 12px;
-}
-.article-list li a {
-  flex: 1;
-  color: var(--uni-text-title);
-  text-decoration: none;
-  font-size: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 20px;
-}
-.article-list li a:hover { color: var(--uni-primary); }
-.article-list li .date {
-  color: #999;
-  font-size: 14px;
-}
-.empty-state { text-align: center; padding: 80px 0; color: #999; font-size: 15px; }
-
-@media (max-width: 768px) {
-  .layout-grid { grid-template-columns: 1fr; }
-  .article-list li .date { display: block; width: 100%; text-align: left; margin-top: 5px; }
-  .article-list li { flex-wrap: wrap; }
-}
-</style>
+        <!-- Unified Footer -->
+        <a-footer :context="context" />
+    </div>
+</template>

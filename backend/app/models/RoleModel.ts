@@ -23,4 +23,10 @@ export default class RoleModel extends Model {
         "DEFAULT": "",
         "super_admin": "C,R,U,D"
     };
+
+    // Config table: allow the admin UI to fetch the whole list in one request.
+    async HTTPReadMany(state, query, body) {
+        state.settingsOverrides.maxLimit = 9999;
+        return await super.HTTPReadMany(state, query, body);
+    }
 }

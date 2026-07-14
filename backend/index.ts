@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { authMiddlewareFactory } from "./app/middlewares/authmiddleware.js";
 import { policy } from "./app/services/PolicyService.js";
 import { scheduler } from "./app/services/SchedulerService.js";
+import { staticgen } from "./app/services/StaticGenService.js";
 import RoleModel from "./app/models/RoleModel.js";
 import RolePermissionModel from "./app/models/RolePermissionModel.js";
 
@@ -67,8 +68,6 @@ const start = async () => {
     });
 
     // 1. Core plugins and hook system initialization
-    // Placeholder listener (future: SSG regeneration / cache invalidation).
-    hooks.addAction("content.published.articles", (id) => console.log(`[hook] content.published.articles id=${id}`));
     await hooks.doAction("app_init");
 
     // 2. Scan core files (UserController, ArticleModel, etc)
@@ -100,5 +99,18 @@ const start = async () => {
 
     // 6. Start the scheduled-publish cron (flips due `scheduled` content to `visible`).
     scheduler.start(app);
+
+    // 7. Public-site SSG: regenerate static pages on content changes, and do an initial build.
+    staticgen.bind(app);
+    hooks.addAction("content.saved.articles", async (id) => {
+        await staticgen.regenerateArticle(id);
+        await staticgen.generateSitemap();
+    });
+    hooks.addAction("content.published.articles", async (id) => {
+        await staticgen.regenerateArticle(id);
+        await staticgen.regenerateHome();
+        await staticgen.generateSitemap();
+    });
+    await staticgen.regenerateAll();
 }
 start();

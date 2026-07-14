@@ -148,25 +148,42 @@ const deleteUser = async (id: number) => {
     }
 };
 
-const handleSave = async (formData: any) => {
+// Reconcile the user_roles table to match the desired additional-role id set.
+const syncUserRoles = async (userId: number, desiredRoleIds: number[]) => {
+    if (!userId) return;
+    const res: any = await crudAPI.getList('user_roles', { filter: { user_id: userId }, limit: 999 });
+    const existing = res.data || [];
+    const existingIds = existing.map((u: any) => u.role_id);
+    for (const rid of desiredRoleIds) {
+        if (!existingIds.includes(rid)) await crudAPI.create('user_roles', { user_id: userId, role_id: rid });
+    }
+    for (const u of existing) {
+        if (!desiredRoleIds.includes(u.role_id)) await crudAPI.remove('user_roles', u.id);
+    }
+};
+
+const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
     try {
         // Prevent password update if left empty during edit
         if (formData.id && !formData.password) {
              delete formData.password;
         }
 
+        let userId = formData.id;
         if (formData.id) {
             await crudAPI.update('users', formData.id, formData);
             toast.add({ severity: 'success', summary: 'Success', detail: '用户更新成功', life: 3000 });
-            // If they changed their own name, maybe update local storage? 
+            // If they changed their own name, maybe update local storage?
             if (formData.id === currentUser.id && formData.username) {
                 currentUser.username = formData.username;
                 localStorage.setItem('user', JSON.stringify(currentUser));
             }
         } else {
-            await crudAPI.create('users', formData);
+            const res: any = await crudAPI.create('users', formData);
+            userId = res.id ?? res.data?.id ?? res.data;
             toast.add({ severity: 'success', summary: 'Success', detail: '用户创建成功', life: 3000 });
         }
+        await syncUserRoles(userId, additionalRoleIds);
         showModal.value = false;
         fetchUsers();
     } catch (e) {

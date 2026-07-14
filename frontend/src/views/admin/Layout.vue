@@ -3,7 +3,7 @@
 import { computed } from 'vue';
 import Button from 'primevue/button';
 import { useRouter, useRoute } from 'vue-router';
-import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, LucideServer, LucideGlobe, LucideMenu, LucideUsers, LucideImage } from 'lucide-vue-next';
+import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, LucideServer, LucideGlobe, LucideMenu, LucideUsers, LucideImage, LucideShieldCheck } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();
@@ -34,6 +34,7 @@ const rawMenuGroups = [
     title: 'system.systemProps',
     items: [
       { label: 'system.users', path: '/admin/users', icon: LucideUsers, requiresSuperAdmin: true },
+      { label: 'system.roles', path: '/admin/roles', icon: LucideShieldCheck, requiresSuperAdmin: true },
       //{ label: 'system.schemas', path: '/admin/schemas', icon: LucideServer, requiresSuperAdmin: true },
       { label: 'system.settings', path: '/admin/settings', icon: LucideSettings, requiresSuperAdmin: true },
     ]

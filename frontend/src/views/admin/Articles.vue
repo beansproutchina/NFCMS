@@ -5,7 +5,7 @@ import SmartTable from '../../components/SmartTable.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
-import { crudAPI } from '../../api';
+import { crudAPI, lifecycleAPI } from '../../api';
 import { LucidePlus, LucideSearch,  } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
@@ -112,6 +112,25 @@ const deleteArticle = async (id: number) => {
     }
 };
 
+const STATUS_CLS: Record<string, string> = {
+    hidden: 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]',
+    scheduled: 'bg-[#fff7ed] text-[#c2410c]',
+    visible: 'bg-[#e0f2fe] text-[#0066cc]'
+};
+const statusMeta = (s: string) => ({
+    label: s ? t('contentStatus.' + s) : '-',
+    cls: STATUS_CLS[s] || 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]'
+});
+
+const toggleVisibility = async (data: any) => {
+    try {
+        const to = data.status === 'visible' ? 'hidden' : 'visible';
+        await lifecycleAPI.transition('articles', data.id, { to });
+        toast.add({ severity: 'success', summary: 'Success', detail: to === 'visible' ? '已发布' : '已隐藏', life: 2500 });
+        fetchArticles();
+    } catch(e) { console.error(e); }
+};
+
 </script>
 
 <template>
@@ -157,7 +176,7 @@ const deleteArticle = async (id: number) => {
                 { field: 'slug', header: $t('form.slug'), sortable: true, style: 'width: 20%' },
                 { field: 'category_id', header: $t('form.category_id') || 'Category', sortable: true, style: 'width: 10%' },
                 { field: 'is_top', header: $t('form.is_top') || 'Top', sortable: true, style: 'width: 10%' },
-                { field: 'visible', header: $t('form.status') || 'Status', sortable: true, style: 'width: 15%' },
+                { field: 'status', header: $t('form.status') || 'Status', sortable: true, style: 'width: 15%' },
                 { field: 'published_at', header: $t('form.date'), sortable: true, style: 'width: 15%' }
             ]"
         >
@@ -170,9 +189,9 @@ const deleteArticle = async (id: number) => {
             <template #is_top="{ data }">
                 <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">TOP</span>
             </template>
-            <template #visible="{ data }">
-                <span :class="{'bg-[#e0f2fe] text-[#0066cc]': data.visible === 1, 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]': data.visible === 0}" class="px-2 py-1 rounded-[5px] text-[12px] font-medium uppercase tracking-wider">
-                    {{ data.visible ? ($t('form.published') || 'Published') : ($t('form.draft') || 'Draft') }}
+            <template #status="{ data }">
+                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-[5px] text-[12px] font-medium uppercase tracking-wider">
+                    {{ statusMeta(data.status).label }}
                 </span>
             </template>
             <template #published_at="{ data }">
@@ -182,6 +201,9 @@ const deleteArticle = async (id: number) => {
                 <div class="flex gap-2">
                     <Button unstyled @click="editArticle(data.id)" class="text-[#0066cc] hover:underline text-[14px] flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
+                    </Button>
+                    <Button unstyled @click="toggleVisibility(data)" class="text-[rgba(0,0,0,0.7)] hover:underline text-[14px] flex items-center cursor-pointer">
+                        {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
                     <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">
                         {{ $t('action.delete') }}

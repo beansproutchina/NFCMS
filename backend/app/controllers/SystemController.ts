@@ -5,6 +5,7 @@ import SystemConfigModel from "../models/SystemConfigModel.js";
 import CategoryModel from "../models/CategoryModel.js";
 import ArticleModel from "../models/ArticleModel.js";
 import MenuModel from "../models/MenuModel.js";
+import { staticgen } from "../services/StaticGenService.js";
 
 const VALID_CONFIG_KEYS = [
     "is_initialized",
@@ -157,6 +158,9 @@ export default class SystemController extends Controller {
             ]
         });
 
+
+        // Seed content was created via raw model calls (no content hooks) — build the static site now.
+        await staticgen.regenerateAll();
 
         return { code: 200, message: "Setup completed successfully." };
     }

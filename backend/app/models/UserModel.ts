@@ -10,16 +10,23 @@ export default class UserModel extends Model {
     tablename = "users";
     datafields = [
         F.String("username"),
-        F.String("password").processor(this._app.settings.passwordHash),
+        // Writable (create/update) but NEVER readable over HTTP — login uses a raw read that bypasses field perms.
+        F.String("password").processor(this._app.settings.passwordHash).setPermission("DEFAULT", "w"),
         F.String("role").default("admin"),
         F.Date("lastontime"),
     ];
     permission = {
-        "PUBLIC": "RO",
+        "PUBLIC": "",
         "DEFAULT": "R,U",
         "admin": "R,U",
         "super_admin": "C,R,U,D"
     };
+
+    // Config/admin table: allow fetching the full list in one request (e.g. share-target picker).
+    async HTTPReadMany(state, query, body) {
+        state.settingsOverrides.maxLimit = 9999;
+        return await super.HTTPReadMany(state, query, body);
+    }
 
     async HTTPRead(state, query) {
         if (state.user?.role !== "super_admin") {

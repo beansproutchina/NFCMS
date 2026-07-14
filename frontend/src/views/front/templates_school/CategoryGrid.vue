@@ -10,9 +10,9 @@
         <a href="/">首页</a> 
         <span class="sep">&gt;</span>
         <span v-for="(crumb, index) in breadcrumbs" :key="crumb.id">
-          <a v-if="index < breadcrumbs.length - 1" :href="`/category/${crumb.id}`">{{ crumb.name }}</a>
+          <a v-if="Number(index) < breadcrumbs.length - 1" :href="`/category/${crumb.id}`">{{ crumb.name }}</a>
           <span v-else class="current">{{ crumb.name }}</span>
-          <span class="sep" v-if="index < breadcrumbs.length - 1">&gt;</span>
+          <span class="sep" v-if="Number(index) < breadcrumbs.length - 1">&gt;</span>
         </span>
       </div>
     </div>

@@ -21,4 +21,9 @@ export default class UserRoleModel extends Model {
         "DEFAULT": "",
         "super_admin": "C,R,U,D"
     };
+
+    async HTTPReadMany(state, query, body) {
+        state.settingsOverrides.maxLimit = 9999;
+        return await super.HTTPReadMany(state, query, body);
+    }
 }
