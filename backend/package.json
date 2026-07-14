@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "dyapi": "^3.0.0"
+    "dyapi": "file:../../dyapi3/dyapi",
+    "node-cron": "^3.0.3"
   }
 }

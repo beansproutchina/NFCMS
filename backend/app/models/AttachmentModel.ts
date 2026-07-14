@@ -17,4 +17,12 @@ export default class AttachmentModel extends Model {
         F.Number("size"),
         F.String("storage_provider").default("local"), // local, s3, tencent
     ];
+    // Uploads/deletes go through the auth-gated UploadController (POST /upload, DELETE /upload/:id).
+    // The public site references file URLs directly via static serving, so it never needs /attachments.
+    permission = {
+        "PUBLIC": "",
+        "DEFAULT": "",
+        "admin": "R",
+        "super_admin": "C,R,U,D"
+    };
 };

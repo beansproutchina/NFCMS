@@ -15,15 +15,22 @@ api.interceptors.response.use(
         return response.data; // Crucial: standardize response
     }, 
     (error) => {
-        // Handle unhandled catastrophic errors (e.g. 500 Network error)
-        window.dispatchEvent(new CustomEvent('app-error', { detail: error.response?.data?.message || error.message || 'API Request Failed' }));
+        // Backend (dyapi 3.1.0, S6) now returns real HTTP status codes, so business
+        // errors (400/401/403/404/5xx) land here rather than in the success branch.
+        const url: string = error.config?.url || '';
+        const isLoginRequest = url.includes('/user/login');
+        const message = error.response?.data?.message || error.message || 'API Request Failed';
+        window.dispatchEvent(new CustomEvent('app-error', { detail: message }));
 
-        if (error.response?.status === 401 || error.response?.data?.message?.includes("Invalid token")) {
-            localStorage.removeItem('auth_token');
+        // Session expired / invalid token -> force re-login. Skip when the failing call
+        // IS the login attempt (wrong password), so the login page can show the error in place.
+        const isAuthError = error.response?.status === 401 || error.response?.data?.message?.includes("Invalid token");
+        if (isAuthError && !isLoginRequest) {
             localStorage.removeItem('user');
             window.location.pathname = '/login';
         }
-        return Promise.reject(error);
+        // Reject with the unwrapped body when available, matching the success-branch convention.
+        return Promise.reject(error.response?.data || error);
     }
 );
 

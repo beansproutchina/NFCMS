@@ -99,9 +99,13 @@ export default class SystemController extends Controller {
 
     @Route("post", "/setup")
     @ValidateBody({
-        siteName: "string",
-        adminUsername: "string",
-        adminPassword: "string"
+        type: "object",
+        properties: {
+            siteName: { type: "string" },
+            adminUsername: { type: "string" },
+            adminPassword: { type: "string" }
+        },
+        required: ["siteName", "adminUsername", "adminPassword"]
     })
     async setup(ctx) {
         const { siteName, adminUsername, adminPassword } = ctx.request.body;
@@ -139,9 +143,9 @@ export default class SystemController extends Controller {
             content: "This is your first article. You can edit or delete it at any time.",
             category_id: 1,
             author_id: 1,
-            visible: 1,
+            status: "visible",
             published_at: new Date(),
-            
+
         });
 
         await this.menuModel.create({

@@ -8,7 +8,11 @@ export default class UserController extends Controller {
     @Inject(UserModel) userModel;
 
     @Route("post", "/login")
-    @ValidateBody({ username: "string", password: "string" })
+    @ValidateBody({
+        type: "object",
+        properties: { username: { type: "string" }, password: { type: "string" } },
+        required: ["username", "password"]
+    })
     async login(ctx) {
         const { username, password } = ctx.request.body;
         const user = (await this.userModel.read({ filter: { username, password: this._app.settings.passwordHash(password) } }))[0];
