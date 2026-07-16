@@ -14,9 +14,9 @@ services:
       - BUN_ENV=production
     volumes:
       # 仅挂载业务必需的目录
-      - ./backend/data:/app/backend/data
-      - ./backend/static:/app/backend/static
-      - ./upload:/app/backend/upload
+      - ./backend/data:/app/backend/app/data
+      - ./backend/static:/app/backend/app/static
+      - ./upload:/app/backend/app/upload
     restart: always
     networks:
       - nfcms-network

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
 
 const props = defineProps<{ context: any }>();
 const { config, articles, categories } = props.context || {};
@@ -21,91 +19,67 @@ const gridArticles = articles?.slice(2) || [];
 </script>
 
 <template>
-  <div class="home-root">
-    <AHeader :context="context" />
-    
-    <main class="home-main">
-      <!-- Hero 区域：使用超大留白与边框 -->
-      <section class="hero">
-        <h1 class="hero-title">
-          <span class="hero-line1">{{ config?.site_name || 'BRUTAL' }}</span>
-          <span class="hero-line2">EDITORIAL</span>
-        </h1>
-        <p class="hero-sub">{{ config?.subtitle || '硬朗与温度并存的文字容器' }}</p>
-        <div class="hero-decor">⸺</div>
-      </section>
+  <main class="home-main">
+    <!-- Hero 区域：使用超大留白与边框 -->
+    <section class="hero">
+      <h1 class="hero-title">
+        <span class="hero-line1">{{ config?.site_name || 'BRUTAL' }}</span>
+        <span class="hero-line2">EDITORIAL</span>
+      </h1>
+      <p class="hero-sub">{{ config?.subtitle || '硬朗与温度并存的文字容器' }}</p>
+      <div class="hero-decor">⸺</div>
+    </section>
 
-      <!-- 特色文章区 (2列，不对称) -->
-      <section class="featured-section" v-if="featuredArticles.length">
-        <div class="featured-grid">
-          <article 
-            v-for="(item, idx) in featuredArticles" 
-            :key="item.id"
-            class="featured-card"
-            :class="{ 'featured-primary': idx === 0 }"
-            @click="openArticle(item)"
-          >
-            <div class="card-label">
-              <span v-if="item.is_top">✦ 置顶</span>
-              <span v-else>✦ 编辑推荐</span>
-            </div>
-            <h2 class="card-title">{{ item.title }}</h2>
-            <p class="card-desc">{{ item.description || '暂无描述…' }}</p>
-            <div class="card-meta">
-              <span>{{ getCategoryName(item.category_id) }}</span>
-              <span>{{ new Date(item.published_at).toLocaleDateString() }}</span>
-            </div>
-          </article>
-        </div>
-      </section>
+    <!-- 特色文章区 (2列，不对称) -->
+    <section class="featured-section" v-if="featuredArticles.length">
+      <div class="featured-grid">
+        <article 
+          v-for="(item, idx) in featuredArticles" 
+          :key="item.id"
+          class="featured-card"
+          :class="{ 'featured-primary': idx === 0 }"
+          @click="openArticle(item)"
+        >
+          <div class="card-label">
+            <span v-if="item.is_top">✦ 置顶</span>
+            <span v-else>✦ 编辑推荐</span>
+          </div>
+          <h2 class="card-title">{{ item.title }}</h2>
+          <p class="card-desc">{{ item.description || '暂无描述…' }}</p>
+          <div class="card-meta">
+            <span>{{ getCategoryName(item.category_id) }}</span>
+            <span>{{ new Date(item.published_at).toLocaleDateString() }}</span>
+          </div>
+        </article>
+      </div>
+    </section>
 
-      <!-- 文章网格（3列） -->
-      <section class="grid-section" v-if="gridArticles.length">
-        <div class="section-header">
-          <h3>最新文章 <span class="header-arrow">→</span></h3>
-        </div>
-        <div class="article-grid">
-          <article 
-            v-for="item in gridArticles" 
-            :key="item.id"
-            class="grid-card"
-            @click="openArticle(item)"
-          >
-            <div class="grid-card-inner">
-              <div class="card-category">{{ getCategoryName(item.category_id) }}</div>
-              <h4>{{ item.title }}</h4>
-              <div class="grid-meta">{{ new Date(item.published_at).toLocaleDateString() }}</div>
-            </div>
-          </article>
-        </div>
-      </section>
+    <!-- 文章网格（3列） -->
+    <section class="grid-section" v-if="gridArticles.length">
+      <div class="section-header">
+        <h3>最新文章 <span class="header-arrow">→</span></h3>
+      </div>
+      <div class="article-grid">
+        <article 
+          v-for="item in gridArticles" 
+          :key="item.id"
+          class="grid-card"
+          @click="openArticle(item)"
+        >
+          <div class="grid-card-inner">
+            <div class="card-category">{{ getCategoryName(item.category_id) }}</div>
+            <h4>{{ item.title }}</h4>
+            <div class="grid-meta">{{ new Date(item.published_at).toLocaleDateString() }}</div>
+          </div>
+        </article>
+      </div>
+    </section>
 
-      <div v-if="!articles?.length" class="empty-state">暂无文章</div>
-    </main>
-
-    <AFooter :context="context" />
-  </div>
+    <div v-if="!articles?.length" class="empty-state">暂无文章</div>
+  </main>
 </template>
 
-<style>
-/* 全局设计变量注入 */
-.home-root {
-  --bg-page: #F4F1EA;
-  --surface: #FFFFFF;
-  --ink: #1C1C1C;
-  --accent: #D64933;
-  --border-light: #D1CCC5;
-  --shadow-hard: 8px 8px 0 #1C1C1C;
-  --shadow-soft: 4px 4px 0 #1C1C1C;
-  
-  background: var(--bg-page);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Manrope', sans-serif;
-  color: var(--ink);
-}
-
+<style scoped>
 .home-main {
   flex: 1;
   max-width: 1440px;

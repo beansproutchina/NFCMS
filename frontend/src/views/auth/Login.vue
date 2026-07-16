@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authAPI } from '../../api';
+import { useAuthStore } from '../../stores/auth';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Password from 'primevue/password';
@@ -11,6 +12,7 @@ import { useI18n } from 'vue-i18n';
 const router = useRouter();
 const toast = useToast();
 const { t } = useI18n();
+const authStore = useAuthStore();
 const username = ref('');
 const password = ref('');
 const error = ref('');
@@ -29,14 +31,16 @@ const performLogin = async () => {
       password: password.value
     });
     if (res.code === 200 || res.data) {
-      localStorage.setItem('user', JSON.stringify(res.data || res));
+      authStore.setUser(res.data || res);
       toast.add({ severity: 'success', summary: 'Success', detail: t('auth.loginSuccess'), life: 3000 });
-      router.push('/admin');
+      const next = router.currentRoute.value.query.redirect as string || '/admin';
+      router.push( next);
     } else {
       error.value = res.message || t('auth.loginFailed');
     }
   } catch (err: any) {
-    error.value = err.message || err.response?.data?.message || err.detail || 'Login Failed';
+    toast.add({ severity: 'error', summary: 'Error', detail: err.message || err.response?.data?.message || err.detail || t('auth.loginFailed'), life: 3000 });
+    error.value = err.message || err.response?.data?.message || err.detail || t('auth.loginFailed');
   } finally {
     loading.value = false;
   }
@@ -48,7 +52,7 @@ const performLogin = async () => {
     <div class="max-w-md w-full px-6">
       <div class="text-center mb-10">
         <h1 class="text-[56px] leading-[1.07] font-semibold tracking-[-0.28px] mb-2">{{ $t('auth.signIn') }}</h1>
-        <p class="text-[21px] leading-[1.19] opacity-60 font-normal tracking-[0.231px]">{{ $t('auth.useId') }}</p>
+        <p class="text-[21px] leading-[1.19] opacity-60 font-normal tracking-[0.231px]" v-if="0">{{ $t('auth.useId') }}</p>
       </div>
 
       <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
@@ -64,7 +68,7 @@ const performLogin = async () => {
 
         <div v-if="error" class="text-red-500 text-[14px] text-center">{{ error }}</div>
 
-        <Button :loading="loading" @click="performLogin" unstyled class="mt-4 bg-apple-blue hover:bg-[#0066cc] text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
+        <Button :loading="loading" @click="performLogin" unstyled class="mt-4 bg-apple-blue hover:bg-apple-link text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
           {{ $t('auth.signIn') }}
         </Button>
       </div>

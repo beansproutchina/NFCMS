@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { systemAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Password from 'primevue/password';
+import { LucideUpload, LucideFileText, LucideX } from 'lucide-vue-next';
 
 const router = useRouter();
 const siteName = ref('');
@@ -13,7 +14,67 @@ const adminPassword = ref('');
 const error = ref('');
 const loading = ref(false);
 
+// Import state
+const importMode = ref(false);
+const importFile = ref<File | null>(null);
+const importFileData = ref<any>(null);
+const importFileName = computed(() => importFile.value?.name || '');
+
+const toggleImportMode = () => {
+  importMode.value = !importMode.value;
+  if (!importMode.value) {
+    clearImportFile();
+  }
+};
+
+const handleFileSelect = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data._meta || data._meta.generator !== 'NFCMS') {
+        error.value = '无效的导入文件格式（非 NFCMS 导出文件）';
+        return;
+      }
+      importFile.value = file;
+      importFileData.value = data;
+      error.value = '';
+    } catch (err: any) {
+      error.value = '文件解析失败：' + (err.message || '未知错误');
+    }
+  };
+  input.click();
+};
+
+const clearImportFile = () => {
+  importFile.value = null;
+  importFileData.value = null;
+};
+
 const performSetup = async () => {
+  if (importMode.value) {
+    if (!importFileData.value) {
+      error.value = '请选择要导入的数据文件。';
+      return;
+    }
+    loading.value = true;
+    error.value = '';
+    try {
+      await systemAPI.setup({ importData: importFileData.value });
+      router.push('/login');
+    } catch (err: any) {
+      error.value = err.response?.data?.message || err.message || '导入失败';
+    } finally {
+      loading.value = false;
+    }
+    return;
+  }
+
   if (!siteName.value || !adminUsername.value || !adminPassword.value) {
     error.value = "All fields are required.";
     return;
@@ -27,7 +88,6 @@ const performSetup = async () => {
       adminPassword: adminPassword.value
     });
     router.push('/login');
-
   } catch (err: any) {
     error.value = err.response?.data?.message || err.message;
   } finally {
@@ -45,32 +105,74 @@ const performSetup = async () => {
       </div>
 
       <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
-        <div class="flex flex-col gap-2">
-          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Site Name</label>
-          <InputText v-model="siteName" unstyled
-            class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all"
-            placeholder="My Awesome Website" />
+        <!-- Mode Toggle -->
+        <div class="flex rounded-[8px] overflow-hidden border border-[rgba(0,0,0,0.1)]">
+          <Button
+            @click="importMode = false; clearImportFile()"
+            unstyled
+            :class="[
+              'flex-1 py-2.5 text-[14px] font-medium transition-colors cursor-pointer',
+              !importMode ? 'bg-[#0071e3] text-white' : 'bg-white text-[rgba(0,0,0,0.6)] hover:bg-[#f5f5f7]'
+            ]"
+          >新建站点</Button>
+          <Button
+            @click="importMode = true"
+            unstyled
+            :class="[
+              'flex-1 py-2.5 text-[14px] font-medium transition-colors cursor-pointer',
+              importMode ? 'bg-[#0071e3] text-white' : 'bg-white text-[rgba(0,0,0,0.6)] hover:bg-[#f5f5f7]'
+            ]"
+          >导入数据</Button>
         </div>
 
-        <div class="flex flex-col gap-2">
-          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Username</label>
-          <InputText v-model="adminUsername" unstyled
-            class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all"
-            placeholder="admin" autocomplete="username" />
-        </div>
+        <!-- New Site Mode -->
+        <template v-if="!importMode">
+          <div class="flex flex-col gap-2">
+            <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Site Name</label>
+            <InputText v-model="siteName" unstyled
+              class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all"
+              placeholder="My Awesome Website" />
+          </div>
 
-        <div class="flex flex-col gap-2">
-          <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Password</label>
-          <Password v-model="adminPassword" unstyled :feedback="false" toggleMask fluid
-            :inputProps="{ class: 'w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all relative', placeholder: '••••••••', autocomplete: 'new-password' }"
-            :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
-        </div>
+          <div class="flex flex-col gap-2">
+            <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Username</label>
+            <InputText v-model="adminUsername" unstyled
+              class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all"
+              placeholder="admin" autocomplete="username" />
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Password</label>
+            <Password v-model="adminPassword" unstyled :feedback="false" toggleMask fluid
+              :inputProps="{ class: 'w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-apple-blue focus:bg-white focus:ring-1 focus:ring-apple-blue transition-all relative', placeholder: '••••••••', autocomplete: 'new-password' }"
+              :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
+          </div>
+        </template>
+
+        <!-- Import Mode -->
+        <template v-else>
+          <p class="text-[14px] text-[rgba(0,0,0,0.6)]">选择之前导出的 NFCMS 数据文件，系统将从中恢复所有数据。</p>
+
+          <div v-if="importFileName" class="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-[8px] border border-[#b3d4fc]">
+            <LucideFileText :size="20" class="text-[#0071e3] shrink-0" />
+            <span class="text-[14px] text-[rgba(0,0,0,0.8)] truncate flex-1">{{ importFileName }}</span>
+            <button @click="clearImportFile" class="shrink-0 opacity-50 hover:opacity-100 cursor-pointer">
+              <LucideX :size="16" />
+            </button>
+          </div>
+
+          <button @click="handleFileSelect" unstyled
+            class="w-full border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[8px] py-6 flex flex-col items-center justify-center gap-2 text-[rgba(0,0,0,0.5)] hover:border-[#0071e3] hover:text-[#0071e3] transition-colors cursor-pointer bg-transparent">
+            <LucideUpload :size="24" />
+            <span class="text-[14px] font-medium">选择导出文件 (.json)</span>
+          </button>
+        </template>
 
         <div v-if="error" class="text-red-500 text-[14px] text-center">{{ error }}</div>
 
         <Button :loading="loading" @click="performSetup" unstyled
-          class="mt-4 bg-apple-blue hover:bg-[#0066cc] text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
-          Complete Setup
+          class="mt-4 bg-apple-blue hover:bg-apple-link text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
+          {{ importMode ? '导入并初始化' : 'Complete Setup' }}
         </Button>
       </div>
     </div>

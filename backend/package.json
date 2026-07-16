@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "dyapi": "^3.0.1"
+    "cos-nodejs-sdk-v5": "^2.15.4",
+    "dyapi": "file:../../DYAPI2/dyapi"
   }
 }

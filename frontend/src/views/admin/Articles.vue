@@ -52,7 +52,7 @@ const fetchArticles = async () => {
         };
         if (lazyParams.value.sortField) {
             params.orderBy = lazyParams.value.sortField;
-            params.orderDesc = lazyParams.value.sortOrder === -1;
+            params.orderDesc = (lazyParams.value.sortOrder === -1) ?? null;
         }
 
         const res: any = await crudAPI.getList('articles', params);
@@ -116,7 +116,7 @@ const deleteArticle = async (id: number) => {
 
 <template>
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex justify-between items-end mb-8">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
             <div>
                 <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.articles') }}</h1>
             </div>
@@ -133,7 +133,7 @@ const deleteArticle = async (id: number) => {
                 />
                 <span class="relative">
                     <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
-                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" class="pl-9 border border-[rgba(0,0,0,0.04)] py-2 px-4 rounded-[11px] text-[17px] text-[rgba(0,0,0,0.8)] focus:outline-none focus:border-apple-blue" />
+                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" class="pl-9 w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue  bg-white transition-shadow" />
                 </span>
                 <Button unstyled @click="router.push('/admin/articles/new')" class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
@@ -171,7 +171,7 @@ const deleteArticle = async (id: number) => {
                 <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">TOP</span>
             </template>
             <template #visible="{ data }">
-                <span :class="{'bg-[#e0f2fe] text-[#0066cc]': data.visible === 1, 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]': data.visible === 0}" class="px-2 py-1 rounded-[5px] text-[12px] font-medium uppercase tracking-wider">
+                <span :class="{'bg-[#e0f2fe] text-apple-link': data.visible === 1, 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]': data.visible === 0}" class="px-2 py-1 rounded-[5px] text-[12px] font-medium uppercase tracking-wider">
                     {{ data.visible ? ($t('form.published') || 'Published') : ($t('form.draft') || 'Draft') }}
                 </span>
             </template>
@@ -180,7 +180,7 @@ const deleteArticle = async (id: number) => {
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
-                    <Button unstyled @click="editArticle(data.id)" class="text-[#0066cc] hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="editArticle(data.id)" class="text-apple-link hover:underline text-[14px] flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">

@@ -21,5 +21,6 @@ export const authMiddlewareFactory = (app) => {
             ctx.state.usertype = b.role;
         }
         await next();
+        console.log(ctx.response.body);
     };
 }

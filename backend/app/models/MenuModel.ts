@@ -7,7 +7,6 @@ import testContainer from "../containers/testContainer.js";
  * Menu Model covering nested items natively with JSON array
  */
 @CRUD("menus")
-@PopTarget("uid")
 export default class MenuModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "menus";

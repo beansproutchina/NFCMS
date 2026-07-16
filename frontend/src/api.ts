@@ -19,8 +19,11 @@ api.interceptors.response.use(
         window.dispatchEvent(new CustomEvent('app-error', { detail: error.response?.data?.message || error.message || 'API Request Failed' }));
 
         if (error.response?.status === 401 || error.response?.data?.message?.includes("Invalid token")) {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
+            // 延迟导入避免循环依赖
+            import('./stores/auth').then(({ useAuthStore }) => {
+                const authStore = useAuthStore();
+                authStore.clearUser();
+            });
             window.location.pathname = '/login';
         }
         return Promise.reject(error);
@@ -50,9 +53,12 @@ export const crudAPI = {
     remove: (modelRoute: string, id: string | number) => api.delete(`/${modelRoute}/${id}`),
 };
 
+// contentAPI 使用 crudAPI.getOne，slug 使用 {slug} 格式
+// 文章详情: /api/articles/{slug}
+// 分类详情: /api/categories/{slug}
 export const contentAPI = {
-    getCategory: (slug: string) => api.get(`/content/category?slug=${slug}`),
-    getArticle: (slug: string) => api.get(`/content/article?slug=${slug}`)
+    getCategory: (slug: string) => crudAPI.getOne('categories', `{${slug}}`),
+    getArticle: (slug: string) => crudAPI.getOne('articles', `{${slug}}`)
 };
 
 export const systemAPI = {
@@ -61,7 +67,7 @@ export const systemAPI = {
     saveConfig: (data: any) => api.post('/system/config', data),
     restart: () => api.post('/system/restart'),
     setup: (data: any) => api.post('/system/setup', data),
-    getConfigItem: (key: string) => api.get(`/systemconfig?filter={"key":"${key}"}`),
+    exportData: () => api.get('/system/export'),
 };
 
 export const uploadAPI = {
@@ -76,9 +82,13 @@ export const uploadAPI = {
         return api.get(`/attachments${qs ? '?' + qs : ''}`);
     },
     upload: (formData: FormData) => api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    remove: (id: number) => api.delete(`/upload/${id}`)
+    remove: (id: number) => api.delete(`/upload/${id}`),
+    getProviders: () => api.get('/upload/providers'),
+    testStorage: (provider?: string) => api.post('/upload/test', { provider }),
 };
 
 export const authAPI = {
-    login: (data: any) => api.post('/user/login', data)
+    login: (data: any) => api.post('/user/login', data),
+    loginInfo: () => api.get('/user/loginInfo'),
+    logout: () => api.post('/user/logout')
 };

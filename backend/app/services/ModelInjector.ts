@@ -10,7 +10,6 @@ import { DYApp } from "dyapi/core/dyapiApp.js";
  * Built-in Core Model for Custom Content Schemas.
  */
 @CRUD("schemas")
-@PopTarget("uid")
 export class ContentSchemaModel extends Model {
     @Inject(testContainer) 
     container;
@@ -114,7 +113,6 @@ export async function injectDynamicModel(app, schemaDef) {
     const DecoratedClass = decorateClass(
         DynamicClass,
         CRUD(routePath),
-        PopTarget("uid")
     );
 
     if (!app.components) app.components = [];

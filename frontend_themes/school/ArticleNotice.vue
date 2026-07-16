@@ -1,7 +1,5 @@
 <template>
-  <div class="article-page notice-theme theme-uni">
-    <AHeader :context="context" />
-
+  <div class="notice-page">
     <!-- 精简版面包屑 -->
     <div class="breadcrumb-container">
       <div class="container">
@@ -44,15 +42,10 @@
         </div>
       </div>
     </main>
-
-    <AFooter :context="context" />
   </div>
 </template>
 
 <script setup lang="ts">
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
-
 const props = defineProps<{ context: any }>();
 const { article, breadcrumbs } = props.context || {};
 
@@ -64,14 +57,8 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped>
-.theme-uni {
-  --uni-primary: #8B0000;
-  --uni-text-title: #222222;
-  --uni-text-body: #444444;
-  --uni-border-light: #E8E8E8;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+.notice-page {
   background-color: #f0f2f5;
-  min-height: 100vh;
 }
 
 .breadcrumb-container {
@@ -122,10 +109,10 @@ const formatDate = (dateStr: string) => {
 .meta-item .label { color: #999; }
 
 .notice-content {
-  font-size: 18px; /* 公文正文字体偏大 */
+  font-size: 18px;
   line-height: 2;
   color: #222;
-  font-family: "FangSong", "STFangsong", serif; /* 仿宋体公文标准 */
+  font-family: "FangSong", "STFangsong", serif;
   min-height: 300px;
 }
 .notice-content :deep(p) {

@@ -2,8 +2,6 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { marked } from 'marked';
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
 
 const props = defineProps<{ context: any }>();
 const { config, article, breadcrumbs } = props.context || {};
@@ -16,54 +14,37 @@ const renderedContent = computed(() => {
 </script>
 
 <template>
-  <div class="article-root">
-    <AHeader :context="context" />
-    <main class="article-main">
-      <div class="breadcrumbs">
-        <span @click="router.push('/')">首页</span>
-        <template v-for="crumb in breadcrumbs" :key="crumb.id">
-          <span class="sep">/</span>
-          <span @click="router.push(`/a/${crumb.slug}`)">{{ crumb.name }}</span>
-        </template>
+  <main class="article-main">
+    <div class="breadcrumbs">
+      <span @click="router.push('/')">首页</span>
+      <template v-for="crumb in breadcrumbs" :key="crumb.id">
         <span class="sep">/</span>
-        <span class="current">{{ article?.title }}</span>
+        <span @click="router.push(`/a/${crumb.slug}`)">{{ crumb.name }}</span>
+      </template>
+      <span class="sep">/</span>
+      <span class="current">{{ article?.title }}</span>
+    </div>
+
+    <article class="article-body">
+      <header class="article-header">
+        <h1>{{ article?.title }}</h1>
+        <div class="meta">
+          <span>By {{ article?.author?.nickname || article?.author?.username }}</span>
+          <span class="dot">•</span>
+          <time>{{ article?.published_at ? new Date(article.published_at).toLocaleDateString() : '' }}</time>
+        </div>
+      </header>
+
+      <div v-if="article?.thumbnail" class="featured-image">
+        <img :src="article.thumbnail" alt="">
       </div>
 
-      <article class="article-body">
-        <header class="article-header">
-          <h1>{{ article?.title }}</h1>
-          <div class="meta">
-            <span>By {{ article?.author?.nickname || article?.author?.username }}</span>
-            <span class="dot">•</span>
-            <time>{{ article?.published_at ? new Date(article.published_at).toLocaleDateString() : '' }}</time>
-          </div>
-        </header>
-
-        <div v-if="article?.thumbnail" class="featured-image">
-          <img :src="article.thumbnail" alt="">
-        </div>
-
-        <div class="content" v-html="renderedContent"></div>
-      </article>
-    </main>
-    <AFooter :context="context" />
-  </div>
+      <div class="content" v-html="renderedContent"></div>
+    </article>
+  </main>
 </template>
 
-<style>
-.article-root {
-  --bg-page: #F4F1EA;
-  --surface: #FFFFFF;
-  --ink: #1C1C1C;
-  --accent: #D64933;
-  --border-light: #D1CCC5;
-  background: var(--bg-page);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: 'Manrope', sans-serif;
-  color: var(--ink);
-}
+<style scoped>
 .article-main {
   max-width: 1000px;
   margin: 0 auto;

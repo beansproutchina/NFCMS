@@ -11,6 +11,7 @@ import { authMiddlewareFactory } from "./app/middlewares/authmiddleware.js";
 
 const start = async () => {
     const app = new DYApp({
+        jwtExpire: 1000*60*60*24*7,
         passwordHash: (password) => {
             return crypto.createHash("md5").update(password + "cn0917").digest("hex");
         },
@@ -24,13 +25,14 @@ const start = async () => {
 
     // 3. Register ContentSchemaModel and Load Dynamic Models
     // Manually instantiate ContentSchemaModel to read existing schemas
-    app.components?.push(new ContentSchemaModel());
+    /*
+    app.components?.push(new ContentSchemaModel(app));
 
     try {
-        const dummyInstance = new ContentSchemaModel();
+        const dummyInstance = new ContentSchemaModel(app);
         // manually inject container and context just for a temporary read
         dummyInstance._app = app;
-        dummyInstance["container"] = new testContainer();
+        dummyInstance["container"] = new testContainer(app);
 
         const schemas = await dummyInstance.container.read({});
 
@@ -45,7 +47,7 @@ const start = async () => {
     } catch (e) {
         console.log(`[ModelInjector] No dynamic schemas loaded yet.`, e.message);
     }
-
+*/
     // 4. Boostrap App (registers decorators, routers, etc)
     
     
@@ -53,5 +55,11 @@ const start = async () => {
     app.bootstrap();
     // 5. Post Bootstrap hook
     await hooks.doAction("app_ready");
+
+    setInterval(() => {
+        // Database Alive
+        const container = app.I(testContainer) as testContainer;
+        container.rawSQLQuery("SELECT 1;")
+    }, 60*60*1000);
 }
 start();

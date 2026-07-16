@@ -90,7 +90,7 @@ const openForm = (cat?: any) => {
 
     } else {
         isEditing.value = false;
-        formData.value = { parent_id: 1, weight: 50, metaPairs: [], list_template: 'DefaultCategory', content_template: 'DefaultArticle' };
+        formData.value = { parent_id: 1, weight: 50, metaPairs: [], articleFieldDefs: [], list_template: 'DefaultCategory', content_template: 'DefaultArticle' };
     }
     showModal.value = true;
 };
