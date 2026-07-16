@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
+
 
 const toast = useToast();
 
@@ -16,6 +17,7 @@ const showError = (e: any) => {
 
 onMounted(() => {
   window.addEventListener('app-error', showError as any);
+  
 });
 onUnmounted(() => {
   window.removeEventListener('app-error', showError as any);

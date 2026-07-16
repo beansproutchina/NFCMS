@@ -2,28 +2,19 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { marked } from 'marked';
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
 
 const props = defineProps<{ context: any }>();
-const { article, breadcrumbs } = props.context || {};
+const { config, article, breadcrumbs } = props.context || {};
 
 const router = useRouter();
-
-
 
 const renderedContent = computed(() => {
     if (!article?.content) return '';
     return marked.parse(article.content);
 });
-
-
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#ffffff] flex flex-col font-[-apple-system,BlinkMacSystemFont,'SF_Pro_Text',sans-serif]">
-    <AHeader :context="context" />
-
     <!-- Main Content -->
     <main class="flex-1 w-full max-w-[980px] mx-auto py-12 px-6">
         <!-- Breadcrumbs -->
@@ -71,12 +62,9 @@ const renderedContent = computed(() => {
             ></div>
         </div>
     </main>
-
-    <AFooter :context="context" />
-  </div>
 </template>
 
-<style>
+<style scoped>
 /* Apple Typography customized for markdown */
 .apple-md-content {
     color: #1d1d1f;
@@ -105,7 +93,7 @@ const renderedContent = computed(() => {
 }
 
 .apple-md-content a {
-    color: #0066cc;
+    color: var(--color-apple-link);
     text-decoration: none;
 }
 .apple-md-content a:hover {

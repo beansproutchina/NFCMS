@@ -1,7 +1,5 @@
 <template>
-  <div class="article-page theme-uni">
-    <AHeader :context="context" />
-
+  <div class="article-page">
     <!-- 顶栏面包屑 -->
     <div class="banner-min"></div>
     <div class="breadcrumb-container">
@@ -30,24 +28,19 @@
           阅读量：{{ article?.views || 0 }} 次
         </div>
 
-        <!-- 正文内容 (Markdown被后端或这里转为了HTML) -->
+        <!-- 正文内容 -->
         <div class="article-content" v-html="article?.content || '<p>暂无内容</p>'"></div>
 
-        <!-- 文章附件/声明/分享等可以放这里 -->
+        <!-- 文章附件/声明/分享等 -->
         <div class="article-footer">
           <p>责任编辑：{{ article?.author || '网管中心' }}</p>
         </div>
       </div>
     </main>
-
-    <AFooter :context="context" />
   </div>
 </template>
 
 <script setup lang="ts">
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
-
 const props = defineProps<{ context: any }>();
 const { article, breadcrumbs, config } = props.context || {};
 
@@ -59,14 +52,8 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped>
-.theme-uni {
-  --uni-primary: #8B0000;
-  --uni-text-title: #222222;
-  --uni-text-body: #444444;
-  --uni-border-light: #E8E8E8;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+.article-page {
   background-color: #f5f5f5;
-  min-height: 100vh;
 }
 
 .banner-min {
@@ -82,7 +69,7 @@ const formatDate = (dateStr: string) => {
 }
 
 .container {
-  max-width: 1000px; /* 文章页更紧凑些，提升阅读体验 */
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -140,7 +127,7 @@ const formatDate = (dateStr: string) => {
 }
 .article-content :deep(p) {
   margin-bottom: 1.5em;
-  text-indent: 2em; /* 中文首行缩进 */
+  text-indent: 2em;
 }
 .article-content :deep(img) {
   max-width: 100%;

@@ -24,5 +24,6 @@ export const authMiddlewareFactory = (app) => {
         // Expand into effective roles/permissions for RBAC (CMSModel). No-op cost for PUBLIC.
         await policy.resolve(ctx.state);
         await next();
+        console.log(ctx.response.body);
     };
 }

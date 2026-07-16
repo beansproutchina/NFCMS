@@ -45,10 +45,6 @@ onMounted(async () => {
     } catch(e) { console.error('Failed to load categories', e); }
 });
 
-const getUserId = () => {
-    try { return JSON.parse(localStorage.getItem('user') || 'null')?.id; } catch { return undefined; }
-};
-
 const loadArticle = async () => {
     if (!articleId.value) return;
     const res: any = await crudAPI.getOne('articles', articleId.value);
@@ -87,7 +83,7 @@ const persist = async (): Promise<string | number | null> => {
         if (articleId.value) {
             await crudAPI.update('articles', articleId.value, { ...form.value });
         } else {
-            const res: any = await crudAPI.create('articles', { ...form.value, author_id: getUserId() });
+            const res: any = await crudAPI.create('articles', { ...form.value }); // author_id set server-side
             articleId.value = res.id ?? res.data?.id ?? res.data ?? null;
         }
         return articleId.value;

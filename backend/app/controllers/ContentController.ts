@@ -81,10 +81,33 @@ export default class ContentController extends Controller {
         const slug = ctx.request.query.slug;
         if (!slug) return { code: 400, message: "Slug is required" };
 
-        const articles = await this.articleModel.read({ filter: { slug, status: "visible" } });
-        if (!articles || articles.length === 0) return { code: 404, message: "Article Not Found" };
+        const rows = await this.articleModel.read({ filter: { slug, status: "visible" }, pops: ["author_id"] });
+        if (!rows || rows.length === 0) return { code: 404, message: "Article Not Found" };
 
-        return { code: 200, data: await this.buildArticlePayload(articles[0]) };
+        // Flat enriched shape (article + category/breadcrumbs/template/author), reusing the model's enrich.
+        const data = (await this.articleModel.enrichArticleData(rows))[0];
+        return { code: 200, data };
+    }
+
+    /**
+     * Public article list — same query format as the model CRUD (filter/orderBy/limit/page/fields),
+     * but status='visible' is forced server-side. Field-level PUBLIC perms guard columns.
+     */
+    @Route("get", "/articles")
+    async listArticles(ctx: any) {
+        const q = ctx.request.query;
+        const param: any = {
+            filter: { ...(q.filter || {}), status: "visible" }, // forced visible (non-overridable)
+            orderBy: q.orderBy || "published_at",
+            orderDesc: q.orderDesc === undefined ? true : (q.orderDesc === "true" || q.orderDesc === true),
+            limit: Math.min(q.limit ? parseInt(q.limit) : 20, 50),
+            page: q.page ? parseInt(q.page) : 0,
+            pops: ["author_id"],
+        };
+        if (q.fields) param.fields = typeof q.fields === "string" ? q.fields.split(",") : q.fields;
+        const rows = await this.articleModel.read(param);
+        const data = await this.articleModel.enrichArticleData(rows);
+        return { code: 200, data, total: param.total, pages: param.pages };
     }
 
     /**
@@ -127,33 +150,12 @@ export default class ContentController extends Controller {
 
         const categories = await this.categoryModel.read({ filter: { slug } });
         if (!categories || categories.length === 0) return { code: 404, message: "Category Not Found" };
-        
-        const category = categories[0];
-        
-        // As per requirement: if list_template is empty, it shouldn't render list page
-        if (!category.list_template || category.list_template.trim() === "") {
-             return { code: 403, message: "This category does not support list view." };
-        }
 
+        const category = categories[0];
         const breadcrumbs = await this.getBreadcrumbs(category.id);
         const children = await this.categoryModel.read({ filter: { parent_id: category.id } }) || [];
-        const articles = await this.articleModel.read({ filter: { category_id: category.id, status: "visible" }, fields: ['id', 'title', 'description', 'thumbnail', 'is_top', 'published_at', 'slug', 'category_id'] }) || [];
-        
-        // Sort articles by is_top then published_at
-        articles.sort((a: any, b: any) => {
-            if (a.is_top !== b.is_top) return a.is_top ? -1 : 1;
-            return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-        });
-
-        return {
-            code: 200,
-            data: {
-                category,
-                children,
-                articles,
-                breadcrumbs,
-                template: category.list_template || "DefaultCategory"
-            }
-        };
+        // Flat: category fields + children + breadcrumbs. The article list comes from the
+        // /content/articles prefetch (theme.config), keeping the query format unified.
+        return { code: 200, data: { ...category, children, breadcrumbs } };
     }
 }

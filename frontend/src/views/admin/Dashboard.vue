@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { schemaAPI, crudAPI, uploadAPI, systemAPI } from '../../api';
+import { useAuthStore } from '../../stores/auth';
 import { 
   LucideFileText, LucideFolder, LucideBox, LucideImage, 
   LucideUsers, LucideActivity, LucideShieldCheck, 
@@ -9,7 +10,8 @@ import {
 } from 'lucide-vue-next';
 
 const router = useRouter();
-const user = ref<any>(null);
+const authStore = useAuthStore();
+const user = computed(() => authStore.user);
 const loading = ref(true);
 
 const stats = ref([
@@ -24,11 +26,6 @@ const recentArticles = ref<any[]>([]);
 const systemInfo = ref<any>({});
 
 onMounted(async () => {
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    user.value = JSON.parse(storedUser);
-  }
-  
   try {
     const [schemasRes, articlesRes, categoriesRes, filesRes, usersRes, statusRes] = await Promise.allSettled([
       schemaAPI.getAll(),

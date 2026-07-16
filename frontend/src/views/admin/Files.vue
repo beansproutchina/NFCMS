@@ -122,7 +122,7 @@ onMounted(fetchFiles);
             <div class="flex gap-3 items-center">
                 <span class="relative">
                     <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
-                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" class="pl-9 border border-[rgba(0,0,0,0.04)] py-2 px-4 rounded-[11px] text-[17px] text-[rgba(0,0,0,0.8)] focus:outline-none focus:border-apple-blue" />
+                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" class="pl-9 w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue  bg-white transition-shadow" />
                 </span>
                 <input type="file" ref="fileInput" @change="handleUpload" class="hidden" multiple />
                 <Button unstyled @click="triggerUpload" :disabled="uploading" class="bg-[#0071e3] hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer disabled:opacity-50 min-w-max">
@@ -146,12 +146,12 @@ onMounted(fetchFiles);
                         <LucideFile v-else :size="48" class="text-[rgba(0,0,0,0.2)]" />
                         
                         <div class="absolute inset-0 bg-[rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                            <button @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform" title="新窗口打开">
+                            <Button unstyled @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform cursor-pointer" title="新窗口打开">
                                 <LucideEye :size="18" />
-                            </button>
-                            <button @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white hover:scale-110 transition-transform" title="删除">
+                            </Button>
+                            <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">
                                 <LucideTrash :size="18" />
-                            </button>
+                            </Button>
                         </div>
                     </div>
                     

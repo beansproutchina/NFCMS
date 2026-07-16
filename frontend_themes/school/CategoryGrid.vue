@@ -1,7 +1,5 @@
 <template>
-  <div class="category-page theme-uni">
-    <AHeader :context="context" />
-
+  <div class="category-page">
     <!-- 顶栏图 -->
     <div class="banner-min"></div>
     <div class="breadcrumb-container">
@@ -35,7 +33,7 @@
         <h2 class="content-title">{{ category?.name || '图文列表' }}</h2>
         
         <div class="article-grid" v-if="articles && articles.length > 0">
-          <a v-for="item in articles" :key="item.id" :href="`/article/${item.id}`" class="card-item">
+          <a v-for="item in articles" :key="item.id" :href="`/a/${item.category.slug}/${item.slug}`" class="card-item">
             <div class="img-wrap">
               <img :src="item.thumbnail || 'https://via.placeholder.com/320x180/8B0000/fff?text=No+Image'" alt="封面" />
             </div>
@@ -51,15 +49,10 @@
         </div>
       </main>
     </div>
-
-    <AFooter :context="context" />
   </div>
 </template>
 
 <script setup lang="ts">
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
-
 const props = defineProps<{ context: any }>();
 const { category, articles, breadcrumbs, children } = props.context || {};
 
@@ -71,14 +64,8 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped>
-.theme-uni {
-  --uni-primary: #8B0000;
-  --uni-bg-page: #F5F5F5;
-  --uni-text-title: #222222;
-  --uni-border-light: #E8E8E8;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+.category-page {
   background-color: var(--uni-bg-page);
-  min-height: 100vh;
 }
 
 .banner-min {
@@ -90,7 +77,7 @@ const formatDate = (dateStr: string) => {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 64, 152, 0.4); /* 使用理工蓝点缀改变气氛 */
+  background: rgba(0, 64, 152, 0.4);
 }
 
 .container { max-width: 1200px; margin: 0 auto; }
@@ -191,7 +178,6 @@ const formatDate = (dateStr: string) => {
   font-size: 16px;
   margin: 0 0 10px 0;
   font-weight: normal;
-  /* 多行省略 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

@@ -1,23 +1,11 @@
 <template>
-  <div class="home-page theme-uni">
-    <AHeader :context="context" />
-    
+  <div class="home-page">
     <!-- 首屏大图轮播区 -->
     <div class="banner">
       <div class="banner-mask"></div>
       <div class="banner-text">厚德载物 自强不息</div>
     </div>
     
-    <!-- 
-    <div class="quick-navs">
-      <div class="container grid-links">
-        <a href="#"><i class="icon">💻</i>在校生通道</a>
-        <a href="#"><i class="icon">👩‍🏫</i>教工通道</a>
-        <a href="#"><i class="icon">🎓</i>研究生院</a>
-        <a href="#"><i class="icon">🏫</i>招生就业</a>
-      </div>
-    </div>
-快捷通道区 -->
     <!-- 主体内容 -->
     <div class="container main-grid">
       <!-- 新闻活动版块 -->
@@ -28,10 +16,9 @@
         </div>
         
         <ul class="news-list">
-          <!-- 提取近期文章前几个 -->
           <li v-for="item in (articles || []).slice(0, 7)" :key="item.id">
             <span class="bullet"></span>
-            <a :href="`/article/${item.id}`" :title="item.title">{{ item.title }}</a>
+            <a :href="`/a/${item.category.slug}/${item.slug}`" :title="item.title">{{ item.title }}</a>
             <span class="date">{{ formatDate(item.published_at) }}</span>
           </li>
         </ul>
@@ -50,7 +37,7 @@
               <span class="day">{{ new Date(item.published_at).getDate() }}</span>
               <span class="month">{{ new Date(item.published_at).getMonth() + 1 }}月</span>
             </div>
-            <a :href="`/article/${item.id}`">{{ item.title }}</a>
+            <a :href="`/a/${item.category.slug}/${item.slug}`">{{ item.title }}</a>
           </li>
         </ul>
       </div>
@@ -71,15 +58,10 @@
         <p>E-CAMPUS</p>
       </div>
     </div>
-
-    <AFooter :context="context" />
   </div>
 </template>
 
 <script setup lang="ts">
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
-
 const props = defineProps<{ context: any }>();
 const { articles, categories } = props.context || {};
 
@@ -91,13 +73,7 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped>
-.theme-uni {
-  --uni-primary: #8B0000;
-  --uni-primary-light: #B22222;
-  --uni-bg-page: #F5F5F5;
-  --uni-text-title: #222222;
-  --uni-text-body: #444444;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+.home-page {
   background-color: #fff;
 }
 
@@ -124,28 +100,6 @@ const formatDate = (dateStr: string) => {
   letter-spacing: 12px;
   text-shadow: 2px 4px 10px rgba(0,0,0,0.5);
 }
-
-/* 快捷通道 */
-.quick-navs {
-  background-color: #f8f9fa;
-  padding: 24px 0;
-  margin-bottom: 40px;
-}
-.grid-links {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-around;
-}
-.grid-links a {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  color: var(--uni-primary);
-  text-decoration: none;
-  font-weight: 500;
-}
-.grid-links .icon { margin-right: 8px; font-size: 20px; }
 
 /* 结构布局 */
 .container {
@@ -245,6 +199,7 @@ const formatDate = (dateStr: string) => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  padding-bottom: 40px;
 }
 .card {
   padding: 40px 20px;
@@ -265,6 +220,5 @@ const formatDate = (dateStr: string) => {
   .main-grid { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: 1fr; }
   .banner-text { font-size: 32px; letter-spacing: 6px; }
-  .grid-links { flex-wrap: wrap; gap: 10px; }
 }
 </style>

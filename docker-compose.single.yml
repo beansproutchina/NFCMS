@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.single
       args:
-        THEME: pear
+        THEME: school
     image: nfcms-allinone:latest
     container_name: nfcms-allinone
     ports:
@@ -12,10 +12,15 @@ services:
     environment:
       - NODE_ENV=production
       - BUN_ENV=production
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=nfcms
+      - MYSQL_PASSWORD=PYX2KdkMM6pXGh5X
+      - MYSQL_DATABASE=nfcms
     volumes:
-      - ./backend/data:/app/backend/data
-      - ./backend/static:/app/backend/static
-      - ./upload:/app/backend/upload
+      - ./backend/data:/app/backend/app/data
+      - ./backend/static:/app/backend/app/static
+      - ./upload:/app/backend/app/upload
     restart: always
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]

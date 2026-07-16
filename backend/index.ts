@@ -4,6 +4,7 @@ import { DYApp } from "dyapi/core/dyapiApp.js";
 import { scanFiles } from "dyapi/utils/scanFiles.js";
 import { hooks } from "./app/services/HookManager.js";
 import { ContentSchemaModel, injectDynamicModel } from "./app/services/ModelInjector.js";
+import testContainer from "./app/containers/testContainer.js";
 import UserModel from "./app/models/UserModel.js";
 import crypto from "crypto";
 import { authMiddlewareFactory } from "./app/middlewares/authmiddleware.js";
@@ -59,6 +60,7 @@ const start = async () => {
 
     const app = new DYApp({
         jwtSecret,
+        jwtExpire: 1000 * 60 * 60 * 24 * 7,
         enableFileUpload: true,
         // Deterministic keyed hash (secret salt from env) — fits DYAPI's equality-match login
         // while removing the old unsalted MD5 + hardcoded public salt.
@@ -94,13 +96,13 @@ const start = async () => {
     // 5. Bootstrap App (registers decorators, routers, etc)
     app.koa.use(authMiddlewareFactory(app));
     app.bootstrap();
-    // 5. Post Bootstrap hook
+    // 6. Post Bootstrap hook
     await hooks.doAction("app_ready");
 
-    // 6. Start the scheduled-publish cron (flips due `scheduled` content to `visible`).
+    // 7. Start the scheduled-publish cron (flips due `scheduled` content to `visible`).
     scheduler.start(app);
 
-    // 7. Public-site SSG: regenerate static pages on content changes, and do an initial build.
+    // 8. Public-site SSG: regenerate static pages on content changes, and do an initial build.
     staticgen.bind(app);
     hooks.addAction("content.saved.articles", async (id) => {
         await staticgen.regenerateArticle(id);
@@ -112,5 +114,13 @@ const start = async () => {
         await staticgen.generateSitemap();
     });
     await staticgen.regenerateAll();
-}
+
+    // 9. Keepalive: keep the SQLite connection warm (from upstream).
+    setInterval(() => {
+        try {
+            const container = app.I(testContainer) as any;
+            container.rawSQLQuery?.("SELECT 1;");
+        } catch { /* ignore */ }
+    }, 60 * 60 * 1000);
+};
 start();

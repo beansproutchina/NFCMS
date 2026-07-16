@@ -1,7 +1,5 @@
 <template>
-  <div class="category-page theme-uni">
-    <AHeader :context="context" />
-
+  <div class="category-page">
     <!-- 顶栏面包屑 -->
     <div class="banner-min"></div>
     <div class="breadcrumb-container">
@@ -37,7 +35,7 @@
         <ul class="article-list" v-if="articles && articles.length > 0">
           <li v-for="item in articles" :key="item.id">
             <span class="bullet"></span>
-            <a :href="`/article/${item.id}`" :title="item.title">{{ item.title }}</a>
+            <a :href="`/a/${item.category.slug}/${item.slug}`" :title="item.title">{{ item.title }}</a>
             <span class="date">{{ formatDate(item.published_at) }}</span>
           </li>
         </ul>
@@ -47,15 +45,10 @@
         </div>
       </main>
     </div>
-
-    <AFooter :context="context" />
   </div>
 </template>
 
 <script setup lang="ts">
-import AHeader from './components/AHeader.vue';
-import AFooter from './components/AFooter.vue';
-
 const props = defineProps<{ context: any }>();
 const { category, articles, breadcrumbs, children } = props.context || {};
 
@@ -67,15 +60,8 @@ const formatDate = (dateStr: string) => {
 </script>
 
 <style scoped>
-.theme-uni {
-  --uni-primary: #8B0000;
-  --uni-bg-page: #F5F5F5;
-  --uni-text-title: #222222;
-  --uni-text-body: #444444;
-  --uni-border-light: #E8E8E8;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+.category-page {
   background-color: var(--uni-bg-page);
-  min-height: 100vh;
 }
 
 .banner-min {
