@@ -24,7 +24,11 @@ class SchedulerService {
         try {
             const dict = app.instanceDict;
             const models = (dict instanceof Map ? [...dict.values()] : Object.values(dict)).filter(
-                (m: any) => m instanceof CMSModel
+                (m: any) =>
+                    m instanceof CMSModel &&
+                    Array.isArray(m.datafields) &&
+                    m.datafields.some((f: any) => f.name === "status") &&
+                    m.datafields.some((f: any) => f.name === "publish_at")
             );
             const nowIso = new Date().toISOString(); // dates stored as ISO text -> lexicographic compare == chronological
             for (const model of models as any[]) {

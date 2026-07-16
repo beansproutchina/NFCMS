@@ -2,6 +2,7 @@
 import { getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
 
 
 const toast = useToast();
@@ -26,5 +27,6 @@ onUnmounted(() => {
 
 <template>
   <Toast />
+  <ConfirmDialog />
   <RouterView />
 </template>

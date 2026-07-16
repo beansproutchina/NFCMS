@@ -44,12 +44,12 @@
             <label class="block text-[15px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ field.name }} <span v-if="field.type" class="text-[12px] text-gray-400">({{ field.type }})</span></label>
             
             <InputText unstyled v-if="field.type === 'string' || field.type === 'date'"
-                   v-model="formData[field.name]" 
-                   class="w-full h-11 px-4 border border-[#d2d2d7] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-all hover:bg-white focus:bg-white" />
+                   v-model="formData[field.name]"
+                   :class="INPUT_CLASS" />
             
             <InputText unstyled v-else-if="field.type === 'int' || field.type === 'float'"
-                   v-model.number="formData[field.name]" 
-                   class="w-full h-11 px-4 border border-[#d2d2d7] rounded-[8px] focus:outline-none focus:border-apple-blue transition-all" />
+                   v-model.number="formData[field.name]"
+                   :class="INPUT_CLASS" />
                    
             <label v-else-if="field.type === 'boolean'" class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-apple-blue text-apple-blue border-gray-300 rounded focus:ring-2 focus:ring-apple-blue">
@@ -78,6 +78,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crudAPI } from '../../api';
+import { INPUT_CLASS } from '../../ui/presets';
 
 const route = useRoute();
 const schemaName = computed(() => route.params.modelName as string);

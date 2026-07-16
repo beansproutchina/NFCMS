@@ -20,6 +20,7 @@ export default class ArticleModel extends CMSModel {
 
     tablename = "articles";
     ownerField = "author_id";
+    categoryField = "category_id"; // enables category-scoped grants (see PolicyService)
     datafields = [
         F.String("title").notNull(),
         F.String("slug").notNull().unique(),

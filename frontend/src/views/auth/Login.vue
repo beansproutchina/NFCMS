@@ -31,7 +31,7 @@ const performLogin = async () => {
       password: password.value
     });
     if (res.code === 200 || res.data) {
-      authStore.setUser(res.data || res);
+      await authStore.fetchLoginInfo(); // load user + RBAC capabilities from the freshly-set cookie
       toast.add({ severity: 'success', summary: 'Success', detail: t('auth.loginSuccess'), life: 3000 });
       const next = router.currentRoute.value.query.redirect as string || '/admin';
       router.push( next);

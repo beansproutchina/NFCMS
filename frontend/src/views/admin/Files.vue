@@ -7,6 +7,7 @@ import { uploadAPI } from '../../api';
 import { LucideUpload, LucideTrash, LucideFile, LucideEye, LucideSearch } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import CustomPaginator from '../../components/CustomPaginator.vue';
+import { INPUT_CLASS, BTN } from '../../ui/presets';
 
 const files = ref<any[]>([]);
 const totalRecords = ref(0);
@@ -122,10 +123,10 @@ onMounted(fetchFiles);
             <div class="flex gap-3 items-center">
                 <span class="relative">
                     <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
-                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" class="pl-9 w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue  bg-white transition-shadow" />
+                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, 'pl-9']" />
                 </span>
                 <input type="file" ref="fileInput" @change="handleUpload" class="hidden" multiple />
-                <Button unstyled @click="triggerUpload" :disabled="uploading" class="bg-[#0071e3] hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer disabled:opacity-50 min-w-max">
+                <Button unstyled @click="triggerUpload" :disabled="uploading" :class="[BTN.primary, 'min-w-max']">
                     <LucideUpload :size="16" /> {{ uploading ? '...' : $t('action.upload', '上传文件') }}
                 </Button>
             </div>

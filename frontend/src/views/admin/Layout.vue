@@ -12,43 +12,42 @@ const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 const authStore = useAuthStore();
-const isSuperAdmin = authStore.isSuperAdmin;
 const sidebarVisible = ref(false);
 
+// Nav visibility is driven by RBAC capabilities (from loginInfo). Content items use `can(model,action)`;
+// taxonomy/menu/system-admin items are super_admin-only (they are publicly-readable or system tables
+// managed exclusively by super_admin).
 const rawMenuGroups = [
   {
     title: 'system.dashboard',
     items: [
-      { label: 'system.dashboard', path: '/admin', icon: LucideLayoutDashboard, requiresSuperAdmin: false }
+      { label: 'system.dashboard', path: '/admin', icon: LucideLayoutDashboard, show: () => true }
     ]
   },
   {
     title: 'system.content',
     items: [
-      { label: 'system.articles', path: '/admin/articles', icon: LucideFileText, requiresSuperAdmin: false },
-      { label: 'system.files', path: '/admin/files', icon: LucideImage, requiresSuperAdmin: false },
-      { label: 'system.categories', path: '/admin/categories', icon: LucideServer, requiresSuperAdmin: true },
-      { label: 'system.menus', path: '/admin/menus', icon: LucideMenu, requiresSuperAdmin: true }
+      { label: 'system.articles', path: '/admin/articles', icon: LucideFileText, show: () => authStore.can('articles', 'R') },
+      { label: 'system.files', path: '/admin/files', icon: LucideImage, show: () => authStore.can('attachments', 'R') },
+      { label: 'system.categories', path: '/admin/categories', icon: LucideServer, show: () => authStore.isSuperAdmin },
+      { label: 'system.menus', path: '/admin/menus', icon: LucideMenu, show: () => authStore.isSuperAdmin }
     ]
   },
   {
     title: 'system.systemProps',
     items: [
-      { label: 'system.users', path: '/admin/users', icon: LucideUsers, requiresSuperAdmin: true },
-      { label: 'system.roles', path: '/admin/roles', icon: LucideShieldCheck, requiresSuperAdmin: true },
-      //{ label: 'system.schemas', path: '/admin/schemas', icon: LucideServer, requiresSuperAdmin: true },
-      { label: 'system.settings', path: '/admin/settings', icon: LucideSettings, requiresSuperAdmin: true },
+      { label: 'system.users', path: '/admin/users', icon: LucideUsers, show: () => authStore.isSuperAdmin },
+      { label: 'system.roles', path: '/admin/roles', icon: LucideShieldCheck, show: () => authStore.isSuperAdmin },
+      { label: 'system.settings', path: '/admin/settings', icon: LucideSettings, show: () => authStore.isSuperAdmin },
     ]
   }
 ];
 
 const menuGroups = computed(() => {
-  return rawMenuGroups.map(group => {
-    return {
-      ...group,
-      items: group.items.filter(item => !item.requiresSuperAdmin || isSuperAdmin)
-    };
-  }).filter(group => group.items.length > 0);
+  return rawMenuGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => item.show())
+  })).filter(group => group.items.length > 0);
 });
 
 const logout = async () => {

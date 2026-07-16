@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>http://localhost/</loc></url>
+  <url><loc>http://localhost/a/blog</loc></url>
+  <url><loc>http://localhost/a/news</loc></url>
+  <url><loc>http://localhost/a/blog/welcome-to-nfcms</loc></url>
+  <url><loc>http://localhost/a/blog/getting-started</loc></url>
+  <url><loc>http://localhost/a/news/scheduled-announcement</loc></url>
+</urlset>

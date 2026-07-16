@@ -45,11 +45,22 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 
 ## 核心约定
 - **内容模型继承 `CMSModel`、声明 `ownerField`、不写静态 `permission`**——权限完全由 RBAC(PolicyService)决定。基础设施模型(Role 等)仍用普通 `Model` + 静态 `permission`。
+- **鉴权优先级(PolicyService)**:`super_admin` → 角色权限 `any` → 独立授权路径(`own` 属主 · 行级 ACL · **分类授权**)。任一路径命中即放行,分类授权/行级 ACL **不需要**基础角色权限也能生效。
+- **分类授权(文章按目录管辖)**:`ResourceGrant` 用合成 `model="articles_category"`、`resource_id=分类id`、`access=C,R,U,...`,表示"可管理该分类(**级联整棵子树**)下的文章"。`ArticleModel.categoryField="category_id"` 触发此逻辑。角色与权限页可按角色分配,分类编辑弹窗可按用户/角色分配。
+- **create(`C`)不认 `own`**:创建出来的必属于自己,`own C` 无意义。全站创建=`articles:C any`;受限创建=对应分类的分类授权(含 C)。后端 `HTTPCreate` 会用具体 item 复核目标分类。
+- **通用 ACL**:`/acl/:model/:resourceId`(`AclController`)+ 前端可复用组件 `components/AclEditor.vue`(内含分页搜索的 `components/UserPicker.vue`)。行级分享(`model=articles`)需该行 `U` 权限;分类授权(`articles_category`)仅 `super_admin`。
 - **两层 API**:裸 `create/read/update/remove`(无鉴权,内部/公开站用)vs `HTTP*`(经 RBAC,`@CRUD` 路由用)。控制器里直接调裸方法会绕过权限——公开站正是这么用的。
 - **生命周期字段**(`status`/`publish_at`/`rev_version`)不可经普通 CRUD 写,只能走 `ContentLifecycleController`。
 - **状态三态**:`hidden` / `scheduled` / `visible`(取代旧 `visible` 字段)。
 - **前端 i18n**:新文案一律加进 `frontend/src/i18n.ts` 的 en+zh,别硬编码中文。
 - **api 响应**:2xx 返回 body;错误 reject 一个带 `.message`/`.code` 的 `Error`(见 `frontend/src/api.ts`)。
+
+## 代码组织规范(别把代码写成一坨)
+- **入口文件只做装配**:`main.ts`、`index.ts` 只负责 `app.use(...)`/接线,**不放数据字面量、不放业务逻辑、不内联大对象**。要配置什么,先问「这块数据/逻辑归属哪个模块」,放过去再 `import` 进来。
+- **数据/常量按归属就近落到对应模块**:i18n 文案与 locale 数据(含 PrimeVue calendar 的 `primevueLocale`)集中在 `frontend/src/i18n.ts`;RBAC/生命周期常量在对应 service/model。同一类东西**单一出处**,不要在多处各写一份。
+- **超过几行的常量对象**别内联进使用点,提成命名常量或独立模块导出;判断标准:它是「配置/数据」而非「此处的控制流」,就抽出去。
+- 复用现有模式而非另起一套:新组件的 Tailwind/`:pt` 写法、api 调用、toast/confirm 用法,先看邻近文件怎么写,保持一致。
+- **管理后台表单控件走设计系统预设** `frontend/src/ui/presets.ts`:文本框 `:class="INPUT_CLASS"`(紧凑版 `INPUT_CLASS_SM`)、下拉框用 unstyled PrimeVue `Select` + `:pt="SELECT_PT"`(**别用原生 `<select>`**)、日期选择器 `DatePicker` + `:pt="DATEPICKER_PT"`、按钮 `:class="BTN.primary|ghost|danger"`。单实例宽度/flex 写到组件自己的 `class`(会并入 root)。确认框用全局 `ConfirmDialog`(`useConfirm`),不要用原生 `confirm()`。
 
 ## 已知待硬化(非阻塞)
 - 前端主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面);SSG 侧只做了基础 strip。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。

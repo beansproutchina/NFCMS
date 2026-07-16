@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import { crudAPI } from '../../api';
+import Select from 'primevue/select';
+import { crudAPI, schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
 import { useToast } from 'primevue/usetoast';
-import { LucidePlus, LucideTrash2, LucideShieldCheck } from 'lucide-vue-next';
+import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
+import { SELECT_PT, INPUT_CLASS_SM, BTN } from '../../ui/presets';
 
 const toast = useToast();
 
@@ -18,10 +20,53 @@ const newRole = ref({ name: '', label: '' });
 // New-permission row
 const newPerm = ref({ model: '', action: 'R', scope: 'any' });
 
+const models = ref<any[]>([]); // registered models (from schematools) for the permission dropdown
+const modelOptions = computed(() => models.value.map((m: any) => ({ label: `${m.modelName} (${m.tableName})`, value: m.tableName })));
 const ACTIONS = ['C', 'R', 'U', 'D', 'publish', 'share'];
 const SCOPES = ['any', 'own'];
+// "own" is meaningless for create (whatever you create is yours) — only offer "any" for C.
+// Category-limited create is expressed via the category grants section below.
+const scopeOptions = computed(() => (newPerm.value.action === 'C' ? ['any'] : SCOPES));
+watch(() => newPerm.value.action, (a) => { if (a === 'C') newPerm.value.scope = 'any'; });
 
 const isSystem = computed(() => !!selectedRole.value?.is_system);
+
+// --- Category-scoped article grants (per selected role) ---
+const categories = ref<any[]>([]);
+const catGrants = ref<any[]>([]);
+const catForm = ref<{ category_id: any; access: string[] }>({ category_id: null, access: [] });
+const CAT_ACTIONS = ['C', 'R', 'U', 'D', 'publish'];
+const categoryOptions = computed(() => categories.value.map((c: any) => ({ label: c.name, value: c.id })));
+const categoryName = (id: number) => { const c = categories.value.find((x: any) => x.id == id); return c ? c.name : `#${id}`; };
+
+const loadCatGrants = async () => {
+    if (!selectedRole.value) { catGrants.value = []; return; }
+    const res: any = await crudAPI.getList('resource_grants', {
+        filter: { $and: { model: ARTICLES_CATEGORY, grantee_type: 'role', grantee_id: selectedRole.value.id } },
+        limit: 999,
+    });
+    catGrants.value = res.data || res || [];
+};
+
+const toggleCatAccess = (a: string) => {
+    const i = catForm.value.access.indexOf(a);
+    if (i >= 0) catForm.value.access.splice(i, 1); else catForm.value.access.push(a);
+};
+
+const addCatGrant = async () => {
+    if (!selectedRole.value || catForm.value.category_id == null) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择分类', life: 2500 }); return; }
+    if (!catForm.value.access.length) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请至少选择一项权限', life: 2500 }); return; }
+    const access = CAT_ACTIONS.filter((a) => catForm.value.access.includes(a)).join(',');
+    await aclAPI.grant(ARTICLES_CATEGORY, catForm.value.category_id, { grantee_type: 'role', grantee_id: selectedRole.value.id, access });
+    toast.add({ severity: 'success', summary: 'Success', detail: '已授予', life: 2000 });
+    catForm.value = { category_id: null, access: [] };
+    await loadCatGrants();
+};
+
+const revokeCatGrant = async (g: any) => {
+    await aclAPI.revoke(ARTICLES_CATEGORY, g.resource_id, g.id);
+    await loadCatGrants();
+};
 
 const loadRoles = async () => {
     const res: any = await crudAPI.getList('roles', { limit: 999, orderBy: 'weight', orderDesc: true });
@@ -38,6 +83,7 @@ const loadPerms = async () => {
 const selectRole = async (r: any) => {
     selectedRole.value = r;
     await loadPerms();
+    await loadCatGrants();
 };
 
 const createRole = async () => {
@@ -77,15 +123,27 @@ const removePerm = async (p: any) => {
     await loadPerms();
 };
 
-onMounted(async () => { loading.value = true; try { await loadRoles(); } finally { loading.value = false; } });
+onMounted(async () => {
+    loading.value = true;
+    try {
+        await loadRoles();
+        try {
+            const res: any = await schemaAPI.getAll();
+            models.value = res.data || [];
+            if (models.value.length && !newPerm.value.model) newPerm.value.model = models.value[0].tableName;
+        } catch (e) { console.error(e); }
+        try {
+            const cr: any = await crudAPI.getList('categories', { limit: 999, orderBy: 'weight' });
+            categories.value = cr.data || cr || [];
+        } catch (e) { console.error(e); }
+    } finally { loading.value = false; }
+});
 </script>
 
 <template>
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="mb-8">
-            <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2 flex items-center gap-3">
-                <LucideShieldCheck :size="32" /> {{ $t('system.roles') }}
-            </h1>
+            <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.roles') }}</h1>
             <p class="text-[15px] text-[rgba(0,0,0,0.55)]">{{ $t('roles.desc') }}</p>
         </div>
 
@@ -101,9 +159,9 @@ onMounted(async () => { loading.value = true; try { await loadRoles(); } finally
                     </button>
                 </div>
                 <div class="border-t border-[rgba(0,0,0,0.06)] pt-3 flex flex-col gap-2">
-                    <InputText v-model="newRole.name" unstyled :placeholder="$t('roles.roleKey')" class="w-full h-9 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[13px] focus:outline-none focus:border-apple-blue" />
-                    <InputText v-model="newRole.label" unstyled :placeholder="$t('roles.roleLabel')" class="w-full h-9 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[13px] focus:outline-none focus:border-apple-blue" />
-                    <Button unstyled @click="createRole" class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 h-9 rounded-[8px] text-[14px] font-medium cursor-pointer">
+                    <InputText v-model="newRole.name" unstyled :placeholder="$t('roles.roleKey')" :class="INPUT_CLASS_SM" />
+                    <InputText v-model="newRole.label" unstyled :placeholder="$t('roles.roleLabel')" :class="INPUT_CLASS_SM" />
+                    <Button unstyled @click="createRole" :class="[BTN.primary, 'w-full']">
                         <LucidePlus :size="15" /> {{ $t('roles.newRole') }}
                     </Button>
                 </div>
@@ -139,16 +197,38 @@ onMounted(async () => { loading.value = true; try { await loadRoles(); } finally
 
                         <!-- add permission row -->
                         <div class="flex gap-2 items-center bg-[#f9f9fb] rounded-[8px] p-3">
-                            <InputText v-model="newPerm.model" unstyled placeholder="articles" class="flex-1 h-9 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[13px] bg-white focus:outline-none focus:border-apple-blue" />
-                            <select v-model="newPerm.action" class="h-9 px-2 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[13px] bg-white cursor-pointer">
-                                <option v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</option>
-                            </select>
-                            <select v-model="newPerm.scope" class="h-9 px-2 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[13px] bg-white cursor-pointer">
-                                <option v-for="s in SCOPES" :key="s" :value="s">{{ s }}</option>
-                            </select>
-                            <Button unstyled @click="addPerm" class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center gap-1 h-9 px-4 rounded-[8px] text-[13px] font-medium cursor-pointer">
+                            <Select v-model="newPerm.model" :options="modelOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="flex-1 min-w-0" />
+                            <Select v-model="newPerm.action" :options="ACTIONS" unstyled :pt="SELECT_PT" class="w-[130px] shrink-0" />
+                            <Select v-model="newPerm.scope" :options="scopeOptions" unstyled :pt="SELECT_PT" class="w-[110px] shrink-0" />
+                            <Button unstyled @click="addPerm" :class="BTN.primary">
                                 <LucidePlus :size="14" /> {{ $t('roles.addPerm') }}
                             </Button>
+                        </div>
+
+                        <!-- Category-scoped article grants: manage articles within a category subtree -->
+                        <div class="mt-8 pt-5 border-t border-[rgba(0,0,0,0.08)]">
+                            <h3 class="text-[15px] font-semibold mb-1">{{ $t('roles.categoryGrants') }}</h3>
+                            <p class="text-[13px] text-[rgba(0,0,0,0.5)] mb-4">{{ $t('roles.categoryGrantsHint') }}</p>
+
+                            <ul v-if="catGrants.length" class="flex flex-col gap-2 mb-3">
+                                <li v-for="g in catGrants" :key="g.id" class="flex items-center justify-between text-[14px] bg-[#f9f9fb] rounded-[8px] px-3 py-2">
+                                    <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-[#eef2ff] text-[#3730a3] px-2 py-0.5 rounded text-[12px]">{{ g.access }}</span></span>
+                                    <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-red-500 cursor-pointer" @click="revokeCatGrant(g)" />
+                                </li>
+                            </ul>
+                            <div v-else class="text-[13px] text-[rgba(0,0,0,0.4)] mb-3">{{ $t('roles.noCategoryGrants') }}</div>
+
+                            <div class="flex gap-2 items-center bg-[#f9f9fb] rounded-[8px] p-3 flex-wrap">
+                                <Select v-model="catForm.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="$t('roles.pickCategory')" unstyled :pt="SELECT_PT" class="w-[200px] shrink-0" />
+                                <button v-for="a in CAT_ACTIONS" :key="a" @click="toggleCatAccess(a)"
+                                    class="px-2.5 h-8 rounded-[8px] text-[13px] border cursor-pointer transition-colors"
+                                    :class="catForm.access.includes(a) ? 'bg-apple-blue text-white border-apple-blue' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
+                                    {{ a }}
+                                </button>
+                                <Button unstyled @click="addCatGrant" :class="[BTN.primary, 'ml-auto']">
+                                    <LucidePlus :size="14" /> {{ $t('roles.addPerm') }}
+                                </Button>
+                            </div>
                         </div>
                     </template>
                 </template>

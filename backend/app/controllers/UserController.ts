@@ -2,6 +2,7 @@ import { ControllerRoute, Route, Inject, ValidateBody } from "dyapi/utils/decora
 import { Controller } from "dyapi/core/controller.js";
 import UserModel from "../models/UserModel.js";
 import { checkJwt, newJwt } from "dyapi/utils/jwt.js";
+import { policy } from "../services/PolicyService.js";
 
 @ControllerRoute("user")
 export default class UserController extends Controller {
@@ -55,7 +56,10 @@ export default class UserController extends Controller {
                 ctx.cookies.set("token", j, { httpOnly: true, maxAge: this._app.settings.jwtExpire });
                 message = "Renewed token";
             }
-            return { code: 200, message, data: user, exp: jwt.exp };
+            // Never leak the password hash to the client.
+            const { password, ...safeUser } = user as any;
+            // Expose the user's effective capabilities so the frontend can gate nav/features.
+            return { code: 200, message, data: safeUser, exp: jwt.exp, auth: policy.serialize(ctx.state) };
         } else {
             return { code: 401, message: "Not logged in" };
         }

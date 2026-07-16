@@ -4,7 +4,7 @@ import { CMSModel } from "../lib/CMSModel.js";
 import { policy } from "../services/PolicyService.js";
 import { revisions } from "../services/RevisionService.js";
 import { hooks } from "../services/HookManager.js";
-import ResourceGrantModel from "../models/ResourceGrantModel.js";
+import CategoryModel from "../models/CategoryModel.js";
 
 const STATES = ["hidden", "scheduled", "visible"];
 
@@ -80,55 +80,17 @@ export default class ContentLifecycleController extends Controller {
         return ok ? { code: 200, message: `Rolled back to v${version_no}` } : { code: 404, message: "Revision not found" };
     }
 
-    // --- Resource ACL / sharing (owner-initiated) ---
-    // Anyone who can update a row may share it. Grants are consumed by PolicyService.scopeFilter/can.
+    // Resource ACL / sharing moved to AclController (/acl) so it can be reused generically
+    // (content-row sharing + category-scoped article grants).
 
-    @Route("post", "/:type/:id/share")
-    async share(ctx: any) {
-        const { type, id } = ctx.params;
-        const { grantee_type, grantee_id, access } = ctx.request.body || {};
-        const model = this.resolveModel(type);
-        if (!model) return { code: 404, message: "Unknown content type" };
-        const row = (await model.read({ id }))[0];
-        if (!row) return { code: 404, message: "Not found" };
-        if (!(await policy.can(ctx.state, "U", model, row))) return { code: 403, message: "没有权限" };
-        if (!["user", "role"].includes(grantee_type)) return { code: 400, message: "grantee_type must be user|role" };
-        if (!access) return { code: 400, message: "access is required (e.g. \"R\" or \"R,U\")" };
-        const gid = await this._app.I(ResourceGrantModel).create({
-            model: type,
-            resource_id: Number(id),
-            grantee_type,
-            grantee_id: Number(grantee_id),
-            access,
-            granted_by: ctx.state.user?.id,
-            created_at: new Date(),
-        });
-        return { code: 200, data: { id: gid } };
-    }
-
-    @Route("get", "/:type/:id/grants")
-    async grants(ctx: any) {
-        const { type, id } = ctx.params;
-        const model = this.resolveModel(type);
-        if (!model) return { code: 404, message: "Unknown content type" };
-        const row = (await model.read({ id }))[0];
-        if (!row) return { code: 404, message: "Not found" };
-        if (!(await policy.can(ctx.state, "U", model, row))) return { code: 403, message: "没有权限" };
-        const data = await this._app.I(ResourceGrantModel).read({
-            filter: { $and: { model: type, resource_id: Number(id) } },
-        });
-        return { code: 200, data };
-    }
-
-    @Route("delete", "/:type/:id/share/:grantId")
-    async revoke(ctx: any) {
-        const { type, id, grantId } = ctx.params;
-        const model = this.resolveModel(type);
-        if (!model) return { code: 404, message: "Unknown content type" };
-        const row = (await model.read({ id }))[0];
-        if (!row) return { code: 404, message: "Not found" };
-        if (!(await policy.can(ctx.state, "U", model, row))) return { code: 403, message: "没有权限" };
-        await this._app.I(ResourceGrantModel).remove({ id: Number(grantId) });
-        return { code: 200 };
+    /** Categories the caller may create/manage articles in — drives the editor's category dropdown.
+     *  Pass ?action=C for the new-article picker (only categories the user can create in). */
+    @Route("get", "/manageable-categories")
+    async manageableCategories(ctx: any) {
+        const action = ctx.query?.action;
+        const scope = await policy.manageableArticleCategories(ctx.state, action ? [String(action)] : undefined);
+        const all = await this._app.I(CategoryModel).read({ limit: 100000, orderBy: "weight" });
+        const categories = scope === "any" ? all : all.filter((c: any) => scope.includes(Number(c.id)));
+        return { code: 200, data: { scope: scope === "any" ? "any" : "scoped", categories } };
     }
 }

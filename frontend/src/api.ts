@@ -16,13 +16,17 @@ api.interceptors.response.use(
         const message: string = body?.message || error.message || `请求失败${status ? ' (' + status + ')' : ''}`;
         const code = body?.code ?? status;
 
-        window.dispatchEvent(new CustomEvent('app-error', { detail: message }));
-
-        // Session expired / invalid token -> clear auth and force re-login
-        // (skip on the login request itself so wrong-password shows in place).
+        // Auth-probe endpoints (login attempt, initial loginInfo check) handle their own errors —
+        // a 401 there is normal (not logged in / wrong password), so no global toast or redirect.
         const url: string = error.config?.url || '';
+        const isAuthProbe = url.includes('/user/login') || url.includes('/user/loginInfo');
+        if (!isAuthProbe) {
+            window.dispatchEvent(new CustomEvent('app-error', { detail: message }));
+        }
+
+        // Session expired mid-use -> clear auth and force re-login.
         const isAuthError = status === 401 || /invalid token/i.test(body?.message || '');
-        if (isAuthError && !url.includes('/user/login')) {
+        if (isAuthError && !isAuthProbe) {
             import('./stores/auth').then(({ useAuthStore }) => useAuthStore().clearUser()).catch(() => {});
             localStorage.removeItem('user');
             window.location.pathname = '/login';
@@ -74,18 +78,28 @@ export const contentAPI = {
     preview: (id: string | number, pt: string) => api.get(`/content/preview?id=${id}&pt=${encodeURIComponent(pt)}`)
 };
 
-// Content lifecycle: status transitions, version history/rollback, and resource sharing (ACL).
+// Content lifecycle: status transitions and version history/rollback.
 export const lifecycleAPI = {
     transition: (type: string, id: string | number, body: { to: string; publish_at?: string; note?: string }) =>
         api.post(`/lifecycle/${type}/${id}/transition`, body),
     revisions: (type: string, id: string | number) => api.get(`/lifecycle/${type}/${id}/revisions`),
     rollback: (type: string, id: string | number, version_no: number, note?: string) =>
         api.post(`/lifecycle/${type}/${id}/rollback`, { version_no, note }),
-    grants: (type: string, id: string | number) => api.get(`/lifecycle/${type}/${id}/grants`),
-    share: (type: string, id: string | number, body: { grantee_type: string; grantee_id: number; access: string }) =>
-        api.post(`/lifecycle/${type}/${id}/share`, body),
-    revoke: (type: string, id: string | number, grantId: number) =>
-        api.delete(`/lifecycle/${type}/${id}/share/${grantId}`)
+    // Categories the current user may create/manage articles in. Pass action="C" for the
+    // new-article picker (only categories the user can create in); omit for the manage union.
+    manageableCategories: (action?: string) =>
+        api.get(`/lifecycle/manageable-categories${action ? `?action=${action}` : ''}`),
+};
+
+// Generic resource ACL. `model` is a content tablename (e.g. "articles") for row sharing,
+// or "articles_category" with resourceId=<category id> for category-scoped article grants.
+export const ARTICLES_CATEGORY = "articles_category";
+export const aclAPI = {
+    list: (model: string, resourceId: string | number) => api.get(`/acl/${model}/${resourceId}`),
+    grant: (model: string, resourceId: string | number, body: { grantee_type: string; grantee_id: number; access: string }) =>
+        api.post(`/acl/${model}/${resourceId}`, body),
+    revoke: (model: string, resourceId: string | number, grantId: number) =>
+        api.delete(`/acl/${model}/${resourceId}/${grantId}`),
 };
 
 export const systemAPI = {

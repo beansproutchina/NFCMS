@@ -5,7 +5,7 @@
         <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.menus') }}</h1>
       </div>
       <div>
-        <Button unstyled @click="openEditor()" class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+        <Button unstyled @click="openEditor()" :class="BTN.primary">
           <LucidePlus :size="16" /> {{ $t('action.new') }}
         </Button>
       </div>
@@ -49,6 +49,7 @@ import SmartTable from '../../components/SmartTable.vue';
 import { crudAPI } from '../../api';
 import MenuEditor from './MenuEditor.vue';
 import { useToast } from 'primevue/usetoast';
+import { BTN } from '../../ui/presets';
 
 const { t } = useI18n();
 const toast = useToast();

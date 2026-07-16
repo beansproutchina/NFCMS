@@ -37,10 +37,19 @@ const seedRbac = async (app) => {
         ["admin", "articles", "C", "any"], ["admin", "articles", "R", "any"],
         ["admin", "articles", "U", "any"], ["admin", "articles", "D", "any"],
         ["admin", "articles", "publish", "any"],
-        ["editor", "articles", "C", "own"], ["editor", "articles", "R", "own"],
-        ["editor", "articles", "U", "own"], ["editor", "articles", "publish", "own"],
-        ["author", "articles", "C", "own"], ["author", "articles", "R", "own"],
-        ["author", "articles", "U", "own"],
+        // NOTE: create ("C") is never granted with scope "own" — whatever you create is yours,
+        // so "own C" is meaningless. Blanket create = scope "any"; category-limited create is
+        // expressed via category grants (resource_grants, model="articles_category"). These roles
+        // manage their OWN content everywhere; a category grant additionally lets them create &
+        // manage ALL articles in a category subtree (see the demo grant seeded in setup).
+        ["editor", "articles", "R", "own"], ["editor", "articles", "U", "own"],
+        ["editor", "articles", "D", "own"], ["editor", "articles", "publish", "own"],
+        ["author", "articles", "R", "own"], ["author", "articles", "U", "own"],
+        // Media library (shared): let content roles manage attachments so the Files page works.
+        ["admin", "attachments", "C", "any"], ["admin", "attachments", "R", "any"],
+        ["admin", "attachments", "U", "any"], ["admin", "attachments", "D", "any"],
+        ["editor", "attachments", "C", "any"], ["editor", "attachments", "R", "any"], ["editor", "attachments", "D", "any"],
+        ["author", "attachments", "C", "any"], ["author", "attachments", "R", "any"],
     ];
     for (const [role, model, action, scope] of perms) {
         await rpModel.create({ role_id: idByName[role], model, action, scope });

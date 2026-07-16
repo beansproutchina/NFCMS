@@ -5,8 +5,11 @@ import SystemConfigModel, { globalConfigCache, VALID_CONFIG_KEYS } from "../mode
 import CategoryModel from "../models/CategoryModel.js";
 import ArticleModel from "../models/ArticleModel.js";
 import MenuModel from "../models/MenuModel.js";
+import RoleModel from "../models/RoleModel.js";
+import ResourceGrantModel from "../models/ResourceGrantModel.js";
 import * as crypto from "crypto";
 import { staticgen } from "../services/StaticGenService.js";
+import { ARTICLES_CATEGORY } from "../services/PolicyService.js";
 
 
 @ControllerRoute("system")
@@ -176,47 +179,70 @@ export default class SystemController extends Controller {
             return { code: 200, data: results, message: "Setup completed with imported data." };
         }
 
-        // Default setup: create initial data
-        await this.userModel.create({
-            nickname: adminUsername,
-            username: adminUsername,
-            password: this._app.settings.passwordHash(adminPassword),
-            role: "super_admin"
-        });
+        // ── Default cold-start seed: demonstrate every feature with usable examples ──
+        const hash = this._app.settings.passwordHash;
+
+        // Users: the super admin (from the wizard) + a demo editor to show RBAC "own" scope.
+        // Roles themselves (super_admin/admin/editor/author) are seeded at boot by seedRbac().
+        await this.userModel.create({ nickname: adminUsername, username: adminUsername, password: hash(adminPassword), role: "super_admin" }); // id 1
+        await this.userModel.create({ nickname: "Demo Editor", username: "editor", password: hash("editor123"), role: "editor" });          // id 2
 
         await this.configModel.SetConfig("is_initialized", "true");
         await this.configModel.SetConfig("site_name", siteName);
+        await this.configModel.SetConfig("subtitle", "Powered by NFCMS");
 
-        await this.categoryModel.create({
-            name: "Default",
-            slug: "default",
-            list_template: "DefaultCategory",
-            content_template: "DefaultArticle",
-            parent_id: 0,
-            weight: 50
-        });
+        // Categories (both list-viewable).
+        const blogId = await this.categoryModel.create({ name: "Blog", slug: "blog", list_template: "DefaultCategory", content_template: "DefaultArticle", parent_id: 0, weight: 50 }); // id 1
+        await this.categoryModel.create({ name: "News", slug: "news", list_template: "DefaultCategory", content_template: "DefaultArticle", parent_id: 0, weight: 40 }); // id 2
 
+        // Demo category-scoped grant: the `editor` role may create & manage ALL articles in the
+        // Blog category (and its subtree) — but nothing in News. Shows category-limited access
+        // in the Roles page. (Without this, the demo editor can only manage its OWN articles.)
+        const editorRole = (await this._app.I(RoleModel).read({ filter: { name: "editor" } }))[0];
+        if (editorRole) {
+            await this._app.I(ResourceGrantModel).create({
+                model: ARTICLES_CATEGORY, resource_id: blogId,
+                grantee_type: "role", grantee_id: editorRole.id,
+                access: "C,R,U,publish", granted_by: 1, created_at: new Date(),
+            });
+        }
+
+        const now = new Date();
+        // Articles across all three lifecycle states + two authors (RBAC ownership example).
         await this.articleModel.create({
-            title: "Hello world!",
-            slug: "welcome-to-nfcms",
-            description: "Welcome to NF-CMS!",
-            content: "This is your first article. You can edit or delete it at any time.",
-            category_id: 1,
-            author_id: 1,
-            status: "visible",
-            published_at: new Date(),
-
-        });
+            title: "Welcome to NFCMS", slug: "welcome-to-nfcms",
+            description: "A quick tour of what this CMS can do.",
+            content: "# Welcome to NFCMS\n\nThis is a **published** article. It renders Markdown and is served both as a static SSG page (SEO-friendly) and via the SPA.\n\n- Role-based access control\n- Draft / scheduled / visible lifecycle with version history\n- Pluggable file storage\n\nEdit or delete me anytime in the admin panel.",
+            category_id: 1, author_id: 1, status: "visible", published_at: now
+        }); // id 1
+        await this.articleModel.create({
+            title: "Getting Started", slug: "getting-started",
+            description: "How to create and publish content.",
+            content: "## Getting Started\n\n1. Log in to `/admin`.\n2. Create an article — it starts as a **draft** (hidden).\n3. Use **Publish** to make it visible, or **Schedule** it for later.\n4. Check the **version history** panel to roll back edits.",
+            category_id: 1, author_id: 1, status: "visible", published_at: now
+        }); // id 2
+        await this.articleModel.create({
+            title: "An Editor's Draft", slug: "editors-draft",
+            description: "Hidden draft owned by the demo editor.",
+            content: "This draft is **hidden** from the public site and is owned by the `editor` user — demonstrating RBAC 'own' scope (the editor only sees/edits their own content).",
+            category_id: 1, author_id: 2, status: "hidden"
+        }); // id 3
+        await this.articleModel.create({
+            title: "Scheduled Announcement", slug: "scheduled-announcement",
+            description: "Goes live automatically in ~2 minutes.",
+            content: "This article is **scheduled** — the cron scheduler will flip it to visible at its publish time and regenerate the static site.",
+            category_id: 2, author_id: 1, status: "scheduled", publish_at: new Date(now.getTime() + 2 * 60 * 1000)
+        }); // id 4
 
         await this.menuModel.create({
             name: "Header Menu",
             location: "header",
             items: [
-                { label: '首页', url: '/', type: 'custom', refId: 1, children: [] },
-                { label: '分类', url: '/a/default', type: 'custom', refId: 1, children: [] },
+                { label: "首页", url: "/", type: "custom", refId: 0, children: [] },
+                { label: "Blog", url: "/a/blog", type: "custom", refId: 1, children: [] },
+                { label: "News", url: "/a/news", type: "custom", refId: 2, children: [] },
             ]
         });
-
 
         // Seed content was created via raw model calls (no content hooks) — build the static site now.
         await staticgen.regenerateAll();

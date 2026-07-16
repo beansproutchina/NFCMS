@@ -34,6 +34,12 @@ export default class CategoryModel extends Model {
         return await super.update(param, item);
     }
 
+    // Category trees are small and admin pickers fetch them all at once — lift the default cap.
+    async HTTPReadMany(state, query, body) {
+        state.settingsOverrides.maxLimit = 9999;
+        return await super.HTTPReadMany(state, query, body);
+    }
+
     /**
      * 处理单条分类详情，添加关联数据
      */

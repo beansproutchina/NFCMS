@@ -26,4 +26,10 @@ export default class ResourceGrantModel extends Model {
         "DEFAULT": "",
         "super_admin": "C,R,U,D"
     };
+
+    // Admin lists fetch all grants for a role/resource in one page — lift the default cap.
+    async HTTPReadMany(state, query, body) {
+        state.settingsOverrides.maxLimit = 9999;
+        return await super.HTTPReadMany(state, query, body);
+    }
 }

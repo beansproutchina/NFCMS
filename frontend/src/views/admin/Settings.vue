@@ -6,6 +6,7 @@ import Button from 'primevue/button';
 import { systemAPI, uploadAPI } from '../../api';
 import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
+import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
 
 // ─── General Site Config ─────────────────────────────────────────────
 const configsMap = ref<Record<string, string>>({
@@ -243,10 +244,10 @@ onMounted(() => {
                 <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.settings') }}</h1>
             </div>
             <div class="flex gap-4 items-center">
-                <Button :disabled="restarting" unstyled @click="restartBackend" class="bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[rgba(0,0,0,0.8)] flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-[rgba(0,0,0,0.05)] focus:outline-none cursor-pointer">
+                <Button :disabled="restarting" unstyled @click="restartBackend" :class="BTN.ghost">
                     <LucideRefreshCw :size="16" :class="{'animate-spin': restarting}" /> {{ $t('action.restart')  }}
                 </Button>
-                <Button :disabled="saving" unstyled @click="saveSettings" class="bg-[#0071e3] hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                <Button :disabled="saving" unstyled @click="saveSettings" :class="BTN.primary">
                     <LucideSave :size="16" /> {{ $t('action.save') }}
                 </Button>
             </div>
@@ -258,28 +259,27 @@ onMounted(() => {
 
                 <div class="flex flex-col gap-2 max-w-lg">
                     <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.site_name') }}</label>
-                    <InputText v-model="configsMap.site_name" unstyled placeholder="..." class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-model="configsMap.site_name" unstyled placeholder="..." :class="INPUT_CLASS" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
                     <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.subtitle')}}</label>
-                    <InputText v-model="configsMap.subtitle" unstyled placeholder="..." class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-model="configsMap.subtitle" unstyled placeholder="..." :class="INPUT_CLASS" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
                     <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.icp_record') }}</label>
-                    <InputText v-model="configsMap.icp_record" unstyled placeholder="e.g. 京ICP备xxxxxxx号" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-model="configsMap.icp_record" unstyled placeholder="e.g. 京ICP备xxxxxxx号" :class="INPUT_CLASS" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
                     <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.mourning_mode')}}</label>
-                    <Select v-model="configsMap.mourning_mode" :options="[{label: '关闭', value: '0'}, {label: '开启 (全站置灰)', value: '1'}]" optionLabel="label" optionValue="value" unstyled
-                        :pt="{ root: 'w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-apple-blue bg-white transition-shadow flex items-center justify-between cursor-pointer relative', label: 'text-[14px] text-[rgba(0,0,0,0.8)] truncate', dropdown: 'w-4 h-4 opacity-50 absolute right-3 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded-[8px] shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-3 py-2 text-[14px] cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-[#0071e3] text-white hover:bg-[#0071e3]' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
+                    <Select v-model="configsMap.mourning_mode" :options="[{label: '关闭', value: '0'}, {label: '开启 (全站置灰)', value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
                     <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">前台首页渲染模版</label>
-                    <InputText v-model="configsMap.home_template" unstyled placeholder="DefaultHome" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-model="configsMap.home_template" unstyled placeholder="DefaultHome" :class="INPUT_CLASS" />
                 </div>
 
             </div>
@@ -297,8 +297,7 @@ onMounted(() => {
             <!-- Provider Selector -->
             <div class="flex flex-col gap-2 max-w-lg ">
                 <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.storageProvider')  }}</label>
-                <Select v-model="activeProvider" :options="storageProviders.map(p => ({ label: p.label, value: p.name }))" optionLabel="label" optionValue="value" unstyled
-                    :pt="{ root: 'w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-apple-blue bg-white transition-shadow flex items-center justify-between cursor-pointer relative', label: 'text-[14px] text-[rgba(0,0,0,0.8)] truncate', dropdown: 'w-4 h-4 opacity-50 absolute right-3 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded-[8px] shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-3 py-2 text-[14px] cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-[#0071e3] text-white hover:bg-[#0071e3]' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
+                <Select v-model="activeProvider" :options="storageProviders.map(p => ({ label: p.label, value: p.name }))" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
             </div>
 
             <!-- Current provider description -->
@@ -315,23 +314,22 @@ onMounted(() => {
                     </label>
 
                     <!-- Select type -->
-                    <Select v-if="field.type === 'select'" :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" :options="field.options" optionLabel="label" optionValue="value" unstyled
-                        :pt="{ root: 'w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-apple-blue bg-white transition-shadow flex items-center justify-between cursor-pointer relative', label: 'text-[14px] text-[rgba(0,0,0,0.8)] truncate', dropdown: 'w-4 h-4 opacity-50 absolute right-3 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded-[8px] shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-3 py-2 text-[14px] cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-[#0071e3] text-white hover:bg-[#0071e3]' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
+                    <Select v-if="field.type === 'select'" :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" :options="field.options" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
 
                     <!-- Password type -->
-                    <InputText v-else-if="field.type === 'password'" :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" type="password" :placeholder="field.placeholder" unstyled class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-else-if="field.type === 'password'" :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" type="password" :placeholder="field.placeholder" unstyled :class="INPUT_CLASS" />
 
                     <!-- Number type -->
-                    <InputText v-else-if="field.type === 'number'" :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" type="number" :placeholder="field.placeholder" unstyled class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-else-if="field.type === 'number'" :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" type="number" :placeholder="field.placeholder" unstyled :class="INPUT_CLASS" />
 
                     <!-- Text type (default) -->
-                    <InputText v-else :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" :placeholder="field.placeholder" unstyled class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white transition-shadow" />
+                    <InputText v-else :modelValue="getFieldValue(field.key)" @update:modelValue="(v: string) => setFieldValue(field.key, v)" :placeholder="field.placeholder" unstyled :class="INPUT_CLASS" />
                 </div>
             </div>
 
             <!-- Test Connection Button -->
             <div class="flex items-center gap-3 mt-6">
-                <Button :disabled="testing" unstyled @click="testStorageConnection" class="bg-[#f5f5f7] hover:bg-[#e8e8ed] text-[rgba(0,0,0,0.8)] flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-[rgba(0,0,0,0.05)] focus:outline-none cursor-pointer disabled:opacity-50">
+                <Button :disabled="testing" unstyled @click="testStorageConnection" :class="BTN.ghost">
                     <LucideLoader v-if="testing" :size="16" class="animate-spin" />
                     <LucidePlug v-else :size="16" />
                     {{ testing ? ($t('form.testing') ) : ($t('form.testConnection') ) }}
@@ -353,7 +351,7 @@ onMounted(() => {
             <p class="text-[14px] text-[rgba(0,0,0,0.6)] mb-6">{{ $t('form.exportDesc')  }}</p>
 
             <div class="flex gap-4 items-start">
-                <Button :disabled="exporting" unstyled @click="handleExport" class="bg-[#0071e3] hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-5 py-2.5 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                <Button :disabled="exporting" unstyled @click="handleExport" :class="BTN.primary">
                     <LucideDownload :size="16" :class="{'animate-pulse': exporting}" /> {{ $t('form.exportAll')  }}
                 </Button>
             </div>

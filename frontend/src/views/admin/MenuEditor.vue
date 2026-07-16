@@ -4,11 +4,11 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.name') }} <span class="text-red-500">*</span></label>
-          <InputText unstyled v-model="formData.name" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow bg-white text-[14px]"/>
+          <InputText unstyled v-model="formData.name" :class="INPUT_CLASS"/>
         </div>
         <div>
           <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.locationKey') || 'Key Location (e.g. "header")' }}</label>
-          <InputText unstyled v-model="formData.location" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow bg-white text-[14px]"/>
+          <InputText unstyled v-model="formData.location" :class="INPUT_CLASS"/>
         </div>
       </div>
 
@@ -18,8 +18,8 @@
               <p class="text-[12px] text-[rgba(0,0,0,0.5)]">{{ $t('form.generateDesc') || 'Automatically fetch subcategories to build nested menu.' }}</p>
           </div>
           <div class="flex gap-2 items-center">
-              <Select v-model="selectedCategoryForGenerate" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="{ root: 'h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow bg-white flex items-center justify-between cursor-pointer relative min-w-[200px]', label: 'text-[14px] text-[rgba(0,0,0,0.8)] truncate', dropdown: 'w-4 h-4 opacity-50 absolute right-3 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded-[8px] shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-3 py-2 text-[14px] cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-apple-blue text-white hover:bg-apple-blue' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
-              <Button unstyled type="button" @click="generateFromCategory" :disabled="!selectedCategoryForGenerate" class="h-10 px-4 bg-apple-blue text-white rounded-[8px] text-[14px] hover:bg-[#2997ff] disabled:opacity-50 transition-colors focus:outline-none font-medium flex items-center justify-center">{{ $t('action.generate') || 'Generate' }}</Button>
+              <Select v-model="selectedCategoryForGenerate" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[220px] shrink-0" />
+              <Button unstyled type="button" @click="generateFromCategory" :disabled="!selectedCategoryForGenerate" :class="BTN.primary">{{ $t('action.generate') || 'Generate' }}</Button>
           </div>
       </div>
 
@@ -44,6 +44,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
+import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
 import { crudAPI } from '../../api';
 import MenuItemEditor from './MenuItemEditor.vue';
 

@@ -25,14 +25,20 @@ const stats = ref([
 const recentArticles = ref<any[]>([]);
 const systemInfo = ref<any>({});
 
+const canArticles = authStore.can('articles', 'R');
+const canFiles = authStore.can('attachments', 'R');
+const isSuper = computed(() => authStore.isSuperAdmin);
+
 onMounted(async () => {
   try {
+    // Only fetch what the current user is allowed to read (avoids 403 toast spam).
+    const skip = Promise.resolve(null);
     const [schemasRes, articlesRes, categoriesRes, filesRes, usersRes, statusRes] = await Promise.allSettled([
-      schemaAPI.getAll(),
-      crudAPI.getList('articles', { orderBy: 'id', orderDesc: true, limit: 5 }),
+      isSuper.value ? schemaAPI.getAll() : skip,
+      canArticles ? crudAPI.getList('articles', { orderBy: 'id', orderDesc: true, limit: 5 }) : skip,
       crudAPI.getList('categories'),
-      uploadAPI.getList(),
-      crudAPI.getList('users'),
+      canFiles ? uploadAPI.getList() : skip,
+      isSuper.value ? crudAPI.getList('users') : skip,
       systemAPI.getStatus()
     ]);
     
@@ -110,7 +116,7 @@ const formatDate = (dateString: string) => {
                       </div>
                       <div class="flex flex-col items-end gap-1 flex-shrink-0">
                            <span class="text-[12px] text-[rgba(0,0,0,0.4)]">{{ formatDate(article.created_at) }}</span>
-                           <span :class="['text-[11px] px-2 py-0.5 rounded-full font-medium', article.visible ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600']">{{ article.visible ? $t('form.published') : $t('form.draft') }}</span>
+                           <span :class="['text-[11px] px-2 py-0.5 rounded-full font-medium', article.status === 'visible' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600']">{{ $t('contentStatus.' + (article.status || 'hidden')) }}</span>
                       </div>
                   </div>
               </div>
@@ -143,20 +149,19 @@ const formatDate = (dateString: string) => {
               <div class="bg-white rounded-[16px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.04)] p-6 flex-1">
                   <h2 class="text-[19px] font-semibold flex items-center gap-2 mb-6 text-[rgba(0,0,0,0.9)]"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
                   <div class="grid grid-cols-2 gap-3">
-                      <button @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
                           <LucideFolder :size="24" class="text-amber-500"/>
                           <span class="text-[13px] font-medium">{{ $t('system.categories') }}</span>
                       </button>
-                      <button @click="router.push('/admin/menus')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/menus')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
                           <LucideBox :size="24" class="text-purple-500"/>
                           <span class="text-[13px] font-medium">{{ $t('system.menus') }}</span>
                       </button>
-                      <button @click="router.push('/admin/files')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="canFiles" @click="router.push('/admin/files')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
                           <LucideImage :size="24" class="text-pink-500"/>
                           <span class="text-[13px] font-medium">{{ $t('system.files') }}</span>
                       </button>
-                      <button @click="router.push('/admin/settings')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
-                          <!-- using LucideActivity again for settings or another icon -->
+                      <button v-if="isSuper" @click="router.push('/admin/settings')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-[12px] bg-[#f5f5f7] hover:bg-[#e8e8ed] transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
                           <LucideShieldCheck :size="24" class="text-slate-500"/>
                           <span class="text-[13px] font-medium">{{ $t('system.settings') }}</span>
                       </button>

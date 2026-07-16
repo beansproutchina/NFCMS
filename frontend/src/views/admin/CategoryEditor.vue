@@ -3,26 +3,22 @@
     <form @submit.prevent="save" class="space-y-4" id="category-form">
       <div>
         <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.name') }}</label>
-        <InputText v-model="formData.name" unstyled
-          class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue  bg-white  transition-shadow" />
+        <InputText v-model="formData.name" unstyled :class="INPUT_CLASS" />
       </div>
 
       <div>
         <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.slug') }}</label>
-        <InputText v-model="formData.slug" unstyled
-          class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white  transition-shadow" />
+        <InputText v-model="formData.slug" unstyled :class="INPUT_CLASS" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.list_template') || 'List Template' }}</label>
-          <InputText v-model="formData.list_template" unstyled placeholder="e.g. ListTemplate1"
-            class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white  transition-shadow" />
+          <InputText v-model="formData.list_template" unstyled placeholder="e.g. ListTemplate1" :class="INPUT_CLASS" />
         </div>
         <div>
           <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.content_template') }}</label>
-          <InputText v-model="formData.content_template" unstyled placeholder="e.g. ContentTemplate1"
-            class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue bg-white  transition-shadow" />
+          <InputText v-model="formData.content_template" unstyled placeholder="e.g. ContentTemplate1" :class="INPUT_CLASS" />
         </div>
       </div>
 
@@ -30,13 +26,11 @@
         <div>
           <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.parent_id') }}</label>
           <Select v-model="formData.parent_id" :options="categoryOptions" optionLabel="label" optionValue="value"
-            unstyled
-            :pt="{ root: 'w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:ring-1 focus:ring-apple-blue bg-white transition-shadow flex items-center justify-between cursor-pointer relative', label: 'text-[14px] text-[rgba(0,0,0,0.8)] truncate', dropdown: 'w-4 h-4 opacity-50 absolute right-3 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded-[8px] shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-3 py-2 text-[14px] cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-apple-blue text-white hover:bg-apple-blue' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
+            unstyled :pt="SELECT_PT" class="w-full" />
         </div>
         <div>
           <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.weight') }}</label>
-          <InputText v-model.number="formData.weight" unstyled
-            class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue  bg-white transition-shadow" />
+          <InputText v-model.number="formData.weight" unstyled :class="INPUT_CLASS" />
         </div>
       </div>
 
@@ -85,6 +79,11 @@
       </div>
       <button type="submit" class="hidden"></button>
     </form>
+
+    <div v-if="isEditing && formData.id" class="mt-6 pt-5 border-t border-[rgba(0,0,0,0.08)]">
+      <AclEditor model="articles_category" :resource-id="formData.id" :actions="['C', 'R', 'U', 'D', 'publish']" :title="$t('acl.categoryArticles')" />
+      <p class="text-[12px] text-[rgba(0,0,0,0.45)] mt-2">{{ $t('acl.categoryArticlesHint') }}</p>
+    </div>
   </AdminModal>
 </template>
 
@@ -95,6 +94,8 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
+import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import AclEditor from '../../components/AclEditor.vue';
 
 const { t } = useI18n();
 const props = defineProps<{

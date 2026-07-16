@@ -3,6 +3,7 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import { LucideImage } from 'lucide-vue-next';
+import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
 
 defineProps<{
     form: any;
@@ -22,15 +23,14 @@ const emit = defineEmits<{
         <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ $t('form.category_id')
             || 'Category ID' }} <span class="text-red-500">*</span></label>
         <Select v-model.number="form.category_id" :options="categoryOptions" optionLabel="label"
-            optionValue="value" unstyled
-            :pt="{ root: 'h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[14px] cursor-pointer flex items-center justify-between w-full relative focus:ring-1 focus:ring-apple-blue focus:outline-none', label: 'truncate', dropdown: 'w-4 h-4 opacity-50 absolute right-2 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded-[8px] shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-3 py-2 text-[14px] cursor-pointer hover:bg-gray-100', context.selected ? 'bg-apple-blue text-white hover:bg-apple-blue' : 'text-gray-800'] }) }" />
+            optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
     </div>
 
     <div class="mt-4">
         <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{
             $t('form.content_template') || 'Local Template' }}</label>
         <InputText unstyled v-model="form.content_template" placeholder="e.g. DefaultArticle"
-            class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
+            :class="INPUT_CLASS" />
     </div>
 
     <div class="mt-4 flex items-center justify-between">
@@ -73,7 +73,7 @@ const emit = defineEmits<{
         <div class="flex flex-col gap-2">
             <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.urlSlug') }}</label>
             <InputText unstyled v-model="form.slug" placeholder="my-awesome-post"
-                class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
+                :class="INPUT_CLASS" />
         </div>
 
         <div class="flex flex-col gap-2">
@@ -90,8 +90,7 @@ const emit = defineEmits<{
 
                 <!-- text -->
                 <InputText v-if="field.type === 'text'" unstyled v-model="form.data[field.key]"
-                    :placeholder="field.title"
-                    class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
+                    :placeholder="field.title" :class="INPUT_CLASS" />
 
                 <!-- textarea -->
                 <Textarea v-else-if="field.type === 'textarea'" unstyled v-model="form.data[field.key]"
@@ -100,8 +99,7 @@ const emit = defineEmits<{
 
                 <!-- number -->
                 <InputText v-else-if="field.type === 'number'" unstyled v-model="form.data[field.key]"
-                    type="number" :placeholder="field.title"
-                    class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
+                    type="number" :placeholder="field.title" :class="INPUT_CLASS" />
 
                 <!-- attachment -->
                 <div v-else-if="field.type === 'attachment'" class="flex flex-col gap-2">

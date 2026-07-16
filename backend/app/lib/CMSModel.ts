@@ -20,6 +20,10 @@ export class CMSModel extends Model {
     /** @type {string|null} column holding the owning user id, or null for no ownership */
     ownerField: string | null = null;
 
+    /** @type {string|null} column holding the category id, to enable category-scoped grants
+     *  (PolicyService cascades a category grant to that category's article subtree). */
+    categoryField: string | null = null;
+
     /** Lifecycle-managed fields: never writable via generic CRUD; only the lifecycle
      *  controller / scheduler may change them (via raw update). */
     lifecycleFields: string[] = ["status", "publish_at", "rev_version"];
@@ -58,6 +62,9 @@ export class CMSModel extends Model {
             const item: any = {};
             for (const k of this.writableKeys()) if (raw[k] !== undefined) item[k] = raw[k];
             if (forceOwner) item[this.ownerField as string] = state.user?.id;
+            // Re-check with the concrete item so category-scoped users can only create in a
+            // category they're granted (no-op for "any"/"own"-owner creators).
+            assert(await policy.can(state, "C", this, item), ForbiddenError, "没有该分类的权限");
             const id = await this.create(item);
             await revisions.snapshot(this, id, state.user?.id, "create");
             await hooks.doAction(`content.saved.${this.tablename}`, id);
