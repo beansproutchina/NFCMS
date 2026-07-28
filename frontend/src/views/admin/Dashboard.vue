@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { schemaAPI, crudAPI, uploadAPI, systemAPI } from '../../api';
+import { schemaAPI, listArticle, listCategory, listUser, uploadAPI, systemAPI } from '../../api';
 import { useAuthStore } from '../../stores/auth';
 import { 
   LucideFileText, LucideFolder, LucideBox, LucideImage, 
@@ -35,26 +35,28 @@ onMounted(async () => {
     const skip = Promise.resolve(null);
     const [schemasRes, articlesRes, categoriesRes, filesRes, usersRes, statusRes] = await Promise.allSettled([
       isSuper.value ? schemaAPI.getAll() : skip,
-      canArticles ? crudAPI.getList('articles', { orderBy: 'id', orderDesc: true, limit: 5 }) : skip,
-      crudAPI.getList('categories'),
+      canArticles ? listArticle({ orderBy: 'id', orderDesc: true, limit: 5 }) : skip,
+      listCategory(),
       canFiles ? uploadAPI.getList() : skip,
-      isSuper.value ? crudAPI.getList('users') : skip,
+      isSuper.value ? listUser() : skip,
       systemAPI.getStatus()
     ]);
     
-    let aCount = 0;
-    if(articlesRes.status === 'fulfilled') {
-        const payload: any = (articlesRes.value as any).data;
-        aCount = payload?.total || payload?.length || (articlesRes.value as any).length || 0;
-        recentArticles.value = (payload?.data || payload || []).slice(0, 5);
-    }
-    
-    let cCount = 0; if(categoriesRes.status === 'fulfilled') cCount = (categoriesRes.value as any).data?.length || (categoriesRes.value as any).length || 0;
-    let fCount = 0; if(filesRes.status === 'fulfilled') fCount = (filesRes.value as any).data?.length || (filesRes.value as any).length || 0;
-    let uCount = 0; if(usersRes.status === 'fulfilled') uCount = (usersRes.value as any).data?.length || (usersRes.value as any).length || 0;
-    let sCount = 0; if(schemasRes.status === 'fulfilled') sCount = (schemasRes.value as any).data?.length || (schemasRes.value as any).length || 0;
-    
-    if(statusRes.status === 'fulfilled') systemInfo.value = (statusRes.value as any).data;
+    // Counts come from the paginated envelope's `total` (the full row count), NOT data.length —
+    // data.length is capped by the page limit (articles fetch limit:5; the rest default to maxLimit=100),
+    // so reading .length would under-report. schemas is a non-paginated array, so it uses data.length.
+    const val = <T>(r: PromiseSettledResult<T | null>): T | null => (r.status === 'fulfilled' ? r.value : null);
+
+    const articles = val(articlesRes);
+    const aCount = articles?.total ?? 0;
+    recentArticles.value = (articles?.data ?? []).slice(0, 5);
+
+    const cCount = val(categoriesRes)?.total ?? 0;
+    const fCount = val(filesRes)?.total ?? 0;
+    const uCount = val(usersRes)?.total ?? 0;
+    const sCount = val(schemasRes)?.data?.length ?? 0;
+
+    systemInfo.value = val(statusRes)?.data ?? null;
 
     stats.value[0].value = aCount.toString();
     stats.value[1].value = cCount.toString();

@@ -38,7 +38,7 @@ import { LucidePlus } from 'lucide-vue-next';
 
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { crudAPI } from '../../api';
+import { listCategory, createCategory, updateCategory, removeCategory } from '../../api';
 import CategoryItem from './CategoryItem.vue';
 import CategoryEditor from './CategoryEditor.vue';
 import { useToast } from 'primevue/usetoast';
@@ -54,8 +54,8 @@ const rootCategories = computed(() => {
 
 const fetchCategories = async () => {
     try {
-        const res: any = await crudAPI.getList('categories');
-        categories.value = res.data || res || [];
+        const res = await listCategory();
+        categories.value = res.data || [];
     } catch (err) {
         console.error(err);
     } finally {
@@ -119,10 +119,10 @@ const saveCategory = async (emittedData: any) => {
     }
 
     if (isEditing.value) {
-        await crudAPI.update('categories', payload.id, payload);
+        await updateCategory(payload.id, payload);
         toast.add({ severity: 'success', summary: 'Success', detail: '分类更新成功', life: 3000 });
     } else {
-        await crudAPI.create('categories', payload);
+        await createCategory(payload);
         toast.add({ severity: 'success', summary: 'Success', detail: '分类创建成功', life: 3000 });
     }
     showModal.value = false;
@@ -133,7 +133,7 @@ const saveCategory = async (emittedData: any) => {
 const deleteCategory = async (id: number) => {
     if (!confirm(t('action.confirmDelete'))) return;
     try {
-        await crudAPI.remove('categories', id);
+        await removeCategory(id);
         toast.add({ severity: 'success', summary: 'Success', detail: '分类删除成功', life: 3000 });
         fetchCategories();
     } catch (err) {

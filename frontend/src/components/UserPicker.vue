@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import { crudAPI } from '../api';
+import { listUser } from '../api';
 import { LucideSearch, LucideX, LucideUser } from 'lucide-vue-next';
 import { INPUT_CLASS } from '../ui/presets';
 
@@ -23,9 +23,9 @@ const load = async () => {
     try {
         const params: any = { page: page.value, limit, orderBy: 'id' };
         if (q.value.trim()) params.filter = { username: { $contains: q.value.trim() } };
-        const res: any = await crudAPI.getList('users', params);
+        const res = await listUser(params);
         users.value = res.data || [];
-        total.value = res.total ?? users.value.length;
+        total.value = res.total;   // full match count for pagination (not the current page length)
     } catch (e) { console.error(e); users.value = []; } finally { loading.value = false; }
 };
 

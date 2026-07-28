@@ -3,7 +3,9 @@ import { ref, onMounted, computed, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
-import { crudAPI, schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
+import { listRole, createRole as apiCreateRole, removeRole, listRolePermission, createRolePermission,
+         removeRolePermission, listResourceGrant, listCategory,
+         schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
 import { useToast } from 'primevue/usetoast';
 import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
 import { SELECT_PT, INPUT_CLASS_SM, BTN } from '../../ui/presets';
@@ -41,11 +43,11 @@ const categoryName = (id: number) => { const c = categories.value.find((x: any) 
 
 const loadCatGrants = async () => {
     if (!selectedRole.value) { catGrants.value = []; return; }
-    const res: any = await crudAPI.getList('resource_grants', {
+    const res = await listResourceGrant({
         filter: { $and: { model: ARTICLES_CATEGORY, grantee_type: 'role', grantee_id: selectedRole.value.id } },
         limit: 999,
     });
-    catGrants.value = res.data || res || [];
+    catGrants.value = res.data || [];
 };
 
 const toggleCatAccess = (a: string) => {
@@ -69,15 +71,15 @@ const revokeCatGrant = async (g: any) => {
 };
 
 const loadRoles = async () => {
-    const res: any = await crudAPI.getList('roles', { limit: 999, orderBy: 'weight', orderDesc: true });
-    roles.value = res.data || res || [];
+    const res = await listRole({ limit: 999, orderBy: 'weight', orderDesc: true });
+    roles.value = res.data || [];
     if (!selectedRole.value && roles.value.length) selectRole(roles.value[0]);
 };
 
 const loadPerms = async () => {
     if (!selectedRole.value) { perms.value = []; return; }
-    const res: any = await crudAPI.getList('role_permissions', { filter: { role_id: selectedRole.value.id }, limit: 999 });
-    perms.value = res.data || res || [];
+    const res = await listRolePermission({ filter: { role_id: selectedRole.value.id }, limit: 999 });
+    perms.value = res.data || [];
 };
 
 const selectRole = async (r: any) => {
@@ -89,7 +91,7 @@ const selectRole = async (r: any) => {
 const createRole = async () => {
     if (!newRole.value.name) { toast.add({ severity: 'warn', summary: 'Warning', detail: '角色标识必填', life: 2500 }); return; }
     try {
-        await crudAPI.create('roles', { name: newRole.value.name, label: newRole.value.label || newRole.value.name });
+        await apiCreateRole({ name: newRole.value.name, label: newRole.value.label || newRole.value.name });
         newRole.value = { name: '', label: '' };
         toast.add({ severity: 'success', summary: 'Success', detail: '角色已创建', life: 2500 });
         await loadRoles();
@@ -99,7 +101,7 @@ const createRole = async () => {
 const deleteRole = async (r: any) => {
     if (r.is_system) { toast.add({ severity: 'warn', summary: 'Warning', detail: '内置角色不可删除', life: 2500 }); return; }
     if (!confirm(`删除角色 "${r.name}"?`)) return;
-    await crudAPI.remove('roles', r.id);
+    await removeRole(r.id);
     if (selectedRole.value?.id === r.id) selectedRole.value = null;
     toast.add({ severity: 'success', summary: 'Success', detail: '角色已删除', life: 2500 });
     await loadRoles();
@@ -107,7 +109,7 @@ const deleteRole = async (r: any) => {
 
 const addPerm = async () => {
     if (!newPerm.value.model) { toast.add({ severity: 'warn', summary: 'Warning', detail: '模型(表名)必填,如 articles', life: 2500 }); return; }
-    await crudAPI.create('role_permissions', {
+    await createRolePermission({
         role_id: selectedRole.value.id,
         model: newPerm.value.model.trim(),
         action: newPerm.value.action,
@@ -119,7 +121,7 @@ const addPerm = async () => {
 };
 
 const removePerm = async (p: any) => {
-    await crudAPI.remove('role_permissions', p.id);
+    await removeRolePermission(p.id);
     await loadPerms();
 };
 
@@ -128,13 +130,13 @@ onMounted(async () => {
     try {
         await loadRoles();
         try {
-            const res: any = await schemaAPI.getAll();
+            const res = await schemaAPI.getAll();
             models.value = res.data || [];
             if (models.value.length && !newPerm.value.model) newPerm.value.model = models.value[0].tableName;
         } catch (e) { console.error(e); }
         try {
-            const cr: any = await crudAPI.getList('categories', { limit: 999, orderBy: 'weight' });
-            categories.value = cr.data || cr || [];
+            const cr = await listCategory({ limit: 999, orderBy: 'weight' });
+            categories.value = cr.data || [];
         } catch (e) { console.error(e); }
     } finally { loading.value = false; }
 });

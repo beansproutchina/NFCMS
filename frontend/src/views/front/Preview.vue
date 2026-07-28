@@ -18,7 +18,7 @@ onMounted(async () => {
     const pt = route.query.pt as string;
     if (!id || !pt) { error.value = t('preview.missing'); loading.value = false; return; }
     try {
-        const res: any = await contentAPI.preview(id, pt);
+        const res = await contentAPI.preview(id, pt);
         article.value = res.data?.article || null;
         if (!article.value) error.value = t('preview.notFound');
     } catch (e) {

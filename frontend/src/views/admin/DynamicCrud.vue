@@ -77,7 +77,7 @@
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { schemaAPI, crudAPI } from '../../api';
+import { schemaAPI, crud } from '../../api';
 import { INPUT_CLASS } from '../../ui/presets';
 
 const route = useRoute();
@@ -96,12 +96,12 @@ const displayFields = computed(() => {
 const fetchSchemaAndData = async () => {
   loading.value = true;
   try {
-    const res: any = await schemaAPI.getAll();
-    currentSchema.value = (res.data || res || []).find((s: any) => s.tableName === schemaName.value || s.routePath === schemaName.value);
+    const res = await schemaAPI.getAll();
+    currentSchema.value = (res.data || []).find((s: any) => s.tableName === schemaName.value || s.routePath === schemaName.value);
     
     if (currentSchema.value) {
-      const dataRes: any = await crudAPI.getList(currentSchema.value.routePath);
-      dataList.value = dataRes.data || dataRes || [];
+      const dataRes = await crud(currentSchema.value.routePath).list();
+      dataList.value = dataRes.data || [];
     }
   } catch(e) {
     console.error(e);
@@ -148,9 +148,9 @@ const saveRecord = async () => {
     try {
         const id = payload.uid || payload.id;
         if (isEditing.value && id) {
-            await crudAPI.update(currentSchema.value.routePath, id, payload);
+            await crud(currentSchema.value.routePath).update(id, payload);
         } else {
-            await crudAPI.create(currentSchema.value.routePath, payload);
+            await crud(currentSchema.value.routePath).create(payload);
         }
         showModal.value = false;
         fetchSchemaAndData();
@@ -163,7 +163,7 @@ const saveRecord = async () => {
 const deleteRecord = async (id: string|number) => {
     if (!confirm('Delete this record forever?')) return;
     try {
-        await crudAPI.remove(currentSchema.value.routePath, id);
+        await crud(currentSchema.value.routePath).remove(id);
         fetchSchemaAndData();
     } catch (e) {
         alert('Delete failed');

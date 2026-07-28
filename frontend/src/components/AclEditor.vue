@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import { crudAPI, aclAPI } from '../api';
+import { listUser, listRole, aclAPI } from '../api';
 import { useToast } from 'primevue/usetoast';
 import { LucideTrash2, LucidePlus } from 'lucide-vue-next';
 import UserPicker from './UserPicker.vue';
@@ -45,12 +45,12 @@ const granteeLabel = (g: any) => g.grantee_type === 'user'
 const load = async () => {
     if (props.resourceId == null) { grants.value = []; return; }
     try {
-        const res: any = await aclAPI.list(props.model, props.resourceId);
+        const res = await aclAPI.list(props.model, props.resourceId);
         grants.value = res.data || [];
         // Resolve usernames for user grantees (one batched read).
         const uids = grants.value.filter((g: any) => g.grantee_type === 'user').map((g: any) => g.grantee_id);
         if (uids.length) {
-            const ur: any = await crudAPI.getList('users', { filter: { id: { $in: uids } }, limit: 999 });
+            const ur = await listUser({ filter: { id: { $in: uids } }, limit: 999 });
             for (const u of (ur.data || [])) userNames.value[u.id] = u.nickname || u.username;
         }
     } catch (e) { console.error(e); }
@@ -84,7 +84,7 @@ const revoke = async (g: any) => {
 };
 
 onMounted(async () => {
-    try { const rr: any = await crudAPI.getList('roles', { limit: 999 }); roles.value = rr.data || []; } catch (e) { console.error(e); }
+    try { const rr = await listRole({ limit: 999 }); roles.value = rr.data || []; } catch (e) { console.error(e); }
     await load();
 });
 watch(() => [props.model, props.resourceId], load);

@@ -26,7 +26,7 @@ const performLogin = async () => {
   loading.value = true;
   error.value = '';
   try {
-    const res: any = await authAPI.login({
+    const res = await authAPI.login({
       username: username.value,
       password: password.value
     });

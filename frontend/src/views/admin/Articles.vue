@@ -5,7 +5,7 @@ import SmartTable from '../../components/SmartTable.vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
-import { crudAPI, lifecycleAPI } from '../../api';
+import { listArticle, removeArticle, listCategory, lifecycleAPI } from '../../api';
 import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
 import { LucidePlus, LucideSearch,  } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
@@ -25,8 +25,8 @@ const lazyParams = ref({ page: 0, rows: 10, sortField: 'id', sortOrder: -1 });
 
 const loadCategories = async () => {
     try {
-        const catRes: any = await crudAPI.getList('categories');
-        categories.value = catRes.data || catRes || [];
+        const catRes = await listCategory();
+        categories.value = catRes.data || [];
     } catch(e) {
         console.error(e);
     }
@@ -53,11 +53,11 @@ const fetchArticles = async () => {
         };
         if (lazyParams.value.sortField) {
             params.orderBy = lazyParams.value.sortField;
-            params.orderDesc = (lazyParams.value.sortOrder === -1) ?? null;
+            params.orderDesc = lazyParams.value.sortOrder === -1;
         }
 
-        const res: any = await crudAPI.getList('articles', params);
-        articles.value = res.data || res || [];
+        const res = await listArticle(params);
+        articles.value = res.data || [];
         totalRecords.value = res.total || 0;
     } catch(e) {
         console.error(e);
@@ -104,7 +104,7 @@ const editArticle = (id: number) => {
 const deleteArticle = async (id: number) => {
     if(confirm(t('action.confirmDelete'))) {
         try {
-            await crudAPI.remove('articles', id);
+            await removeArticle(id);
             toast.add({ severity: 'success', summary: 'Success', detail: '文章删除成功', life: 3000 });
             fetchArticles();
         } catch(e) {

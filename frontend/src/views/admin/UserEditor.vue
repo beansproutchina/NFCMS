@@ -41,7 +41,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Select from 'primevue/select';
-import { crudAPI } from '../../api';
+import { listRole, listUserRole } from '../../api';
 import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
 
 const { t } = useI18n();
@@ -67,13 +67,13 @@ const roleOptions = computed(() =>
 
 onMounted(async () => {
     try {
-        const res: any = await crudAPI.getList('roles', { limit: 999, orderBy: 'weight', orderDesc: true });
-        roles.value = res.data || res || [];
+        const res = await listRole({ limit: 999, orderBy: 'weight', orderDesc: true });
+        roles.value = res.data || [];
     } catch (e) { console.error(e); }
     // Load this user's additional roles (user_roles) when editing.
     if (props.initialData?.id) {
         try {
-            const res: any = await crudAPI.getList('user_roles', { filter: { user_id: props.initialData.id }, limit: 999 });
+            const res = await listUserRole({ filter: { user_id: props.initialData.id }, limit: 999 });
             additionalRoleIds.value = (res.data || []).map((u: any) => u.role_id);
         } catch (e) { console.error(e); }
     }

@@ -4,6 +4,14 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "types": ["vite/client"],
 
+    /* Path alias — mirrors vite.config resolve.alias so `@/...` resolves in the editor + vue-tsc.
+       No baseUrl: TS 5+ resolves paths relative to this tsconfig (baseUrl is deprecated in TS 6). */
+    "paths": { "@/*": ["./src/*"] },
+
+    /* Resolve through symlinks so editing the active-theme slot (a symlink into frontend_themes/)
+       gets autocomplete + type-check with bare imports resolving against frontend/node_modules. */
+    "preserveSymlinks": true,
+
     /* Linting */
     "noUnusedLocals": false,
     "noUnusedParameters": false,

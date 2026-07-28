@@ -7,21 +7,71 @@ declare module 'vue-router' {
   }
 }
 
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
-import { systemAPI, contentAPI, crudAPI } from '../api';
+import { systemAPI, contentAPI, crud, listMenu } from '../api';
 import { pages } from '../views/front/templates/theme.config';
 import { useAuthStore } from '../stores/auth';
 
 NProgress.configure({ showSpinner: false, speed: 400 });
+
+/**
+ * Prefetch dispatch table for themes. `theme.config.ts` names APIs by string
+ * (e.g. `api: 'crudAPI.getList'`), which no compiler can verify — so the set of
+ * callable APIs lives here explicitly. Adding a theme-callable API means adding a
+ * row here; the legacy `crudAPI.*` / `contentAPI.*` names are the public contract
+ * for existing themes and must keep working.
+ */
+const PREFETCH_APIS: Record<string, (...args: any[]) => Promise<any>> = {
+    'crudAPI.getList': (route: string, params?: any) => crud(route).list(params),
+    'crudAPI.getOne': (route: string, id: any, params?: any) => crud(route).get(id, params),
+    'contentAPI.getHome': () => contentAPI.getHome(),
+    'contentAPI.listArticles': (params?: any) => contentAPI.listArticles(params),
+    'contentAPI.getCategory': (slug: string) => contentAPI.getCategory(slug),
+    'contentAPI.getArticle': (slug: string) => contentAPI.getArticle(slug),
+    'systemAPI.getConfig': () => systemAPI.getConfig(),
+    'systemAPI.getStatus': () => systemAPI.getStatus(),
+};
+
+/** Themes may abbreviate the namespace: `crud.getList` == `crudAPI.getList`. */
+const PREFETCH_ALIASES: Record<string, string> = { crud: 'crudAPI', content: 'contentAPI', system: 'systemAPI' };
+
+function resolvePrefetchApi(name: string): ((...args: any[]) => Promise<any>) | undefined {
+    const [ns, method] = String(name).split('.');
+    return PREFETCH_APIS[`${PREFETCH_ALIASES[ns] ?? ns}.${method}`];
+}
+
+/** Walk a dotted path (["article","title"]) into an object; undefined if any hop is missing. */
+function getByPath(root: any, path: string[]): any {
+    let val = root;
+    for (const k of path) {
+        if (val && typeof val === 'object' && k in val) val = val[k];
+        else return undefined;
+    }
+    return val;
+}
+
+/**
+ * Resolve `$data.<path>` / `$params.<name>` tokens embedded anywhere in a template string
+ * (same injection syntax as prefetch args, but usable mid-string for composed titles).
+ * `data` is the merged page data (config + entity + prefetched keys); `params` is the route params.
+ * Unresolved or nullish tokens collapse to "".
+ */
+function resolveTemplateString(tpl: string, scope: { data: any; params: any }): string {
+    return tpl.replace(/\$(data|params)((?:\.[A-Za-z0-9_]+)+)/g, (_m, kind, pathStr) => {
+        const path = pathStr.split('.').filter(Boolean);
+        const val = getByPath(kind === 'params' ? scope.params : scope.data, path);
+        return val == null ? '' : String(val);
+    });
+}
 
 // 统一的数据获取函数
 const fetchContentData = async (to: any) => {
     const viewType = to.meta.viewType as string;
     const [configRes, menuRes] = await Promise.all([
         systemAPI.getConfig().catch(() => ({ data: {} })),
-        crudAPI.getList('menus').catch(() => ({ data: [] }))
+        listMenu().catch(() => ({ data: [] }))
     ]);
 
     const baseData = {
@@ -76,9 +126,11 @@ const fetchContentData = async (to: any) => {
     let currentTemplate = templateName;
     const layouts: string[] = [];
     const fetchQueue: any[] = [];
-    
+    let titleTemplate: string | undefined;   // most-specific template's title wins (child before parent)
+
     while (currentTemplate && pages[currentTemplate]) {
         const pConf = pages[currentTemplate];
+        if (titleTemplate === undefined && pConf.title) titleTemplate = pConf.title;
         if (pConf.prefetch) fetchQueue.push(...pConf.prefetch);
         if (pConf.layout) {
             layouts.push(pConf.layout);
@@ -92,14 +144,11 @@ const fetchContentData = async (to: any) => {
     // later items (parent) shouldn't override earlier items (child) if they share a key.
     const promises = fetchQueue.map(async (fetchInfo: any) => {
         try {
-            const [namespace, method] = fetchInfo.api.split('.');
-            let apiModule: any;
-            if (namespace === 'crudAPI' || namespace === 'crud') apiModule = crudAPI;
-            else if (namespace === 'contentAPI' || namespace === 'content') apiModule = contentAPI;
-            else if (namespace === 'systemAPI' || namespace === 'system') apiModule = systemAPI;
+            const apiFn = resolvePrefetchApi(fetchInfo.api);
+            if (!apiFn) console.warn(`[prefetch] unknown api "${fetchInfo.api}" — see PREFETCH_APIS in router/index.ts`);
 
-            if (apiModule && typeof apiModule[method] === 'function') {
-                
+            if (apiFn) {
+
                 // Helper to resolve dynamically, polls for missing variables across extraData
                 const resolveArgAsync = async (arg: any): Promise<any> => {
                     if (typeof arg === 'string') {
@@ -141,7 +190,7 @@ const fetchContentData = async (to: any) => {
                 };
 
                 const args = await Promise.all((fetchInfo.args || []).map(resolveArgAsync));
-                const res = await apiModule[method](...args);
+                const res = await apiFn(...args);
 
                 return { key: fetchInfo.key, data: res.data };
             }
@@ -158,28 +207,36 @@ const fetchContentData = async (to: any) => {
         if (r.data !== null) extraData[r.key] = r.data;
     }
 
-to.meta.fetchedData = {
+    const pageData = { ...entityData, ...extraData };
+
+    // 3. Resolve the page title from the theme config (same $-injection as prefetch), applied
+    // now that entity + prefetched data is ready. `config` is exposed under $data.config.*.
+    // Fall back to site_name when no template sets a title or it resolves empty.
+    const titleScope = { data: { config: baseData.config, ...pageData }, params: to.params };
+    let pageTitle = titleTemplate ? resolveTemplateString(titleTemplate, titleScope).trim() : '';
+    if (!pageTitle) pageTitle = baseData.config?.site_name || '';
+    if (pageTitle) document.title = pageTitle;
+
+    to.meta.fetchedData = {
         ...baseData,
-        data: {
-            ...entityData,
-            ...extraData
-        },
+        data: pageData,
+        title: pageTitle,
         templateName,
         layouts
     };
 };
 
-const customRoutes = Object.entries(pages)
+const customRoutes: RouteRecordRaw[] = Object.entries(pages)
   .filter(([_, config]) => config.routes && config.routes.length > 0)
-  .flatMap(([templateName, config]) => 
+  .flatMap(([templateName, config]) =>
     config.routes!.map(route => ({
       path: route,
       component: () => import('../views/front/DynamicView.vue'),
-      meta: { fetch: fetchContentData, viewType: 'custom', templateName }
+      meta: { fetch: fetchContentData, viewType: 'custom' as const, templateName }
     }))
   );
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   // Visitor Facing Routes - 统一使用 DynamicView
   { path: '/', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'home' } },
   { path: '/a/:category_slug/:article_slug', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'article' } },
@@ -233,8 +290,8 @@ router.beforeEach(async (to, from, next) => {
 
   try {
     if (!isInitialized) {
-      const statusRes: any = await systemAPI.getStatus();
-      isInitialized = statusRes.data?.is_initialized || statusRes.is_initialized;
+      const statusRes = await systemAPI.getStatus();
+      isInitialized = statusRes.data.is_initialized;   // { code, data: { is_initialized } }
       
       if (isInitialized) {
         localStorage.setItem('is_initialized', '1');

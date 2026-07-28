@@ -1,7 +1,21 @@
 import axios from 'axios';
+import {
+    configureApi, crud,
+    schematoolsGetAllSchemas,
+    contentGetHome, contentGetCategory, contentGetArticle, contentListArticles, contentPreviewToken, contentPreview,
+    lifecycleTransition, lifecycleListRevisions, lifecycleRollback, lifecycleManageableCategories,
+    aclList, aclCreate, aclRemove,
+    systemStatus, systemGetConfig, systemUpdateConfig, systemRestart, systemSetup, systemExportData,
+    listAttachment, uploadUploadFile, uploadDeleteFile, uploadGetProviders, uploadTestStorage,
+    userLogin, userLoginInfo, userLogout,
+    type ReadQuery, type LifecycleTransitionBody, type AclCreateBody, type SystemSetupBody,
+} from './api.gen';
 
+// baseURL is intentionally EMPTY: api.gen.ts emits absolute paths that already carry the
+// dyapi urlPrefix (e.g. "/api/articles"). Setting baseURL to "/api" here would produce
+// "/api/api/articles". Vite proxies /api and /static to :3000 in dev; nginx does it in prod.
 export const api = axios.create({
-    baseURL: '/api',
+    baseURL: '',
     withCredentials: true
 });
 
@@ -35,101 +49,111 @@ api.interceptors.response.use(
     }
 );
 
-// Unified Frontend API calls definition
+// Hand the generated client our instance. `unwrap: false` is REQUIRED: the interceptor above
+// already returns response.data, so the generated request() must not unwrap a second time
+// (that would drop `total`/`pages` off list responses).
+configureApi({ instance: api, unwrap: false });
+
+// Typed model CRUD (listArticle/createUser/...), the crud(route) escape hatch for runtime
+// models, and every controller function are re-exported so views import from a single place.
+export * from './api.gen';
+
+// ---------------------------------------------------------------------------
+// Semantic wrappers. These keep call-site-friendly signatures (positional slug/id
+// instead of a query object) over the generated functions. Return types are inferred.
+// ---------------------------------------------------------------------------
+
 export const schemaAPI = {
-    getAll: () => api.get('/schematools/all'),
+    getAll: () => schematoolsGetAllSchemas(),
 };
 
+/**
+ * Backward-compat shim for THEMES. The whole api module is injected into every theme template
+ * as `context.api` (see THEME_DEV.md), and existing/external themes call
+ * `api.crudAPI.getList('articles', ...)`. The admin app has moved to the typed named functions
+ * + `crud()`, but this preserves the public theme-facing contract with zero theme edits.
+ * Prefer `crud(route)` / the named functions in new app code.
+ */
 export const crudAPI = {
-    getList: (modelRoute: string, params: any = {}) => {
-        const searchParams = new URLSearchParams();
-        for (const [key, value] of Object.entries(params)) {
-             if (value !== undefined && value !== null) {
-                 const strValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-                 searchParams.append(key, strValue);
-             }
-        }
-        const qs = searchParams.toString();
-        return api.get(`/${modelRoute}${qs ? '?' + qs : ''}`);
-    },
-    getOne: (modelRoute: string, id: string | number) => api.get(`/${modelRoute}/${id}`),
-    create: (modelRoute: string, data: any) => api.post(`/${modelRoute}`, data),
-    update: (modelRoute: string, id: string | number, data: any) => api.put(`/${modelRoute}/${id}`, data), 
-    remove: (modelRoute: string, id: string | number) => api.delete(`/${modelRoute}/${id}`),
+    getList: (route: string, params: any = {}) => crud(route).list(params),
+    getOne: (route: string, id: string | number, params: any = {}) => crud(route).get(id, params),
+    create: (route: string, data: any) => crud(route).create(data),
+    update: (route: string, id: string | number, data: any) => crud(route).update(id, data),
+    remove: (route: string, id: string | number) => crud(route).remove(id),
 };
 
-// contentAPI 使用 crudAPI.getOne，slug 使用 {slug} 格式
-// 文章详情: /api/articles/{slug}
-// 分类详情: /api/categories/{slug}
+/**
+ * Stringify a loose query object into the shape /api/content/* expects.
+ * dyapi's app-level middleware runs `JSON.parse(ctx.query.filter)` on every request
+ * (core/dyapiApp.js), so object values must be sent as JSON, not bracket-expanded
+ * the way axios would serialize them by default.
+ */
+function serializeContentQuery(params: Record<string, any>): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(params)) {
+        if (v === undefined || v === null) continue;
+        out[k] = typeof v === 'object' ? JSON.stringify(v) : String(v);
+    }
+    return out;
+}
+
+// 文章详情/分类详情按 slug 查询;公开站只能走 /api/content/*(见 CLAUDE.md 坑 5)。
 export const contentAPI = {
-    getHome: () => api.get('/content/home'),
-    getCategory: (slug: string) => api.get(`/content/category?slug=${slug}`),
-    getArticle: (slug: string) => api.get(`/content/article?slug=${slug}`),
-    // Public article list — same query shape as crudAPI.getList; server forces status=visible.
-    listArticles: (params: any = {}) => {
-        const sp = new URLSearchParams();
-        for (const [k, v] of Object.entries(params)) {
-            if (v !== undefined && v !== null) sp.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-        }
-        const qs = sp.toString();
-        return api.get(`/content/articles${qs ? '?' + qs : ''}`);
-    },
-    previewToken: (id: string | number) => api.post('/content/preview-token', { id }),
-    preview: (id: string | number, pt: string) => api.get(`/content/preview?id=${id}&pt=${encodeURIComponent(pt)}`)
+    getHome: () => contentGetHome(),
+    getCategory: (slug: string) => contentGetCategory({ slug }),
+    getArticle: (slug: string) => contentGetArticle({ slug }),
+    // Public article list — same query shape as the admin list; server forces status=visible.
+    // Referenced by theme.config.ts prefetch via the string "contentAPI.listArticles".
+    listArticles: (params: Record<string, any> = {}) => contentListArticles(serializeContentQuery(params)),
+    previewToken: (id: string | number) => contentPreviewToken({ id }),
+    preview: (id: string | number, pt: string) => contentPreview({ id: String(id), pt }),
 };
 
 // Content lifecycle: status transitions and version history/rollback.
 export const lifecycleAPI = {
-    transition: (type: string, id: string | number, body: { to: string; publish_at?: string; note?: string }) =>
-        api.post(`/lifecycle/${type}/${id}/transition`, body),
-    revisions: (type: string, id: string | number) => api.get(`/lifecycle/${type}/${id}/revisions`),
-    rollback: (type: string, id: string | number, version_no: number, note?: string) =>
-        api.post(`/lifecycle/${type}/${id}/rollback`, { version_no, note }),
+    transition: (type: string, id: string | number, body: LifecycleTransitionBody) =>
+        lifecycleTransition(type, id, body),
+    revisions: (type: string, id: string | number) => lifecycleListRevisions(type, id),
+    // NOTE: the backend only reads `version_no` (ContentLifecycleController.rollback destructures
+    // just that key), so no `note` param here — the old signature accepted one and silently dropped it.
+    rollback: (type: string, id: string | number, version_no: number) =>
+        lifecycleRollback(type, id, { version_no }),
     // Categories the current user may create/manage articles in. Pass action="C" for the
     // new-article picker (only categories the user can create in); omit for the manage union.
-    manageableCategories: (action?: string) =>
-        api.get(`/lifecycle/manageable-categories${action ? `?action=${action}` : ''}`),
+    manageableCategories: (action?: string) => lifecycleManageableCategories(action ? { action } : undefined),
 };
 
 // Generic resource ACL. `model` is a content tablename (e.g. "articles") for row sharing,
 // or "articles_category" with resourceId=<category id> for category-scoped article grants.
 export const ARTICLES_CATEGORY = "articles_category";
 export const aclAPI = {
-    list: (model: string, resourceId: string | number) => api.get(`/acl/${model}/${resourceId}`),
-    grant: (model: string, resourceId: string | number, body: { grantee_type: string; grantee_id: number; access: string }) =>
-        api.post(`/acl/${model}/${resourceId}`, body),
+    list: (model: string, resourceId: string | number) => aclList(model, resourceId),
+    grant: (model: string, resourceId: string | number, body: AclCreateBody) =>
+        aclCreate(model, resourceId, body),
     revoke: (model: string, resourceId: string | number, grantId: number) =>
-        api.delete(`/acl/${model}/${resourceId}/${grantId}`),
+        aclRemove(model, resourceId, grantId),
 };
 
 export const systemAPI = {
-    getStatus: () => api.get('/system/status'),
-    getConfig: () => api.get('/system/config'),
-    saveConfig: (data: any) => api.post('/system/config', data),
-    restart: () => api.post('/system/restart'),
-    setup: (data: any) => api.post('/system/setup', data),
-    exportData: () => api.get('/system/export'),
+    getStatus: () => systemStatus(),
+    getConfig: () => systemGetConfig(),
+    saveConfig: (data: any) => systemUpdateConfig(data),
+    restart: () => systemRestart(),
+    setup: (data: SystemSetupBody) => systemSetup(data),
+    exportData: () => systemExportData(),
 };
 
 export const uploadAPI = {
-    getList: (params: any = {}) => {
-        const searchParams = new URLSearchParams();
-        for (const [key, value] of Object.entries(params)) {
-            if (value !== undefined && value !== null) {
-                searchParams.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
-            }
-        }
-        const qs = searchParams.toString();
-        return api.get(`/attachments${qs ? '?' + qs : ''}`);
-    },
-    upload: (formData: FormData) => api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    remove: (id: number) => api.delete(`/upload/${id}`),
-    getProviders: () => api.get('/upload/providers'),
-    testStorage: (provider?: string) => api.post('/upload/test', { provider }),
+    getList: (params: ReadQuery = {}) => listAttachment(params),
+    // axios sets the multipart boundary itself when the payload is a FormData.
+    upload: (formData: FormData) => uploadUploadFile(formData),
+    remove: (id: number) => uploadDeleteFile(id),
+    getProviders: () => uploadGetProviders(),
+    testStorage: (provider?: string) => uploadTestStorage({ provider }),
 };
 
 export const authAPI = {
-    login: (data: any) => api.post('/user/login', data),
-    loginInfo: () => api.get('/user/loginInfo'),
-    logout: () => api.post('/user/logout')
+    login: (data: { username: string; password: string }) => userLogin(data),
+    loginInfo: () => userLoginInfo(),
+    logout: () => userLogout(),
 };

@@ -52,7 +52,8 @@ import { ref, computed, onMounted } from 'vue';
 import Button from 'primevue/button';
 import { useI18n } from 'vue-i18n';
 import SmartTable from '../../components/SmartTable.vue';
-import { crudAPI } from '../../api';
+import { listUser, getUser, createUser, updateUser, removeUser,
+         listUserRole, createUserRole, removeUserRole } from '../../api';
 import UserEditor from './UserEditor.vue';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../stores/auth';
@@ -98,19 +99,19 @@ const fetchUsers = async () => {
         };
         if (lazyParams.value.sortField) {
             params.orderBy = lazyParams.value.sortField;
-            params.orderDesc = (lazyParams.value.sortOrder === -1) ?? null;
+            params.orderDesc = lazyParams.value.sortOrder === -1;
         }
 
-        const res: any = await crudAPI.getList('users', params);
-        users.value = res.data || res || [];
+        const res = await listUser(params);
+        users.value = res.data || [];
         totalRecords.value = res.total || 0;
     } catch (e) {
         console.error(e);
         // Fallback for admin if list fails (in case API forbids listing): Try to fetch just themselves
         if (!isSuperAdmin && currentUser.value.id) {
             try {
-                const selfRes: any = await crudAPI.getOne('users', currentUser.value.id);
-                users.value = [selfRes.data || selfRes];
+                const selfRes = await getUser(currentUser.value.id);
+                users.value = [selfRes.data];   // getUser returns { code, data: row }
                 totalRecords.value = 1;
             } catch (e2) { }
         }
@@ -132,7 +133,7 @@ const openEditor = (item?: any) => {
 const deleteUser = async (id: number) => {
     if (confirm(t('action.confirmDelete'))) {
         try {
-            await crudAPI.remove('users', id);
+            await removeUser(id);
             toast.add({ severity: 'success', summary: 'Success', detail: '用户删除成功', life: 3000 });
             fetchUsers();
         } catch (e) {
@@ -144,14 +145,14 @@ const deleteUser = async (id: number) => {
 // Reconcile the user_roles table to match the desired additional-role id set.
 const syncUserRoles = async (userId: number, desiredRoleIds: number[]) => {
     if (!userId) return;
-    const res: any = await crudAPI.getList('user_roles', { filter: { user_id: userId }, limit: 999 });
+    const res = await listUserRole({ filter: { user_id: userId }, limit: 999 });
     const existing = res.data || [];
     const existingIds = existing.map((u: any) => u.role_id);
     for (const rid of desiredRoleIds) {
-        if (!existingIds.includes(rid)) await crudAPI.create('user_roles', { user_id: userId, role_id: rid });
+        if (!existingIds.includes(rid)) await createUserRole({ user_id: userId, role_id: rid });
     }
     for (const u of existing) {
-        if (!desiredRoleIds.includes(u.role_id)) await crudAPI.remove('user_roles', u.id);
+        if (!desiredRoleIds.includes(u.role_id)) await removeUserRole(u.id);
     }
 };
 
@@ -164,15 +165,15 @@ const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
 
         let userId = formData.id;
         if (formData.id) {
-            await crudAPI.update('users', formData.id, formData);
+            await updateUser(formData.id, formData);
             toast.add({ severity: 'success', summary: 'Success', detail: '用户更新成功', life: 3000 });
             // If they changed their own name, reflect it in the auth store.
             if (formData.id === currentUser.value.id && formData.username) {
                 authStore.setUser({ ...currentUser.value, username: formData.username });
             }
         } else {
-            const res: any = await crudAPI.create('users', formData);
-            userId = res.id ?? res.data?.id ?? res.data;
+            const res = await createUser(formData);
+            userId = res.id;   // HTTPCreate returns { code, id }
             toast.add({ severity: 'success', summary: 'Success', detail: '用户创建成功', life: 3000 });
         }
         await syncUserRoles(userId, additionalRoleIds);

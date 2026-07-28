@@ -23,4 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-src/views/front/templates/*
+# Active-theme slot: a dev symlink into ../frontend_themes/<theme> (npm run theme:use),
+# or a COPY of the theme in Docker builds. Never committed — source of truth is frontend_themes/.
+src/views/front/templates

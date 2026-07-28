@@ -8,6 +8,7 @@ NFCMS 是基于自研框架 **DYAPI** 的无头 CMS:Bun + SQLite 后端 + Vue3 �
 - 后端(RBAC/生命周期/动态模型/端点) → [docs/backend.md](docs/backend.md)
 - 前端(admin/api 约定/i18n/主题) → [docs/frontend.md](docs/frontend.md)
 - 本地运行/构建/测试/踩坑 → [docs/development.md](docs/development.md)
+- 项目现状评估(强项/技术债/优先级) → [docs/assessment.md](docs/assessment.md)
 
 ## 技术栈
 - **后端**:Bun + DYAPI **3.1.0**(自研框架,`backend/package.json` 里以 `file:../../dyapi3/dyapi` 本地路径 pin)+ SQLite(`backend/data/test.db`)。
@@ -54,6 +55,7 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 - **状态三态**:`hidden` / `scheduled` / `visible`(取代旧 `visible` 字段)。
 - **前端 i18n**:新文案一律加进 `frontend/src/i18n.ts` 的 en+zh,别硬编码中文。
 - **api 响应**:2xx 返回 body;错误 reject 一个带 `.message`/`.code` 的 `Error`(见 `frontend/src/api.ts`)。
+- **前端 API 层是生成的**:`frontend/src/api.gen.ts` 由 `npm run gen:api`(dyapi-cli)从后端 model/controller 生成,**不要手改**;改了后端接口就重新生成并一起提交。`api.ts` 只放 axios 实例 + 拦截器 + 接线 + 语义封装。接线两条铁律:`baseURL` 必须为空串(生成的是含 `/api` 前缀的绝对路径),`configureApi` 必须带 `unwrap: false`(拦截器已解包一次)。细节见 [docs/frontend.md](docs/frontend.md)。
 
 ## 代码组织规范(别把代码写成一坨)
 - **入口文件只做装配**:`main.ts`、`index.ts` 只负责 `app.use(...)`/接线,**不放数据字面量、不放业务逻辑、不内联大对象**。要配置什么,先问「这块数据/逻辑归属哪个模块」,放过去再 `import` 进来。

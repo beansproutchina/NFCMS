@@ -46,7 +46,7 @@ import { ref, onMounted } from 'vue';
 import Button from 'primevue/button';
 import { useI18n } from 'vue-i18n';
 import SmartTable from '../../components/SmartTable.vue';
-import { crudAPI } from '../../api';
+import { listMenu, createMenu, updateMenu, removeMenu } from '../../api';
 import MenuEditor from './MenuEditor.vue';
 import { useToast } from 'primevue/usetoast';
 import { BTN } from '../../ui/presets';
@@ -67,8 +67,8 @@ const editingItem = ref<any>(null);
 const fetchMenus = async () => {
     loading.value = true;
     try {
-        const res: any = await crudAPI.getList('menus');
-        menus.value = res.data || res || [];
+        const res = await listMenu();
+        menus.value = res.data || [];
     } catch(e) {
         console.error(e);
     } finally {
@@ -86,7 +86,7 @@ const openEditor = (item?: any) => {
 const deleteMenu = async (id: number) => {
     if (confirm(t('action.confirmDelete'))) {
         try {
-            await crudAPI.remove('menus', id);
+            await removeMenu(id);
             toast.add({ severity: 'success', summary: 'Success', detail: '菜单删除成功', life: 3000 });
             fetchMenus();
         } catch (e) {
@@ -98,10 +98,10 @@ const deleteMenu = async (id: number) => {
 const handleSave = async (formData: any) => {
     try {
         if (formData.id) {
-            await crudAPI.update('menus', formData.id, formData);
+            await updateMenu(formData.id, formData);
             toast.add({ severity: 'success', summary: 'Success', detail: '菜单更新成功', life: 3000 });
         } else {
-            await crudAPI.create('menus', formData);
+            await createMenu(formData);
             toast.add({ severity: 'success', summary: 'Success', detail: '菜单创建成功', life: 3000 });
         }
         showModal.value = false;

@@ -45,7 +45,7 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
 import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
-import { crudAPI } from '../../api';
+import { listCategory, listArticle } from '../../api';
 import MenuItemEditor from './MenuItemEditor.vue';
 
 const { t } = useI18n();
@@ -66,10 +66,10 @@ const categoryOptions = computed(() => {
 
 onMounted(async () => {
     try {
-        const catRes: any = await crudAPI.getList('categories');
-        const artRes: any = await crudAPI.getList('articles');
-        categories.value = catRes.data || catRes || [];
-        articles.value = artRes.data || artRes || [];
+        const catRes = await listCategory();
+        const artRes = await listArticle();
+        categories.value = catRes.data || [];
+        articles.value = artRes.data || [];
     } catch(e) {}
 });
 

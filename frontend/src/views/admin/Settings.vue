@@ -73,8 +73,8 @@ const setFieldValue = (key: string, value: string) => {
 const fetchSettings = async () => {
     loading.value = true;
     try {
-        const res: any = await systemAPI.getConfig();
-        const data = res.data || res || {};
+        const res = await systemAPI.getConfig();
+        const data = res.data || {};
 
         // Populate general config
         Object.keys(configsMap.value).forEach(k => {
@@ -112,8 +112,8 @@ const fetchSettings = async () => {
 
 const fetchProviders = async () => {
     try {
-        const res: any = await uploadAPI.getProviders();
-        const data = res.data || res;
+        const res = await uploadAPI.getProviders();
+        const data = res.data;
         storageProviders.value = data.providers || [];
         if (data.activeProvider) {
             activeProvider.value = data.activeProvider;
@@ -183,8 +183,8 @@ const restartBackend = async () => {
 const handleExport = async () => {
     exporting.value = true;
     try {
-        const res: any = await systemAPI.exportData();
-        const data = res.data || res;
+        const res = await systemAPI.exportData();
+        const data = res.data;
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -209,13 +209,16 @@ const testStorageConnection = async () => {
     testing.value = true;
     testResult.value = null;
     try {
-        const res: any = await uploadAPI.testStorage(activeProvider.value);
-        const data = res.data || res;
-        testResult.value = { success: data.success, error: data.error };
+        const res = await uploadAPI.testStorage(activeProvider.value);
+        const data = res.data;
+        // The backend only returns a message on the 500 branch, which rejects into catch below;
+        // a 2xx with success:false carries no detail, so fall back to a generic message here.
+        const error = data.success ? undefined : '连接测试未通过';
+        testResult.value = { success: data.success, error };
         toast.add({
             severity: data.success ? 'success' : 'error',
             summary: data.success ? 'Success' : 'Error',
-            detail: data.success ? '连接测试成功' : `连接失败: ${data.error || 'Unknown error'}`,
+            detail: data.success ? '连接测试成功' : `连接失败: ${error}`,
             life: 3000
         });
     } catch (e: any) {

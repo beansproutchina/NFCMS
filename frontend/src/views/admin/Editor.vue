@@ -5,7 +5,7 @@ import Textarea from 'primevue/textarea';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { crudAPI, lifecycleAPI, contentAPI, uploadAPI } from '../../api';
+import { getArticle, createArticle, updateArticle, lifecycleAPI, contentAPI, uploadAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
@@ -28,7 +28,7 @@ const articleId = ref<string | number | null>(route.params.id ? (route.params.id
 
 // Content fields only. status/publish_at are lifecycle-managed on the backend (not sent here).
 const form = ref({
-    category_id: '', content_template: "", is_top: 0,
+    category_id: 0, content_template: "", is_top: 0,
     title: '', slug: '', description: '', thumbnail: '', content: ''
 });
 const status = ref<string>('hidden');       // hidden | scheduled | visible
@@ -48,20 +48,20 @@ const statusCls = computed(() => ({
 onMounted(async () => {
     try {
         // Only categories the user may create in (new) or manage (edit) — backend-filtered.
-        const res: any = await lifecycleAPI.manageableCategories(isEdit ? undefined : 'C');
+        const res = await lifecycleAPI.manageableCategories(isEdit ? undefined : 'C');
         categories.value = res.data?.categories || [];
     } catch(e) { console.error('Failed to load categories', e); }
 });
 
 const loadArticle = async () => {
     if (!articleId.value) return;
-    const res: any = await crudAPI.getOne('articles', articleId.value);
-    const item = res.data || res;
+    const res = await getArticle(articleId.value);
+    const item = res.data;
     if (!item) return;
     form.value = {
         title: item.title || '', slug: item.slug || '', description: item.description || '',
         thumbnail: item.thumbnail || '', content: item.content || '',
-        category_id: item.category_id || '', content_template: item.content_template || '', is_top: item.is_top || 0
+        category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0
     };
     status.value = item.status || 'hidden';
 };
@@ -69,7 +69,7 @@ const loadArticle = async () => {
 const loadRevisions = async () => {
     if (!articleId.value) return;
     try {
-        const res: any = await lifecycleAPI.revisions('articles', articleId.value);
+        const res = await lifecycleAPI.revisions('articles', articleId.value);
         revisions.value = res.data || [];
     } catch (e) { console.error(e); }
 };
@@ -89,10 +89,10 @@ const persist = async (): Promise<string | number | null> => {
     loading.value = true;
     try {
         if (articleId.value) {
-            await crudAPI.update('articles', articleId.value, { ...form.value });
+            await updateArticle(articleId.value, { ...form.value });
         } else {
-            const res: any = await crudAPI.create('articles', { ...form.value }); // author_id set server-side
-            articleId.value = res.id ?? res.data?.id ?? res.data ?? null;
+            const res = await createArticle({ ...form.value }); // author_id set server-side
+            articleId.value = res.id ?? null;         // HTTPCreate returns { code, id }
         }
         return articleId.value;
     } finally {
@@ -136,7 +136,7 @@ const doPreview = async () => {
     const id = await persist();
     if (!id) return;
     try {
-        const res: any = await contentAPI.previewToken(id);
+        const res = await contentAPI.previewToken(id);
         const token = res.data?.token;
         if (token) window.open(`/preview?id=${id}&pt=${encodeURIComponent(token)}`, '_blank');
     } catch (e) { console.error(e); }
@@ -171,7 +171,7 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
         formData.append('file', file);
     });
     
-    const res: any = await uploadAPI.upload(formData);
+    const res = await uploadAPI.upload(formData);
     
     if (res?.data) {
         callback(res.data.map((item: any) => item.url));
@@ -188,7 +188,7 @@ const onThumbnailSelected = async (event: Event) => {
     formData.append('file', file);
     
     try {
-        const res: any = await uploadAPI.upload(formData);
+        const res = await uploadAPI.upload(formData);
         
         if (res?.data?.length > 0) {
             form.value.thumbnail = res.data[0].url;

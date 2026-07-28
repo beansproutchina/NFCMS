@@ -7,6 +7,7 @@
 - [backend.md](backend.md) — 后端启动流程、CMS 核心层、数据模型、RBAC、内容生命周期、端点速查、安全。
 - [frontend.md](frontend.md) — 前端结构、api 约定、管理台惯例、i18n、主题/展示站、构建。
 - [development.md](development.md) — 本地运行、环境变量、**测试纪律(备份 DB / 杀进程)**、Docker 部署、陷阱清单。
+- [assessment.md](assessment.md) — 项目现状评估(五维度强项 / 待还的债 / 优先级建议)。
 
 其它既有文档:
 - [../README.md](../README.md) / [../README.zh-CN.md](../README.zh-CN.md) — 面向使用者的项目说明。

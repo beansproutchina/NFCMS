@@ -57,3 +57,7 @@ test-results
 tmp
 temp
 *.tmp
+
+# Active-theme dev symlink — excluded so `COPY frontend/` doesn't drag a dangling symlink into
+# the image; the Dockerfile then `COPY frontend_themes/${THEME}/` populates the slot fresh.
+frontend/src/views/front/templates

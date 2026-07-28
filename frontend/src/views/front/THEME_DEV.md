@@ -2,6 +2,30 @@
 
 NFCMS 的前台支持自定义无缝的 Vue.js 模板。无论您正在构建首页、列表页还是文章详情页，系统都会将相关的数据包装为一个统一的 `context`（上下文）对象直接注入至模板中。
 
+## 主题在哪 · 本地开发工作流
+
+- **主题源码住在仓库根的 `frontend_themes/<主题名>/`**（`pear`/`neo`/`school`/`cosmos_love`），这是**唯一真源**。每个主题含 `Default{Home,Category,Article}.vue`、`Layout.vue`、`components/`、`theme.config.ts`。
+- 应用通过一个「活动主题槽位」`frontend/src/views/front/templates/` 加载主题：**生产**由 Docker `COPY frontend_themes/${THEME}/` 填充；**本地开发**把它做成指向真源的**符号链接**。槽位永不入库（`.gitignore`）。
+
+**切换/激活当前开发的主题**（一条命令，改哪个主题就填哪个）：
+
+```bash
+cd frontend
+npm run theme:use pear      # 默认 pear;可换 neo / school / cosmos_love
+npm run dev
+```
+
+`theme:use` 把槽位重指到 `frontend_themes/<名>`。**之后你直接编辑 `src/views/front/templates/...`（其实就是符号链接后的真源），改动落到 `frontend_themes/<名>/`**——单一真源、无副本漂移，且因为槽位在 `src/` 内，**自动补全、类型检查、`@` 别名、`vue-router` 等裸包全部正常**（靠 `preserveSymlinks` 穿透符号链接，已在 vite + tsconfig 配好）。
+
+> 首次 clone 后槽位不存在，先跑一次 `npm run theme:use <名>` 再 `npm run dev`。
+> 部署不变：`Dockerfile.single` 仍按 `--build-arg THEME=<名>` 把对应主题 COPY 进槽位。
+
+**深度类型检查单个主题**（可选，能揪出主题里被日常 `noCheck` 构建放过的类型问题）：
+
+```bash
+npx vue-tsc --noEmit -p tsconfig.app.json --noCheck false
+```
+
 ## 获取与使用 Context
 
 每个位于 `templates/` 下的模板组件都只需接收一个通用的 `context` Prop：
@@ -61,5 +85,39 @@ const { config, menus } = props.context || {};
 // ...
 </script>
 ```
+
+## 页面标题（浏览器标签页）
+
+在主题的 `theme.config.ts` 里，每个页面配置支持 `title` 字段来设置浏览器标签页标题。它与 `prefetch` 的 `args` 用**同一套 `$` 变量注入**语法，但可以嵌在字符串任意位置，便于拼接：
+
+```ts
+export const pages: Record<string, PageConfig> = {
+  DefaultArticle: {
+    layout: 'Layout',
+    title: '$data.article.title - $data.config.site_name',   // 「文章标题 - 站点名」
+    prefetch: []
+  },
+  DefaultCategory: {
+    layout: 'Layout',
+    title: '$data.category.name - $data.config.site_name',
+    // ...
+  },
+  Layout: {
+    title: '$data.config.site_name',   // 兜底:未单独设标题的页面用它
+    // ...
+  }
+};
+```
+
+注入规则：
+
+- `$data.<路径>` —— 读取当前页面数据。作用域是「`config`(站点设置) + 该页的实体(`article`/`category`/…) + 所有 prefetch 拉到的 key」的合集,例如 `$data.article.title`、`$data.config.site_name`、`$data.category.name`。
+- `$params.<名>` —— 读取路由参数,如 `$params.category_slug`。
+- 解析在**实体与 prefetch 数据都就绪之后**执行,所以能安全引用它们。未命中的 token 会被替换成空串。
+- 布局链里**最具体的模板**(页面本身)的 `title` 优先;它没设或解析后为空,则回退到上层布局的 `title`,最终回退到 `config.site_name`。
+
+解析后的标题会写入 `document.title`,同时以 `context.title` 暴露给模板(如需在页内再次使用)。
+
+> 注:这套标题只作用于**前台动态渲染**。后端 SSG 静态生成走的是另一条渲染路径,不读取此配置。
 
 现在您可以专注于为各个页面实现完美的 Vue UI 啦。如需回退或修改，请查阅 `templates_example` 文件夹。

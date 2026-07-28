@@ -39,8 +39,8 @@ const fetchFiles = async () => {
             orderDesc: true
         };
 
-        const res: any = await uploadAPI.getList(params);
-        files.value = res.data || res || [];
+        const res = await uploadAPI.getList(params);
+        files.value = res.data || [];
         totalRecords.value = res.total || 0;
     } catch(e) {
         console.error(e);

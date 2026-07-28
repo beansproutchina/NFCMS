@@ -10,8 +10,8 @@ const loading = ref(true);
 const fetchSchemas = async () => {
     loading.value = true;
     try {
-        const res: any = await schemaAPI.getAll();
-        schemas.value = res.data || res || [];
+        const res = await schemaAPI.getAll();
+        schemas.value = res.data || [];
     } catch(e) {
         console.error(e);
     } finally {
