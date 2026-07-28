@@ -1,18 +1,18 @@
 <template>
-  <div>
+  <div @click="onRootClick">
     <div v-if="error" class="text-center py-20 text-red-500">{{ error }}</div>
     <div v-else-if="templateComponent" class="animate-fade-in transition-opacity duration-300">
       <NestedLayouts v-if="layoutComponents.length > 0" :layouts="layoutComponents" :context="context">
-        <component :is="templateComponent" :context="context" />
+        <component :is="templateComponent" :context="context" :key="renderKey" />
       </NestedLayouts>
-      <component v-else :is="templateComponent" :context="context" />
+      <component v-else :is="templateComponent" :context="context" :key="renderKey" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, markRaw, defineComponent, h } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import * as api from '../../api';
 import { useAuthStore } from '../../stores/auth';
 import DefaultHome from './templates/DefaultHome.vue';
@@ -35,10 +35,34 @@ const NestedLayouts = defineComponent({
 });
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
+
+/**
+ * Delegated link handler for the whole front site. Themes (and Markdown article bodies rendered
+ * via v-html) use plain <a href> links; a bare left-click on an internal one would trigger a full
+ * browser navigation — rebooting the SPA and reloading the header/logo (the "flash"). Here we
+ * intercept those and route via the SPA instead, while leaving the real href intact so SEO,
+ * middle-click / ⌘-click "open in new tab", and external links all keep working.
+ */
+function onRootClick(e: MouseEvent) {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const anchor = (e.target as HTMLElement)?.closest?.('a');
+  if (!anchor) return;
+  const href = anchor.getAttribute('href');
+  if (!href) return;
+  // Leave external / new-tab / download / protocol / hash links to the browser.
+  if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+  if (/^(https?:)?\/\//i.test(href) || /^(mailto:|tel:|#)/i.test(href)) return;
+  e.preventDefault();
+  if (href !== route.fullPath) router.push(href);
+}
 const error = ref('');
 const templateComponent = ref<any>(null);
 const layoutComponents = ref<any[]>([]);
+// Bumped after each successful (re)load so the page body remounts per navigation (re-reading
+// context) WITHOUT nulling templateComponent first — nulling caused a blank gap + fade-in replay.
+const renderKey = ref(0);
 
 // 默认模板映射
 const defaultTemplates: Record<string, any> = {
@@ -52,7 +76,7 @@ const context = computed(() => {
   const fetchedData: any = route.meta.fetchedData;
   if (!fetchedData || !fetchedData.success) return {};
 
-  const { data, config, menus } = fetchedData;
+  const { data, config, menus, meta } = fetchedData;
   // 获取当前用户
   const user = authStore.user;
 
@@ -62,6 +86,8 @@ const context = computed(() => {
     menus: menus || [],
     user,
     api,
+    // Pagination meta per prefetch key (e.g. $meta.articles.total) — see router prefetch.
+    $meta: meta || {},
     ...data, // 所有预取的数据
   };
 });
@@ -88,34 +114,46 @@ async function loadComponent(name: string, fallbackTemplate?: any): Promise<any>
     }
 }
 
+// Remember the current layout chain so we only rebuild it when it actually changes.
+let lastLayoutKey = '';
+
 // 解析并加载模板
 async function resolveTemplate() {
-  error.value = '';
-  templateComponent.value = null;
-  layoutComponents.value = [];
-
   const fetchedData: any = route.meta.fetchedData;
-  if (!fetchedData) return;
+  if (!fetchedData) { error.value = ''; templateComponent.value = null; layoutComponents.value = []; lastLayoutKey = ''; return; }
 
   if (!fetchedData.success) {
     error.value = fetchedData.error || 'Failed to load content';
+    templateComponent.value = null; layoutComponents.value = []; lastLayoutKey = '';
     return;
   }
+  error.value = '';
 
   const viewType = route.meta.viewType as string;
   const templateName = fetchedData.templateName || 'DefaultHome';
   const layouts = fetchedData.layouts || [];
-
   const defaultTemplate = defaultTemplates[viewType] || DefaultHome;
-  
-  // 先加载布局 (支持多层)
-  for (const l of layouts) {
+
+  // Only (re)build the layout chain when it changes between navigations. Rebuilding it every time
+  // would remount the layout — and with it the header + logo <img> — causing a visible flash.
+  // The page body (templateComponent) still swaps per navigation below.
+  const layoutKey = layouts.join('>');
+  if (layoutKey !== lastLayoutKey) {
+    const comps: any[] = [];
+    for (const l of layouts) {
       const comp = await loadComponent(l);
-      if (comp) layoutComponents.value.push(comp);
+      if (comp) comps.push(comp);
+    }
+    layoutComponents.value = comps;
+    lastLayoutKey = layoutKey;
   }
 
-  // 再加载实际模板
-  templateComponent.value = await loadComponent(templateName, defaultTemplate);
+  // Swap the page body atomically: load the new component, then assign + bump the key in the same
+  // tick. No intermediate null → no blank flash / fade-in replay; the key change still forces a
+  // remount so same-template navigations re-read their (non-reactive) destructured context.
+  const next = await loadComponent(templateName, defaultTemplate);
+  templateComponent.value = next;
+  renderKey.value++;
 }
 
 // 监听数据变化

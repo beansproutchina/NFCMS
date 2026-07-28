@@ -1,7 +1,7 @@
 import { ControllerRoute, Route, Inject } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
 import UserModel from "../models/UserModel.js";
-import SystemConfigModel, { globalConfigCache, VALID_CONFIG_KEYS } from "../models/SystemConfigModel.js";
+import SystemConfigModel, { globalConfigCache, VALID_CONFIG_KEYS, isThemeConfigKey } from "../models/SystemConfigModel.js";
 import CategoryModel from "../models/CategoryModel.js";
 import ArticleModel from "../models/ArticleModel.js";
 import MenuModel from "../models/MenuModel.js";
@@ -64,13 +64,18 @@ export default class SystemController extends Controller {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
         
-        const payload = ctx.request.body;
-        
-        const updates = [];
+        const payload = ctx.request.body || {};
+
         for (const key in VALID_CONFIG_KEYS) {
             if (key === "is_initialized") continue;
-            if (payload[key] !== undefined ) {
-                this.configModel.SetConfig(key, payload[key]);
+            if (payload[key] !== undefined) {
+                await this.configModel.SetConfig(key, payload[key]);
+            }
+        }
+        // Theme-owned keys (theme_<name>_<field>) are dynamic — persist any present in the payload.
+        for (const key of Object.keys(payload)) {
+            if (isThemeConfigKey(key)) {
+                await this.configModel.SetConfig(key, payload[key]);
             }
         }
 
@@ -169,12 +174,11 @@ export default class SystemController extends Controller {
                 results[key] = { imported, failed };
             }
 
-            // Mark system as initialized
-            const isInitEntry = await this.configModel.read({ filter: { key: "is_initialized" } });
-            if (!isInitEntry || isInitEntry.length === 0) {
-                await this.configModel.create({ key: "is_initialized", value: "true" });
-            }
+            // Mark system as initialized. NOTE: system_config columns are configkey/configvalue
+            // (not key/value); go through SetConfig so the write + cache stay consistent even when
+            // the imported data already contained an is_initialized row.
             this.configModel.ClearCache();
+            await this.configModel.SetConfig("is_initialized", "true");
 
             return { code: 200, data: results, message: "Setup completed with imported data." };
         }

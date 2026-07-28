@@ -26,7 +26,8 @@ export default class SystemConfigModel extends Model {
                 globalConfigCache = {};
                 const allConfig = await this.read({});
                 for (const item of allConfig) {
-                    if (item.configkey in VALID_CONFIG_KEYS) {
+                    // Core whitelisted keys + any theme-owned key (theme_<name>_<field>).
+                    if (item.configkey in VALID_CONFIG_KEYS || isThemeConfigKey(item.configkey)) {
                         globalConfigCache[item.configkey] = item.configvalue;
                     }
                 }
@@ -35,13 +36,15 @@ export default class SystemConfigModel extends Model {
                         globalConfigCache[configkey] = VALID_CONFIG_KEYS[configkey];
                     }
                 }
+                // theme_* keys have no backend default; unset ones simply stay absent
+                // (the theme supplies its own fallback via configSchema.default).
             }
             return globalConfigCache;
         })
     }
 
     async SetConfig(configkey: string, configvalue: string) {
-        if(!(configkey in VALID_CONFIG_KEYS)){
+        if(!(configkey in VALID_CONFIG_KEYS) && !isThemeConfigKey(configkey)){
             throw new BadRequestError(`Invalid config configkey: ${configkey}`);
         }
         const configCache = await this.GetConfig();
@@ -61,6 +64,17 @@ export default class SystemConfigModel extends Model {
         globalConfigCache = null;
     }
 }
+/**
+ * Theme-owned config keys follow the convention `theme_<themename>_<field>` (e.g.
+ * theme_school_logo). They are NOT whitelisted individually — any key matching this
+ * pattern is accepted for get/set, so a theme can declare its own settings (via
+ * `configSchema` in its theme.config.ts) without touching the backend. Lowercase +
+ * digits + underscores only; must have a name segment and a field segment.
+ */
+export function isThemeConfigKey(key: string): boolean {
+    return /^theme_[a-z0-9]+_[a-z0-9_]+$/.test(key);
+}
+
 export const VALID_CONFIG_KEYS = {
     "is_initialized" : "false",
     "site_name" : "NFCMS",

@@ -4,9 +4,29 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
 import { systemAPI, uploadAPI } from '../../api';
-import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader } from 'lucide-vue-next';
+import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader, LucidePalette } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import * as activeTheme from '../front/templates/theme.config';
+import type { ThemeConfigField } from '../front/theme-runtime';
+
+// ─── Active theme's own config fields (theme_<name>_* keys) ──────────
+// The active theme declares these via `export const configSchema`; we render an editor for
+// each and persist through the same /system/config endpoint (backend accepts theme_* keys).
+const themeConfigSchema: ThemeConfigField[] = ((activeTheme as any).configSchema as ThemeConfigField[]) || [];
+const themeInfo: any = (activeTheme as any).info || {};
+const themeConfig = ref<Record<string, string>>({});
+// Fields grouped by their optional `group` label, preserving declaration order.
+const themeConfigGroups = computed(() => {
+    const groups: { name: string; fields: ThemeConfigField[] }[] = [];
+    for (const f of themeConfigSchema) {
+        const name = f.group || '';
+        let g = groups.find(x => x.name === name);
+        if (!g) { g = { name, fields: [] }; groups.push(g); }
+        g.fields.push(f);
+    }
+    return groups;
+});
 
 // ─── General Site Config ─────────────────────────────────────────────
 const configsMap = ref<Record<string, string>>({
@@ -83,6 +103,11 @@ const fetchSettings = async () => {
             }
         });
 
+        // Populate the active theme's own config fields (empty string when unset).
+        const tc: Record<string, string> = {};
+        for (const f of themeConfigSchema) tc[f.key] = data[f.key] ?? '';
+        themeConfig.value = tc;
+
         // Parse storage_config JSON
         const rawStorage = data.storage_config;
         if (rawStorage) {
@@ -153,6 +178,7 @@ const saveSettings = async () => {
 
         const payload = {
             ...configsMap.value,
+            ...themeConfig.value,   // theme_<name>_* keys
             storage_config: JSON.stringify(storageConfigObj),
         };
         await systemAPI.saveConfig(payload);
@@ -287,6 +313,30 @@ onMounted(() => {
 
             </div>
             <div v-else class="text-[14px] opacity-60">Loading...</div>
+        </div>
+
+        <!-- Active Theme Config (theme_<name>_* keys declared by the theme) -->
+        <div v-if="!loading && themeConfigSchema.length" class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
+            <div class="flex items-center gap-3 mb-2">
+                <LucidePalette :size="20" class="text-rose-500" />
+                <h2 class="text-[20px] font-semibold">{{ $t('form.themeSettings') }}</h2>
+            </div>
+            <p class="text-[14px] text-[rgba(0,0,0,0.5)] mb-6">
+                {{ $t('form.themeSettingsDesc') }}<span v-if="themeInfo.name"> · {{ themeInfo.name }}</span>
+            </p>
+
+            <div v-for="grp in themeConfigGroups" :key="grp.name" class="mb-6 last:mb-0">
+                <h3 v-if="grp.name" class="text-[15px] font-medium text-[rgba(0,0,0,0.7)] mb-3 pb-2 border-b border-[rgba(0,0,0,0.06)]">{{ grp.name }}</h3>
+                <div class="flex flex-col gap-6">
+                    <div v-for="f in grp.fields" :key="f.key" class="flex flex-col gap-2 max-w-lg">
+                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ f.label }}</label>
+                        <textarea v-if="f.type === 'textarea'" v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="INPUT_CLASS" rows="3"></textarea>
+                        <InputText v-else v-model="themeConfig[f.key]" :type="f.type === 'number' ? 'number' : 'text'" unstyled :placeholder="f.placeholder" :class="INPUT_CLASS" />
+                        <img v-if="f.type === 'image' && themeConfig[f.key]" :src="themeConfig[f.key]" alt="preview" class="mt-1 max-h-16 w-auto rounded border border-[rgba(0,0,0,0.08)] bg-[#fafafa] object-contain" />
+                        <span v-if="f.hint" class="text-[12px] text-[rgba(0,0,0,0.45)]">{{ f.hint }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Storage Configuration -->

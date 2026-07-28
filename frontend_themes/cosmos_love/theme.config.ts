@@ -1,5 +1,5 @@
 import type { App } from 'vue';
-import type { ThemeInfo, ThemePages } from '@/views/front/theme-runtime';
+import type { ThemeInfo, ThemePages, ThemeConfigSchema } from '@/views/front/theme-runtime';
 
 export const info: ThemeInfo = {
   name: "Starlit Love",
@@ -91,3 +91,6 @@ export const pages: ThemePages = {
     ]
   }
 };
+
+// This theme exposes no custom settings.
+export const configSchema: ThemeConfigSchema = [];

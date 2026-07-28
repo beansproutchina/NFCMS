@@ -1,169 +1,105 @@
 <template>
   <div class="article-page">
-    <!-- 顶栏面包屑 -->
-    <div class="banner-min"></div>
-    <div class="breadcrumb-container">
+    <div class="breadcrumb-bar">
       <div class="container">
-        当前位置：
-        <a href="/">首页</a> 
-        <span class="sep">&gt;</span>
-        <span v-for="(crumb, index) in breadcrumbs" :key="crumb.id">
-          <a v-if="index < breadcrumbs.length - 1" :href="`/category/${crumb.id}`">{{ crumb.name }}</a>
-          <span v-else class="current">{{ crumb.name }}</span>
-          <span class="sep" v-if="index < breadcrumbs.length - 1">&gt;</span>
-        </span>
+        当前位置：<a href="/">首页</a>
+        <template v-for="(c, i) in breadcrumbs" :key="c.id">
+          <span class="sep">&gt;</span>
+          <a v-if="Number(i) < breadcrumbs.length - 1 && !c.disabled" :href="`/a/${c.slug}`">{{ c.name }}</a>
+          <span v-else class="current">{{ c.name }}</span>
+        </template>
       </div>
     </div>
 
-    <!-- 文章正文区域 -->
     <main class="container article-main">
-      <div class="article-wrapper">
-        <!-- 标题区域 -->
+      <article class="article-card">
         <h1 class="article-title">{{ article?.title || '文章标题' }}</h1>
+
         <div class="article-meta">
-          发布时间：{{ formatDate(article?.published_at) }}
-          <span class="divider">|</span>
-          来源：{{ article?.source || config?.site_name || '本站' }}
-          <span class="divider">|</span>
-          阅读量：{{ article?.views || 0 }} 次
+          <span v-if="article?.published_at">{{ formatDate(article.published_at) }}</span>
+          <span class="dot" v-if="authorName">·</span>
+          <span v-if="authorName">作者：{{ authorName }}</span>
+          <span class="dot" v-if="source">·</span>
+          <span v-if="source">来源：{{ source }}</span>
         </div>
 
-        <!-- 正文内容 -->
-        <div class="article-content" v-html="article?.content || '<p>暂无内容</p>'"></div>
+        <div v-if="article?.description" class="article-summary">{{ article.description }}</div>
 
-        <!-- 文章附件/声明/分享等 -->
-        <div class="article-footer">
-          <p>责任编辑：{{ article?.author || '网管中心' }}</p>
+        <div class="article-content" v-html="renderedContent"></div>
+
+        <div class="article-foot" v-if="authorName">
+          <span>责任编辑：{{ authorName }}</span>
         </div>
-      </div>
+      </article>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ context: any }>();
-const { article, breadcrumbs, config } = props.context || {};
+import { computed } from 'vue';
+import { marked } from 'marked';
 
-const formatDate = (dateStr: string) => {
-  if (!dateStr) return '未知时间';
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-};
+const props = defineProps<{ context: any }>();
+const { article, breadcrumbs } = props.context || {};
+
+// content is Markdown (see ArticleModel); render to HTML like the other themes / SSG.
+const renderedContent = computed(() => (article?.content ? (marked.parse(article.content) as string) : '<p>暂无内容</p>'));
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const formatDate = (s: string) => { if (!s) return ''; const d = new Date(s); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+
+// `author` is the enriched user object (password stripped) — show a name, not [object Object].
+const authorName = computed(() => {
+  const a = article?.author;
+  if (!a) return '';
+  return a.nickname || a.username || '';
+});
+// Optional "来源" from the article's custom data (category article_data_fields → article.data).
+const source = computed(() => article?.data?.source || '');
 </script>
 
 <style scoped>
-.article-page {
-  background-color: #f5f5f5;
-}
+.article-page { background: var(--uni-bg-page); min-height: 60vh; }
+.container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
 
-.banner-min {
-  height: 160px;
-  background: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
-  position: relative;
-}
-.banner-min::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(139, 0, 0, 0.5);
-}
+.breadcrumb-bar { background: #fff; padding: 14px 0; font-size: 14px; color: #666; border-bottom: 1px solid var(--uni-border-light); }
+.breadcrumb-bar .container { max-width: 1200px; }
+.breadcrumb-bar a { color: #555; text-decoration: none; }
+.breadcrumb-bar a:hover { color: var(--uni-primary); }
+.breadcrumb-bar .sep { margin: 0 8px; color: #bbb; }
+.breadcrumb-bar .current { color: var(--uni-primary); }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-}
+.article-main { padding: 36px 20px 60px; }
+.article-card { background: #fff; border-radius: 6px; padding: 48px 64px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
 
-/* 面包屑导航 */
-.breadcrumb-container {
-  background-color: #fff;
-  padding: 16px 0;
-  font-size: 14px;
-  color: #666;
-  border-bottom: 1px solid var(--uni-border-light);
-  margin-bottom: 40px;
-}
-.breadcrumb-container .container { max-width: 1200px; }
-.breadcrumb-container a { color: #333; text-decoration: none; }
-.breadcrumb-container a:hover { color: var(--uni-primary); }
-.breadcrumb-container .sep { margin: 0 8px; color: #999; }
-.breadcrumb-container .current { color: var(--uni-primary); }
-
-/* 主区域 */
-.article-main {
-  background: #fff;
-  padding: 50px 80px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05);
-  margin-bottom: 40px;
-  border-radius: 4px;
-}
-
-.article-title {
-  text-align: center;
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--uni-text-title);
-  margin: 0 0 24px 0;
-  line-height: 1.4;
-}
-
+.article-title { text-align: center; font-size: 28px; font-weight: 700; color: var(--uni-text-title); margin: 0 0 22px; line-height: 1.45; }
 .article-meta {
-  text-align: center;
-  color: #888;
-  font-size: 14px;
-  padding-bottom: 30px;
-  margin-bottom: 30px;
-  border-bottom: 1px dashed var(--uni-border-light);
+  display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px;
+  color: #999; font-size: 14px; padding-bottom: 22px; margin-bottom: 30px;
+  border-bottom: 1px solid var(--uni-border-light);
 }
-.article-meta .divider {
-  margin: 0 15px;
-  color: #e0e0e0;
+.article-meta .dot { color: #ddd; }
+
+.article-summary {
+  background: #faf7f7; border-left: 3px solid var(--uni-primary); color: #666;
+  font-size: 15px; line-height: 1.8; padding: 14px 20px; margin-bottom: 28px; border-radius: 0 4px 4px 0;
 }
 
-.article-content {
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--uni-text-body);
-  text-align: justify;
-}
-.article-content :deep(p) {
-  margin-bottom: 1.5em;
-  text-indent: 2em;
-}
-.article-content :deep(img) {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 20px auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.article-content :deep(h2), .article-content :deep(h3) {
-  color: var(--uni-text-title);
-  margin-top: 1.5em;
-  margin-bottom: 0.8em;
-  text-indent: 0;
-}
-.article-content :deep(a) {
-  color: var(--uni-primary);
-  text-decoration: none;
-}
-.article-content :deep(a:hover) {
-  text-decoration: underline;
-}
+.article-content { font-size: 16px; line-height: 1.9; color: var(--uni-text-body); }
+.article-content :deep(p) { margin-bottom: 1.4em; }
+.article-content :deep(img) { max-width: 100%; height: auto; display: block; margin: 22px auto; border-radius: 4px; }
+.article-content :deep(h2), .article-content :deep(h3) { color: var(--uni-text-title); margin: 1.6em 0 .7em; }
+.article-content :deep(a) { color: var(--uni-primary); text-decoration: none; }
+.article-content :deep(a:hover) { text-decoration: underline; }
+.article-content :deep(blockquote) { border-left: 3px solid var(--uni-border-light); padding-left: 16px; color: #888; margin: 1.2em 0; }
+.article-content :deep(table) { border-collapse: collapse; width: 100%; margin: 1.2em 0; }
+.article-content :deep(td), .article-content :deep(th) { border: 1px solid var(--uni-border-light); padding: 8px 12px; }
 
-.article-footer {
-  margin-top: 50px;
-  padding-top: 20px;
-  border-top: 1px dotted var(--uni-border-light);
-  text-align: right;
-  font-size: 14px;
-  color: #666;
-}
+.article-foot { margin-top: 44px; padding-top: 18px; border-top: 1px dashed var(--uni-border-light); text-align: right; font-size: 14px; color: #888; }
 
 @media (max-width: 768px) {
-  .article-main { padding: 30px 20px; }
+  .article-card { padding: 28px 20px; }
   .article-title { font-size: 22px; }
   .article-content { font-size: 15px; }
-  .article-content :deep(p) { text-indent: 0; }
-  .article-meta .divider { margin: 0 8px; }
 }
 </style>

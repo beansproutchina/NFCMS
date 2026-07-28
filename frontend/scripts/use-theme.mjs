@@ -11,7 +11,7 @@
  * production instead COPYs the theme into it (see Dockerfile.single). Requires
  * resolve.preserveSymlinks (vite) + preserveSymlinks (tsconfig) — already configured.
  */
-import { existsSync, rmSync, symlinkSync, lstatSync, readdirSync } from 'node:fs';
+import { existsSync, rmSync, unlinkSync, symlinkSync, lstatSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,8 +30,14 @@ if (!existsSync(themePath)) {
   process.exit(1);
 }
 
-// Clear whatever is currently in the slot (symlink or a real/copied directory).
-if (existsSync(slot) || isSymlink(slot)) rmSync(slot, { recursive: true, force: true });
+// Clear whatever is currently in the slot. CRITICAL: if the slot is a symlink, unlink ONLY the
+// link — never rmSync({recursive}) it, or we'd delete the *target theme's real source* through
+// the link. Only a real copied directory (e.g. a Docker build slot) gets the recursive remove.
+if (isSymlink(slot)) {
+  unlinkSync(slot);
+} else if (existsSync(slot)) {
+  rmSync(slot, { recursive: true, force: true });
+}
 
 // POSIX: relative link so the repo stays portable across clone locations.
 // slot lives at src/views/front/templates -> ../../../../frontend_themes/<name>

@@ -47,6 +47,33 @@ export interface ThemeInfo {
 export type ThemePages = Record<string, PageConfig>;
 
 /**
+ * A theme-owned config field, declared by a theme's `export const configSchema`.
+ * The admin Settings panel reads the active theme's schema and renders an editor for each,
+ * so a theme can expose its own settings (logo URL, footer contact, …) with zero backend work.
+ *
+ * `key` MUST follow the `theme_<themename>_<field>` convention (lowercase/digits/underscore) —
+ * that prefix is what the backend accepts as a theme-owned key. Values are stored as strings;
+ * empty means "unset", and the theme should hide the corresponding UI rather than show a default.
+ */
+export interface ThemeConfigField {
+  /** Full config key, e.g. "theme_school_logo". Must start with `theme_<name>_`. */
+  key: string;
+  /** Human label shown in the admin Settings form. */
+  label: string;
+  /** Editor control. Defaults to "text". */
+  type?: 'text' | 'textarea' | 'number' | 'image';
+  /** Optional helper text under the field. */
+  hint?: string;
+  /** Placeholder for the input. */
+  placeholder?: string;
+  /** Optional grouping heading in the form (e.g. "页脚", "品牌"). */
+  group?: string;
+}
+
+/** A theme's `export const configSchema: ThemeConfigSchema`. */
+export type ThemeConfigSchema = ThemeConfigField[];
+
+/**
  * The object injected into every template as the `context` prop. Themes may type their
  * `defineProps<{ context: ThemeContext }>()` against this for autocomplete (all optional
  * since which keys are present depends on the page — see THEME_DEV.md).
@@ -59,6 +86,8 @@ export interface ThemeContext {
   api?: any;
   /** Resolved page title (same value written to document.title). */
   title?: string;
+  /** Per-prefetch-key pagination meta from list responses, e.g. `$meta.articles.total`. */
+  $meta?: Record<string, { total?: number; pages?: number }>;
   /** Prefetched keys + the current entity (article/category/children/breadcrumbs) spread in. */
   [key: string]: any;
 }

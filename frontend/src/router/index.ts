@@ -192,19 +192,29 @@ const fetchContentData = async (to: any) => {
                 const args = await Promise.all((fetchInfo.args || []).map(resolveArgAsync));
                 const res = await apiFn(...args);
 
-                return { key: fetchInfo.key, data: res.data };
+                // Keep list pagination info from the envelope — `context[key]` stays the
+                // data (array), while total/pages are surfaced separately via `context.$meta[key]`
+                // so themes can paginate off a prefetched first page without a second request.
+                const meta = (res && (res.total !== undefined || res.pages !== undefined))
+                    ? { total: res.total, pages: res.pages }
+                    : undefined;
+                return { key: fetchInfo.key, data: res.data, meta };
             }
         } catch (e) {
             console.error('Prefetch error for', fetchInfo.key, e);
         }
-        return { key: fetchInfo.key, data: null };
+        return { key: fetchInfo.key, data: null, meta: undefined };
     });
 
     const results = await Promise.all(promises);
+    const meta: Record<string, any> = {};
     // Apply in reverse order (parents first, then children) so children override parents
     for (let i = results.length - 1; i >= 0; i--) {
         const r = results[i];
-        if (r.data !== null) extraData[r.key] = r.data;
+        if (r.data !== null) {
+            extraData[r.key] = r.data;
+            if (r.meta) meta[r.key] = r.meta;
+        }
     }
 
     const pageData = { ...entityData, ...extraData };
@@ -220,6 +230,7 @@ const fetchContentData = async (to: any) => {
     to.meta.fetchedData = {
         ...baseData,
         data: pageData,
+        meta,
         title: pageTitle,
         templateName,
         layouts

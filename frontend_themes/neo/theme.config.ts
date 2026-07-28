@@ -1,5 +1,5 @@
 import type { App } from 'vue';
-import type { ThemeInfo, ThemePages } from '@/views/front/theme-runtime';
+import type { ThemeInfo, ThemePages, ThemeConfigSchema } from '@/views/front/theme-runtime';
 
 export const info: ThemeInfo = {
   name: "Neo Theme",
@@ -22,12 +22,14 @@ export const pages: ThemePages = {
     ]
   },
   DefaultCategory: {
+    layout: 'Layout',
     title: '$data.category.name - $data.config.site_name',
     prefetch: [
       { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true }] }
     ]
   },
   DefaultArticle: {
+    layout: 'Layout',
     title: '$data.article.title - $data.config.site_name',
     prefetch: []
   },
@@ -38,3 +40,6 @@ export const pages: ThemePages = {
     ]
   }
 };
+
+// This theme exposes no custom settings.
+export const configSchema: ThemeConfigSchema = [];

@@ -19,41 +19,39 @@ const importMode = ref(false);
 const importFile = ref<File | null>(null);
 const importFileData = ref<any>(null);
 const importFileName = computed(() => importFile.value?.name || '');
-
-const toggleImportMode = () => {
-  importMode.value = !importMode.value;
-  if (!importMode.value) {
-    clearImportFile();
-  }
-};
+// Real hidden <input> in the template (see ref). A detached createElement('input') can have its
+// change event dropped by the browser (GC'd before firing) — hence "no reaction on select".
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const handleFileSelect = () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  input.onchange = async (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      if (!data._meta || data._meta.generator !== 'NFCMS') {
-        error.value = '无效的导入文件格式（非 NFCMS 导出文件）';
-        return;
-      }
-      importFile.value = file;
-      importFileData.value = data;
-      error.value = '';
-    } catch (err: any) {
-      error.value = '文件解析失败：' + (err.message || '未知错误');
+  fileInput.value?.click();
+};
+
+const onFileChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  // Reset so picking the SAME file again still fires change next time.
+  input.value = '';
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data._meta || data._meta.generator !== 'NFCMS') {
+      error.value = '无效的导入文件格式（非 NFCMS 导出文件）';
+      return;
     }
-  };
-  input.click();
+    importFile.value = file;
+    importFileData.value = data;
+    error.value = '';
+  } catch (err: any) {
+    error.value = '文件解析失败：' + (err.message || '未知错误');
+  }
 };
 
 const clearImportFile = () => {
   importFile.value = null;
   importFileData.value = null;
+  if (fileInput.value) fileInput.value.value = '';
 };
 
 const performSetup = async () => {
@@ -161,7 +159,8 @@ const performSetup = async () => {
             </button>
           </div>
 
-          <button @click="handleFileSelect" unstyled
+          <input ref="fileInput" type="file" accept=".json,application/json" class="hidden" @change="onFileChange" />
+          <button @click="handleFileSelect" type="button" unstyled
             class="w-full border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[8px] py-6 flex flex-col items-center justify-center gap-2 text-[rgba(0,0,0,0.5)] hover:border-[#0071e3] hover:text-[#0071e3] transition-colors cursor-pointer bg-transparent">
             <LucideUpload :size="24" />
             <span class="text-[14px] font-medium">选择导出文件 (.json)</span>

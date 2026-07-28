@@ -1,0 +1,1421 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "exportedAt": "2026-07-28T09:10:33.256Z",
+    "generator": "NFCMS"
+  },
+  "system_config": [
+    {
+      "id": 1,
+      "configkey": "is_initialized",
+      "configvalue": "true"
+    },
+    {
+      "id": 2,
+      "configkey": "site_name",
+      "configvalue": "云帆大学人工智能学院"
+    },
+    {
+      "id": 3,
+      "configkey": "subtitle",
+      "configvalue": "School of Artificial Intelligence, Yunfan University"
+    },
+    {
+      "id": 4,
+      "configkey": "icp_record",
+      "configvalue": "沪ICP备00000000号-1"
+    },
+    {
+      "id": 5,
+      "configkey": "home_template",
+      "configvalue": "DefaultHome"
+    },
+    {
+      "id": 6,
+      "configkey": "storage_config",
+      "configvalue": "{\"provider\":\"local\",\"local\":{\"upload_dir\":\"static/uploads\"}}"
+    },
+    {
+      "id": 7,
+      "configkey": "theme_school_logo",
+      "configvalue": "https://mockimg.dev/220x64/CCCCCC/66CCFF.png"
+    },
+    {
+      "id": 8,
+      "configkey": "theme_school_qrcode",
+      "configvalue": "https://mockimg.dev/240x240/CCCCCC/66CCFF.png"
+    },
+    {
+      "id": 9,
+      "configkey": "theme_school_footer_address",
+      "configvalue": "云海市翔安区云帆路 800 号 人工智能学院"
+    },
+    {
+      "id": 10,
+      "configkey": "theme_school_footer_postcode",
+      "configvalue": "361000"
+    },
+    {
+      "id": 11,
+      "configkey": "theme_school_footer_phone",
+      "configvalue": "0592-8888XXXX"
+    },
+    {
+      "id": 12,
+      "configkey": "theme_school_footer_email",
+      "configvalue": "sai@yunfan.edu.cn"
+    },
+    {
+      "id": 13,
+      "configkey": "theme_school_police_record",
+      "configvalue": "沪公网安备 31000000000000 号"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "新闻中心",
+      "slug": "news",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 10,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 2,
+      "name": "通知公告",
+      "slug": "notice",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "ArticleNotice",
+      "weight": 20,
+      "article_data_fields": {
+        "department": {
+          "title": "发文单位",
+          "type": "text"
+        },
+        "doc_number": {
+          "title": "发文字号",
+          "type": "text"
+        }
+      },
+      "data": null
+    },
+    {
+      "id": 3,
+      "name": "学术活动",
+      "slug": "events",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 30,
+      "article_data_fields": {
+        "source": {
+          "title": "来源",
+          "type": "text"
+        }
+      },
+      "data": null
+    },
+    {
+      "id": 4,
+      "name": "师资队伍",
+      "slug": "faculty",
+      "parent_id": 0,
+      "list_template": "CategoryGrid",
+      "content_template": "DefaultArticle",
+      "weight": 40,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 5,
+      "name": "科学研究",
+      "slug": "research",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 50,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 6,
+      "name": "学院概况",
+      "slug": "about",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 70,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 7,
+      "name": "学院简介",
+      "slug": "about-intro",
+      "parent_id": 6,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 10,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 8,
+      "name": "现任领导",
+      "slug": "about-leaders",
+      "parent_id": 6,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 20,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 9,
+      "name": "教授",
+      "slug": "faculty-prof",
+      "parent_id": 4,
+      "list_template": "CategoryGrid",
+      "content_template": "DefaultArticle",
+      "weight": 10,
+      "article_data_fields": null,
+      "data": null
+    },
+    {
+      "id": 10,
+      "name": "副教授",
+      "slug": "faculty-assoc",
+      "parent_id": 4,
+      "list_template": "CategoryGrid",
+      "content_template": "DefaultArticle",
+      "weight": 20,
+      "article_data_fields": null,
+      "data": null
+    }
+  ],
+  "menus": [
+    {
+      "id": 1,
+      "name": "主导航",
+      "location": "header",
+      "items": [
+        {
+          "label": "首页",
+          "url": "/",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "学院概况",
+          "url": "/a/about",
+          "type": "category",
+          "refId": 6,
+          "children": [
+            {
+              "label": "学院简介",
+              "url": "/a/about-intro",
+              "type": "category",
+              "refId": 7,
+              "children": []
+            },
+            {
+              "label": "现任领导",
+              "url": "/a/about-leaders",
+              "type": "category",
+              "refId": 8,
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "新闻中心",
+          "url": "/a/news",
+          "type": "category",
+          "refId": 1,
+          "children": []
+        },
+        {
+          "label": "通知公告",
+          "url": "/a/notice",
+          "type": "category",
+          "refId": 2,
+          "children": []
+        },
+        {
+          "label": "学术活动",
+          "url": "/a/events",
+          "type": "category",
+          "refId": 3,
+          "children": []
+        },
+        {
+          "label": "师资队伍",
+          "url": "/a/faculty",
+          "type": "category",
+          "refId": 4,
+          "children": [
+            {
+              "label": "教授",
+              "url": "/a/faculty-prof",
+              "type": "category",
+              "refId": 9,
+              "children": []
+            },
+            {
+              "label": "副教授",
+              "url": "/a/faculty-assoc",
+              "type": "category",
+              "refId": 10,
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "科学研究",
+          "url": "/a/research",
+          "type": "category",
+          "refId": 5,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "顶栏链接",
+      "location": "top",
+      "items": [
+        {
+          "label": "学院邮箱",
+          "url": "https://mail.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "图书馆",
+          "url": "https://lib.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "OA 系统",
+          "url": "https://oa.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "English",
+          "url": "https://en.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "快速通道",
+      "location": "quicklinks",
+      "items": [
+        {
+          "label": "校历",
+          "url": "https://www.example.edu/calendar",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "教务系统",
+          "url": "https://jw.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "本科招生",
+          "url": "https://bkzs.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "就业信息",
+          "url": "https://job.example.edu",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "页脚链接",
+      "location": "footer",
+      "items": [
+        {
+          "label": "相关链接",
+          "url": "#",
+          "type": "group",
+          "refId": 0,
+          "children": [
+            {
+              "label": "学校主页",
+              "url": "https://www.example.edu",
+              "type": "custom",
+              "refId": 0,
+              "children": []
+            },
+            {
+              "label": "研究生院",
+              "url": "https://gs.example.edu",
+              "type": "custom",
+              "refId": 0,
+              "children": []
+            },
+            {
+              "label": "校友会",
+              "url": "https://alumni.example.edu",
+              "type": "custom",
+              "refId": 0,
+              "children": []
+            }
+          ]
+        },
+        {
+          "label": "信息服务",
+          "url": "#",
+          "type": "group",
+          "refId": 0,
+          "children": [
+            {
+              "label": "信息公开",
+              "url": "https://xxgk.example.edu",
+              "type": "custom",
+              "refId": 0,
+              "children": []
+            },
+            {
+              "label": "网络服务",
+              "url": "https://net.example.edu",
+              "type": "custom",
+              "refId": 0,
+              "children": []
+            },
+            {
+              "label": "联系我们",
+              "url": "/a/about",
+              "type": "custom",
+              "refId": 0,
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "id": 1,
+      "title": "我院在国际人工智能顶级会议上发表多项研究成果",
+      "slug": "news-1",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 我院在国际人工智能顶级会议上发表多项研究成果\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2026-01-01T01:00:00.000Z",
+      "created_at": "2026-01-01T01:00:00.000Z",
+      "updated_at": "2026-01-01T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 2,
+      "title": "学院举行 2026 级新生开学典礼暨入学教育",
+      "slug": "news-2",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 学院举行 2026 级新生开学典礼暨入学教育\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2026-02-02T01:00:00.000Z",
+      "created_at": "2026-02-02T01:00:00.000Z",
+      "updated_at": "2026-02-02T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 3,
+      "title": "人工智能与智能制造产学研合作基地正式揭牌",
+      "slug": "news-3",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 人工智能与智能制造产学研合作基地正式揭牌\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2026-03-03T01:00:00.000Z",
+      "created_at": "2026-03-03T01:00:00.000Z",
+      "updated_at": "2026-03-03T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 4,
+      "title": "我院师生在全国大学生智能算法竞赛中喜获佳绩",
+      "slug": "news-4",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 我院师生在全国大学生智能算法竞赛中喜获佳绩\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-04-04T01:00:00.000Z",
+      "created_at": "2026-04-04T01:00:00.000Z",
+      "updated_at": "2026-04-04T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 5,
+      "title": "学院召开学科建设与发展战略研讨会",
+      "slug": "news-5",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 学院召开学科建设与发展战略研讨会\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-05-05T01:00:00.000Z",
+      "created_at": "2026-05-05T01:00:00.000Z",
+      "updated_at": "2026-05-05T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 6,
+      "title": "知名学者做客“云帆讲坛”畅谈大模型前沿",
+      "slug": "news-6",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 知名学者做客“云帆讲坛”畅谈大模型前沿\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-06-06T01:00:00.000Z",
+      "created_at": "2026-06-06T01:00:00.000Z",
+      "updated_at": "2026-06-06T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 7,
+      "title": "我院与多家龙头企业签署联合培养协议",
+      "slug": "news-7",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 我院与多家龙头企业签署联合培养协议\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-01-07T01:00:00.000Z",
+      "created_at": "2026-01-07T01:00:00.000Z",
+      "updated_at": "2026-01-07T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 8,
+      "title": "学院开展师德师风建设主题教育活动",
+      "slug": "news-8",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 学院开展师德师风建设主题教育活动\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-02-08T01:00:00.000Z",
+      "created_at": "2026-02-08T01:00:00.000Z",
+      "updated_at": "2026-02-08T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 9,
+      "title": "智能视觉实验室在顶级期刊发表重要论文",
+      "slug": "news-9",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 智能视觉实验室在顶级期刊发表重要论文\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-03-09T01:00:00.000Z",
+      "created_at": "2026-03-09T01:00:00.000Z",
+      "updated_at": "2026-03-09T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 10,
+      "title": "我院组织师生赴企业开展社会实践活动",
+      "slug": "news-10",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 我院组织师生赴企业开展社会实践活动\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-04-10T01:00:00.000Z",
+      "created_at": "2026-04-10T01:00:00.000Z",
+      "updated_at": "2026-04-10T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 11,
+      "title": "学院成功举办第五届研究生学术论坛",
+      "slug": "news-11",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 学院成功举办第五届研究生学术论坛\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-05-11T01:00:00.000Z",
+      "created_at": "2026-05-11T01:00:00.000Z",
+      "updated_at": "2026-05-11T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 12,
+      "title": "人工智能基础理论研究取得阶段性突破",
+      "slug": "news-12",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 人工智能基础理论研究取得阶段性突破\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-06-12T01:00:00.000Z",
+      "created_at": "2026-06-12T01:00:00.000Z",
+      "updated_at": "2026-06-12T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 13,
+      "title": "学院党委开展主题党日活动",
+      "slug": "news-13",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 学院党委开展主题党日活动\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-01-13T01:00:00.000Z",
+      "created_at": "2026-01-13T01:00:00.000Z",
+      "updated_at": "2026-01-13T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 14,
+      "title": "我院学子在创新创业大赛中斩获金奖",
+      "slug": "news-14",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 我院学子在创新创业大赛中斩获金奖\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-02-14T01:00:00.000Z",
+      "created_at": "2026-02-14T01:00:00.000Z",
+      "updated_at": "2026-02-14T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 15,
+      "title": "学院举办教职工趣味运动会",
+      "slug": "news-15",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 学院举办教职工趣味运动会\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-03-15T01:00:00.000Z",
+      "created_at": "2026-03-15T01:00:00.000Z",
+      "updated_at": "2026-03-15T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 16,
+      "title": "关于表彰 2025 年度优秀学生的决定",
+      "slug": "news-16",
+      "author_id": "1",
+      "description": "这是一条用于演示的新闻摘要，介绍了本条新闻的核心要点与背景信息。",
+      "thumbnail": "",
+      "content": "# 关于表彰 2025 年度优秀学生的决定\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2026-04-16T01:00:00.000Z",
+      "created_at": "2026-04-16T01:00:00.000Z",
+      "updated_at": "2026-04-16T01:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 17,
+      "title": "关于做好 2026 年寒假放假安排的通知",
+      "slug": "notice-1",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "根据学院工作安排，现将有关事项通知如下：\n\n**一、总体要求**\n\n各系、各办公室要高度重视，认真组织落实。\n\n**二、具体安排**\n\n1. 请于规定时间内完成相关工作；\n2. 如有疑问请与相关部门联系。\n\n特此通知。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2026-01-02T06:30:00.000Z",
+      "created_at": "2026-01-02T06:30:00.000Z",
+      "updated_at": "2026-01-02T06:30:00.000Z",
+      "data": {
+        "department": "院办公室",
+        "doc_number": "云智院办〔2026〕1 号"
+      }
+    },
+    {
+      "id": 18,
+      "title": "关于开展 2026 年研究生国家奖学金评选工作的通知",
+      "slug": "notice-2",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "根据学院工作安排，现将有关事项通知如下：\n\n**一、总体要求**\n\n各系、各办公室要高度重视，认真组织落实。\n\n**二、具体安排**\n\n1. 请于规定时间内完成相关工作；\n2. 如有疑问请与相关部门联系。\n\n特此通知。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2026-02-03T06:30:00.000Z",
+      "created_at": "2026-02-03T06:30:00.000Z",
+      "updated_at": "2026-02-03T06:30:00.000Z",
+      "data": {
+        "department": "研究生教务办",
+        "doc_number": "云智研〔2026〕7 号"
+      }
+    },
+    {
+      "id": 19,
+      "title": "关于组织申报省部级科研项目的通知",
+      "slug": "notice-3",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "根据学院工作安排，现将有关事项通知如下：\n\n**一、总体要求**\n\n各系、各办公室要高度重视，认真组织落实。\n\n**二、具体安排**\n\n1. 请于规定时间内完成相关工作；\n2. 如有疑问请与相关部门联系。\n\n特此通知。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2026-03-04T06:30:00.000Z",
+      "created_at": "2026-03-04T06:30:00.000Z",
+      "updated_at": "2026-03-04T06:30:00.000Z",
+      "data": {
+        "department": "科研办公室",
+        "doc_number": "云智科〔2026〕12 号"
+      }
+    },
+    {
+      "id": 20,
+      "title": "关于举办第六届学术文化节的通知",
+      "slug": "notice-4",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "根据学院工作安排，现将有关事项通知如下：\n\n**一、总体要求**\n\n各系、各办公室要高度重视，认真组织落实。\n\n**二、具体安排**\n\n1. 请于规定时间内完成相关工作；\n2. 如有疑问请与相关部门联系。\n\n特此通知。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2026-04-05T06:30:00.000Z",
+      "created_at": "2026-04-05T06:30:00.000Z",
+      "updated_at": "2026-04-05T06:30:00.000Z",
+      "data": {
+        "department": "团委",
+        "doc_number": "云智团〔2026〕3 号"
+      }
+    },
+    {
+      "id": 21,
+      "title": "关于调整本学期课程安排的通知",
+      "slug": "notice-5",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "根据学院工作安排，现将有关事项通知如下：\n\n**一、总体要求**\n\n各系、各办公室要高度重视，认真组织落实。\n\n**二、具体安排**\n\n1. 请于规定时间内完成相关工作；\n2. 如有疑问请与相关部门联系。\n\n特此通知。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2026-05-06T06:30:00.000Z",
+      "created_at": "2026-05-06T06:30:00.000Z",
+      "updated_at": "2026-05-06T06:30:00.000Z",
+      "data": {
+        "department": "本科教务办",
+        "doc_number": "云智教〔2026〕5 号"
+      }
+    },
+    {
+      "id": 22,
+      "title": "关于开展实验室安全检查的通知",
+      "slug": "notice-6",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "根据学院工作安排，现将有关事项通知如下：\n\n**一、总体要求**\n\n各系、各办公室要高度重视，认真组织落实。\n\n**二、具体安排**\n\n1. 请于规定时间内完成相关工作；\n2. 如有疑问请与相关部门联系。\n\n特此通知。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2026-06-07T06:30:00.000Z",
+      "created_at": "2026-06-07T06:30:00.000Z",
+      "updated_at": "2026-06-07T06:30:00.000Z",
+      "data": {
+        "department": "实验室与设备管理办",
+        "doc_number": "云智实〔2026〕2 号"
+      }
+    },
+    {
+      "id": 23,
+      "title": "云帆讲坛(第 88 期):大规模预训练模型的可解释性",
+      "slug": "event-1",
+      "author_id": "1",
+      "description": "讲座信息:时间、地点及主讲人详见正文,欢迎广大师生踊跃参加。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "**主讲人**:张伟 教授(示例大学)\n\n**时间**:2026 年 7 月 12 日 15:00\n\n**地点**:人工智能学院报告厅(A 楼 101)\n\n**内容简介**\n\n本次讲座将围绕相关主题展开深入探讨,分享最新研究进展与思考。欢迎感兴趣的师生参加交流。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 3,
+      "published_at": "2026-07-10T07:00:00.000Z",
+      "created_at": "2026-07-10T07:00:00.000Z",
+      "updated_at": "2026-07-10T07:00:00.000Z",
+      "data": {
+        "source": "学院学术委员会"
+      }
+    },
+    {
+      "id": 24,
+      "title": "前沿论坛:具身智能与机器人操作",
+      "slug": "event-2",
+      "author_id": "1",
+      "description": "讲座信息:时间、地点及主讲人详见正文,欢迎广大师生踊跃参加。",
+      "thumbnail": "",
+      "content": "**主讲人**:李娜 研究员(示例研究院)\n\n**时间**:2026 年 7 月 13 日 15:00\n\n**地点**:人工智能学院报告厅(A 楼 101)\n\n**内容简介**\n\n本次讲座将围绕相关主题展开深入探讨,分享最新研究进展与思考。欢迎感兴趣的师生参加交流。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 3,
+      "published_at": "2026-07-11T07:00:00.000Z",
+      "created_at": "2026-07-11T07:00:00.000Z",
+      "updated_at": "2026-07-11T07:00:00.000Z",
+      "data": {
+        "source": "学院学术委员会"
+      }
+    },
+    {
+      "id": 25,
+      "title": "青年学者沙龙:图神经网络的理论与应用",
+      "slug": "event-3",
+      "author_id": "1",
+      "description": "讲座信息:时间、地点及主讲人详见正文,欢迎广大师生踊跃参加。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "**主讲人**:王强 副教授(本院)\n\n**时间**:2026 年 7 月 14 日 15:00\n\n**地点**:人工智能学院报告厅(A 楼 101)\n\n**内容简介**\n\n本次讲座将围绕相关主题展开深入探讨,分享最新研究进展与思考。欢迎感兴趣的师生参加交流。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 3,
+      "published_at": "2026-07-12T07:00:00.000Z",
+      "created_at": "2026-07-12T07:00:00.000Z",
+      "updated_at": "2026-07-12T07:00:00.000Z",
+      "data": {
+        "source": "学院学术委员会"
+      }
+    },
+    {
+      "id": 26,
+      "title": "名师讲堂:从感知到认知的智能演进",
+      "slug": "event-4",
+      "author_id": "1",
+      "description": "讲座信息:时间、地点及主讲人详见正文,欢迎广大师生踊跃参加。",
+      "thumbnail": "",
+      "content": "**主讲人**:陈明 院士(示例科学院)\n\n**时间**:2026 年 7 月 15 日 15:00\n\n**地点**:人工智能学院报告厅(A 楼 101)\n\n**内容简介**\n\n本次讲座将围绕相关主题展开深入探讨,分享最新研究进展与思考。欢迎感兴趣的师生参加交流。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 3,
+      "published_at": "2026-07-13T07:00:00.000Z",
+      "created_at": "2026-07-13T07:00:00.000Z",
+      "updated_at": "2026-07-13T07:00:00.000Z",
+      "data": {
+        "source": "学院学术委员会"
+      }
+    },
+    {
+      "id": 27,
+      "title": "赵一 教授",
+      "slug": "faculty-1",
+      "author_id": "1",
+      "description": "主要研究方向:机器学习。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n赵一,教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 机器学习\n\n## 联系方式\n\n邮箱:zhao@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 9,
+      "published_at": "2025-09-01T02:00:00.000Z",
+      "created_at": "2025-09-01T02:00:00.000Z",
+      "updated_at": "2025-09-01T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 28,
+      "title": "钱二 教授",
+      "slug": "faculty-2",
+      "author_id": "1",
+      "description": "主要研究方向:计算机视觉。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n钱二,教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 计算机视觉\n\n## 联系方式\n\n邮箱:qian@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 9,
+      "published_at": "2025-09-02T02:00:00.000Z",
+      "created_at": "2025-09-02T02:00:00.000Z",
+      "updated_at": "2025-09-02T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 29,
+      "title": "孙三 教授",
+      "slug": "faculty-3",
+      "author_id": "1",
+      "description": "主要研究方向:自然语言处理。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n孙三,教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 自然语言处理\n\n## 联系方式\n\n邮箱:sun@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 9,
+      "published_at": "2025-09-03T02:00:00.000Z",
+      "created_at": "2025-09-03T02:00:00.000Z",
+      "updated_at": "2025-09-03T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 30,
+      "title": "李四 副教授",
+      "slug": "faculty-4",
+      "author_id": "1",
+      "description": "主要研究方向:智能机器人。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n李四,副教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 智能机器人\n\n## 联系方式\n\n邮箱:li@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 9,
+      "published_at": "2025-09-04T02:00:00.000Z",
+      "created_at": "2025-09-04T02:00:00.000Z",
+      "updated_at": "2025-09-04T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 31,
+      "title": "周五 副教授",
+      "slug": "faculty-5",
+      "author_id": "1",
+      "description": "主要研究方向:数据挖掘。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n周五,副教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 数据挖掘\n\n## 联系方式\n\n邮箱:zhou@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 10,
+      "published_at": "2025-09-05T02:00:00.000Z",
+      "created_at": "2025-09-05T02:00:00.000Z",
+      "updated_at": "2025-09-05T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 32,
+      "title": "吴六 副教授",
+      "slug": "faculty-6",
+      "author_id": "1",
+      "description": "主要研究方向:知识图谱。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n吴六,副教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 知识图谱\n\n## 联系方式\n\n邮箱:wu@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 10,
+      "published_at": "2025-09-06T02:00:00.000Z",
+      "created_at": "2025-09-06T02:00:00.000Z",
+      "updated_at": "2025-09-06T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 33,
+      "title": "郑七 助理教授",
+      "slug": "faculty-7",
+      "author_id": "1",
+      "description": "主要研究方向:强化学习。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n郑七,助理教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 强化学习\n\n## 联系方式\n\n邮箱:zheng@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 10,
+      "published_at": "2025-09-07T02:00:00.000Z",
+      "created_at": "2025-09-07T02:00:00.000Z",
+      "updated_at": "2025-09-07T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 34,
+      "title": "王八 助理教授",
+      "slug": "faculty-8",
+      "author_id": "1",
+      "description": "主要研究方向:智能芯片。",
+      "thumbnail": "https://mockimg.dev/400x400/CCCCCC/66CCFF.png",
+      "content": "## 个人简介\n\n王八,助理教授,博士生导师。长期从事人工智能相关领域的教学与科研工作。\n\n## 研究方向\n\n- 智能芯片\n\n## 联系方式\n\n邮箱:wang@yunfan.edu.cn",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 10,
+      "published_at": "2025-09-08T02:00:00.000Z",
+      "created_at": "2025-09-08T02:00:00.000Z",
+      "updated_at": "2025-09-08T02:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 35,
+      "title": "国家重点研发计划项目取得重要进展",
+      "slug": "research-1",
+      "author_id": "1",
+      "description": "科研动态演示内容,介绍相关项目、平台与成果的基本情况。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 国家重点研发计划项目取得重要进展\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 5,
+      "published_at": "2026-01-03T03:00:00.000Z",
+      "created_at": "2026-01-03T03:00:00.000Z",
+      "updated_at": "2026-01-03T03:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 36,
+      "title": "我院牵头建设省级重点实验室",
+      "slug": "research-2",
+      "author_id": "1",
+      "description": "科研动态演示内容,介绍相关项目、平台与成果的基本情况。",
+      "thumbnail": "",
+      "content": "# 我院牵头建设省级重点实验室\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 5,
+      "published_at": "2026-02-04T03:00:00.000Z",
+      "created_at": "2026-02-04T03:00:00.000Z",
+      "updated_at": "2026-02-04T03:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 37,
+      "title": "多项发明专利实现成果转化",
+      "slug": "research-3",
+      "author_id": "1",
+      "description": "科研动态演示内容,介绍相关项目、平台与成果的基本情况。",
+      "thumbnail": "https://mockimg.dev/600x400/CCCCCC/66CCFF.png",
+      "content": "# 多项发明专利实现成果转化\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 5,
+      "published_at": "2026-03-05T03:00:00.000Z",
+      "created_at": "2026-03-05T03:00:00.000Z",
+      "updated_at": "2026-03-05T03:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 38,
+      "title": "智能计算平台算力升级完成",
+      "slug": "research-4",
+      "author_id": "1",
+      "description": "科研动态演示内容,介绍相关项目、平台与成果的基本情况。",
+      "thumbnail": "",
+      "content": "# 智能计算平台算力升级完成\n\n我院坚持立德树人根本任务，围绕人工智能领域国家重大战略需求，持续推进学科建设、人才培养与科研创新。\n\n## 主要内容\n\n- 深化产教融合，构建高水平人才培养体系\n- 加强基础研究，推动关键核心技术攻关\n- 拓展国际合作，提升学院全球影响力\n\n> 本文为演示数据，内容为占位文字，可在后台自由编辑或删除。\n\n具体安排详见相关通知，欢迎广大师生积极参与。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 5,
+      "published_at": "2026-04-06T03:00:00.000Z",
+      "created_at": "2026-04-06T03:00:00.000Z",
+      "updated_at": "2026-04-06T03:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 39,
+      "title": "学院简介",
+      "slug": "intro",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "https://mockimg.dev/800x400/CCCCCC/66CCFF.png",
+      "content": "# 学院简介\n\n云帆大学人工智能学院成立于示例年份,是学校面向人工智能领域重点建设的教学科研单位(演示内容)。\n\n学院设有多个系所与研究中心,拥有一支结构合理、素质精良的师资队伍,在人才培养、科学研究、社会服务等方面取得显著成效。\n\n## 学科方向\n\n- 机器学习与数据科学\n- 计算机视觉与模式识别\n- 自然语言处理\n- 智能机器人与控制\n\n> 以上内容均为演示占位,请在后台按实际情况修改。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 7,
+      "published_at": "2025-06-01T00:00:00.000Z",
+      "created_at": "2025-06-01T00:00:00.000Z",
+      "updated_at": "2025-06-01T00:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 40,
+      "title": "现任领导",
+      "slug": "leaders",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "# 现任领导\n\n| 职务 | 姓名 | 分工 |\n| --- | --- | --- |\n| 院长 | 示例一 | 全面工作 |\n| 党委书记 | 示例二 | 党务工作 |\n| 副院长 | 示例三 | 科研工作 |\n| 副院长 | 示例四 | 教学工作 |\n\n(演示数据)",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 8,
+      "published_at": "2025-06-02T00:00:00.000Z",
+      "created_at": "2025-06-02T00:00:00.000Z",
+      "updated_at": "2025-06-02T00:00:00.000Z",
+      "data": null
+    }
+  ],
+  "roles": [
+    {
+      "id": 1,
+      "name": "super_admin",
+      "label": "Super Admin",
+      "description": null,
+      "is_system": 1,
+      "weight": 100
+    },
+    {
+      "id": 2,
+      "name": "admin",
+      "label": "Admin",
+      "description": null,
+      "is_system": 1,
+      "weight": 80
+    },
+    {
+      "id": 3,
+      "name": "editor",
+      "label": "Editor",
+      "description": null,
+      "is_system": 1,
+      "weight": 50
+    },
+    {
+      "id": 4,
+      "name": "author",
+      "label": "Author",
+      "description": null,
+      "is_system": 1,
+      "weight": 30
+    }
+  ],
+  "role_permissions": [
+    {
+      "id": 1,
+      "role_id": 2,
+      "model": "articles",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 2,
+      "role_id": 2,
+      "model": "articles",
+      "action": "R",
+      "scope": "any"
+    },
+    {
+      "id": 3,
+      "role_id": 2,
+      "model": "articles",
+      "action": "U",
+      "scope": "any"
+    },
+    {
+      "id": 4,
+      "role_id": 2,
+      "model": "articles",
+      "action": "D",
+      "scope": "any"
+    },
+    {
+      "id": 5,
+      "role_id": 2,
+      "model": "articles",
+      "action": "publish",
+      "scope": "any"
+    },
+    {
+      "id": 6,
+      "role_id": 3,
+      "model": "articles",
+      "action": "R",
+      "scope": "own"
+    },
+    {
+      "id": 7,
+      "role_id": 3,
+      "model": "articles",
+      "action": "U",
+      "scope": "own"
+    },
+    {
+      "id": 8,
+      "role_id": 3,
+      "model": "articles",
+      "action": "D",
+      "scope": "own"
+    },
+    {
+      "id": 9,
+      "role_id": 3,
+      "model": "articles",
+      "action": "publish",
+      "scope": "own"
+    },
+    {
+      "id": 10,
+      "role_id": 4,
+      "model": "articles",
+      "action": "R",
+      "scope": "own"
+    },
+    {
+      "id": 11,
+      "role_id": 4,
+      "model": "articles",
+      "action": "U",
+      "scope": "own"
+    },
+    {
+      "id": 12,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 13,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "R",
+      "scope": "any"
+    },
+    {
+      "id": 14,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "U",
+      "scope": "any"
+    },
+    {
+      "id": 15,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "D",
+      "scope": "any"
+    },
+    {
+      "id": 16,
+      "role_id": 3,
+      "model": "attachments",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 17,
+      "role_id": 3,
+      "model": "attachments",
+      "action": "R",
+      "scope": "any"
+    },
+    {
+      "id": 18,
+      "role_id": 3,
+      "model": "attachments",
+      "action": "D",
+      "scope": "any"
+    },
+    {
+      "id": 19,
+      "role_id": 4,
+      "model": "attachments",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 20,
+      "role_id": 4,
+      "model": "attachments",
+      "action": "R",
+      "scope": "any"
+    }
+  ],
+  "user_roles": [],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "dd3224dc3eea0354251a29849f0c304afe74c215afdff3a3849cdd724b2fad441ea81c81c370238cf12409913b410bfffdf360c6ab27b40153bbcbf2e135eebd7e179c1cc31bb4af2e28b825a3f55d36",
+      "nickname": "admin",
+      "role": "super_admin",
+      "lastontime": "2026-07-16 08:18:25"
+    },
+    {
+      "id": 2,
+      "username": "editor",
+      "password": "e0bbd115ce68c1265cdd1aa9ff307ea4634c4e02f63c1ae83df9e31af179d1d056a14e356cf6e87e97f682e444f28d18bfa4f430f799c2e7d0bd37c7ddcbcad190ee7a03bd58fbc3b84ba957a0283b40",
+      "nickname": "Demo Editor",
+      "role": "editor",
+      "lastontime": "2026-07-16 08:18:25"
+    }
+  ],
+  "attachments": [],
+  "revisions": [],
+  "resource_grants": [
+    {
+      "id": 1,
+      "model": "articles_category",
+      "resource_id": 1,
+      "grantee_type": "role",
+      "grantee_id": 3,
+      "access": "C,R,U,publish",
+      "granted_by": 1,
+      "created_at": "2025-12-31T16:00:00.000Z"
+    }
+  ],
+  "schemas": []
+}
