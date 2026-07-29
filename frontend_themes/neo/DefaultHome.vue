@@ -78,7 +78,8 @@ const props = defineProps<{ context: any }>();
 const { config, categories, articles, api } = props.context || {};
 
 const siteName = computed(() => config?.site_name || 'NEO STUDIO');
-const tagline = computed(() => config?.theme_neo_tagline || config?.subtitle || '');
+// Tagline = the generic `subtitle` config key (single source of truth; see theme.config.ts).
+const tagline = computed(() => config?.subtitle || '');
 const ctaText = computed(() => config?.theme_neo_hero_cta_text || '查看作品');
 const worksCat = computed(() => (categories || []).find((c: any) => c.list_template === 'WorkGrid'));
 const servicesCat = computed(() => (categories || []).find((c: any) => c.list_template === 'ServiceList'));

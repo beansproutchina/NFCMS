@@ -37,7 +37,8 @@ const api = props.context?.api;
 
 const slug = computed(() => cfg.value.theme_neo_about_slug || 'about');
 const avatar = computed(() => cfg.value.theme_neo_avatar || '');
-const tagline = computed(() => cfg.value.theme_neo_tagline || cfg.value.subtitle || '');
+// Tagline = the generic `subtitle` config key (single source of truth; see theme.config.ts).
+const tagline = computed(() => cfg.value.subtitle || '');
 
 const article = ref<any>(null);
 const heading = computed(() => article.value?.title || cfg.value.site_name || 'About');
