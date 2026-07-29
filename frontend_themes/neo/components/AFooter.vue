@@ -26,17 +26,19 @@ import { computed } from 'vue';
 import Socials from './Socials.vue';
 
 const props = defineProps<{ context: any }>();
-const { config, menus } = props.context || {};
+// Kept reactive rather than destructured — see the note in AHeader.vue.
+const config = computed<any>(() => props.context?.config || {});
+const menus = computed<any[]>(() => props.context?.menus || []);
 
 // Footer menu: flatten one level (group children or top items) into a link row.
 const footerItems = computed(() => {
-  const m = (menus || []).find((x: any) => x.location === 'footer');
+  const m = menus.value.find((x: any) => x.location === 'footer');
   if (!m) return [];
   const items = m.items || [];
   const flat = items.flatMap((it: any) => (it.children && it.children.length ? it.children : [it]));
   return flat;
 });
-const note = computed(() => config?.theme_neo_footer_note || '');
+const note = computed(() => config.value.theme_neo_footer_note || '');
 const isExternal = (url: string) => /^https?:\/\//i.test(url || '');
 const year = new Date().getFullYear();
 </script>

@@ -33,14 +33,17 @@ import { ref, computed } from 'vue';
 import Socials from './Socials.vue';
 
 const props = defineProps<{ context: any }>();
-const { config, menus } = props.context || {};
+// Layout only rebuilds when the layout chain changes (DynamicView keys it by `layouts.join('>')`),
+// so a plain destructure would freeze these at the first mount's snapshot — computed keeps them live.
+const config = computed<any>(() => props.context?.config || {});
+const menus = computed<any[]>(() => props.context?.menus || []);
 
 const navItems = computed(() => {
-  const m = (menus || []).find((x: any) => x.location === 'header');
-  return (m ? m.items : menus?.[0]?.items) || [];
+  const m = menus.value.find((x: any) => x.location === 'header');
+  return (m ? m.items : menus.value[0]?.items) || [];
 });
-const ctaText = computed(() => config?.theme_neo_nav_cta_text || '');
-const ctaLink = computed(() => config?.theme_neo_nav_cta_link || '/contact');
+const ctaText = computed(() => config.value.theme_neo_nav_cta_text || '');
+const ctaLink = computed(() => config.value.theme_neo_nav_cta_link || '/contact');
 
 const mobileOpen = ref(false);
 </script>
