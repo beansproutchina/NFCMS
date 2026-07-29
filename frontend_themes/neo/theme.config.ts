@@ -72,6 +72,30 @@ export const pages: ThemePages = {
   // Services & team
   ServiceList: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
   TeamGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
+  // Member profile: bare shell + the works this member is credited on.
+  MemberPage: {
+    layout: 'MemberLayout',
+    title: '$data.article.title - $data.config.site_name',
+    prefetch: [
+      // ⚠ LIKE over the WHOLE `data` column on purpose — never `data.members` (a dotted path makes
+      // SQLite json_extract throw "malformed JSON" on any row where data='', which fails the entire
+      // query; prefetch catches that and silently renders an empty section). The client then
+      // re-filters exactly, since LIKE 'member-1' also matches 'member-10'. See MemberPage.vue.
+      {
+        key: 'memberWorks', api: 'contentAPI.listArticles',
+        args: [{
+          filter: { data: { $contains: '$data.article.slug' } },
+          orderBy: 'published_at', orderDesc: true, page: 0, limit: 24,
+        }],
+      },
+    ],
+  },
+  // Registered on purpose even though it is empty: `pages` is the only index of this theme's
+  // layout chain, and a layout that appears in the chain but not in the index reads like an
+  // oversight. Nothing to declare — MemberLayout needs no prefetch (its back link is derived from
+  // context.article.category) and no title (MemberPage's wins, child before parent).
+  // ⚠ Never add `layout: 'Layout'` here: that wraps AHeader/AFooter back around the bare page.
+  MemberLayout: {},
   // Standalone marketing pages (custom routes)
   AboutPage: { layout: 'Layout', routes: ['/about'], title: '关于 - $data.config.site_name', prefetch: [] },
   ContactPage: { layout: 'Layout', routes: ['/contact'], title: '联系 - $data.config.site_name', prefetch: [] },
