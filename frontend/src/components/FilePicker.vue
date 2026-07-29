@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { uploadAPI } from '../api';
 import { LucideSearch, LucideX, LucideFile, LucideCheck } from 'lucide-vue-next';
-import { INPUT_CLASS, BTN } from '../ui/presets';
+import { INPUT_CLASS, BTN, DIALOG_CLOSE } from '../ui/presets';
 
 /**
  * File-library picker overlay. Same shape as UserPicker.vue (paged search + `visible`/`select`
@@ -85,8 +85,8 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
     <div v-if="visible" class="fixed inset-0 z-60 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" @click.self="close">
         <div class="bg-white rounded-card w-full max-w-2xl shadow-2xl flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-separator-weak flex items-center justify-between">
-                <h2 class="text-title-section font-display font-semibold">{{ $t('fileUploader.pickTitle') }}</h2>
-                <Button unstyled @click="close" class="text-gray-400 hover:text-black cursor-pointer"><LucideX :size="18" /></Button>
+                <h2 class="text-title-section font-semibold">{{ $t('fileUploader.pickTitle') }}</h2>
+                <Button unstyled @click="close" :class="DIALOG_CLOSE"><LucideX :size="18" /></Button>
             </div>
 
             <div class="p-5 flex flex-col gap-3 overflow-y-auto">

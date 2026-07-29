@@ -80,7 +80,7 @@ watch(() => route.path, () => {
     
     <!-- Mobile Header Bar -->
     <header class="md:hidden h-[48px] bg-chrome backdrop-blur-[20px] flex items-center justify-between px-4 shrink-0 z-30" style="-webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);">
-      <span class="font-display font-semibold text-title-item text-white flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
+      <span class="font-semibold text-title-item text-white flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
         <LucideSettings :size="18" /> {{ $t('system.title') }}
       </span>
       <Button unstyled @click="sidebarVisible = !sidebarVisible" class="w-10 h-10 flex items-center justify-center text-white rounded-control hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer">
@@ -108,14 +108,14 @@ watch(() => route.path, () => {
     >
       <!-- Sidebar Header (desktop only, mobile has its own header) -->
       <div class="hidden md:flex px-6 py-6 border-b border-divider border-opacity-60 items-center justify-between">
-        <span class="font-display font-semibold text-title-section flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
+        <span class="font-semibold text-title-section flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
           <LucideSettings :size="20"/> {{ $t('system.title') }}
         </span>
       </div>
       
       <!-- Mobile sidebar header -->
       <div class="md:hidden px-6 py-5 border-b border-divider border-opacity-60">
-        <span class="font-display font-semibold text-title-item flex items-center gap-2 text-label">
+        <span class="font-semibold text-title-item flex items-center gap-2 text-label">
           {{ $t('system.title') }}
         </span>
       </div>

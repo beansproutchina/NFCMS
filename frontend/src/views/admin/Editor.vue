@@ -206,16 +206,16 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                     <LucideChevronLeft :size="20" />
                 </Button>
                 <div>
-                    <h1 class="text-[28px] font-display font-semibold leading-[1.14] tracking-[0.196px]">{{ isEdit ? $t('action.edit') : $t('action.new') }}</h1>
+                    <h1 class="text-[28px] font-semibold leading-[1.14] tracking-[0.196px]">{{ isEdit ? $t('action.edit') : $t('action.new') }}</h1>
                 </div>
             </div>
 
             <div class="flex gap-2 items-center">
                 <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-lg text-small font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
-                <Button unstyled @click="doPreview" :disabled="loading" :class="BTN.ghost">
+                <Button unstyled @click="doPreview" :disabled="loading" :class="BTN.secondary">
                     <LucideEye :size="16" /> {{ $t('action.preview') }}
                 </Button>
-                <Button unstyled @click="saveDraft" :disabled="loading" :class="BTN.ghost">
+                <Button unstyled @click="saveDraft" :disabled="loading" :class="BTN.secondary">
                     <LucideSave :size="16" /> {{ $t('action.save') }}
                 </Button>
                 <Button v-if="status === 'visible'" unstyled @click="unpublish" :disabled="loading" :class="BTN.danger">
@@ -230,7 +230,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
         <div class="flex-1 flex gap-6 pb-6 h-[calc(100vh-140px)]">
             <div class="flex-1 flex flex-col bg-white rounded-card shadow-card overflow-hidden border border-separator-weak">
                 <div class="px-6 py-4 border-b border-separator-weak flex flex-col gap-2">
-                    <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-display font-semibold outline-none placeholder:opacity-30" />
+                    <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-semibold outline-none placeholder:opacity-30" />
                 </div>
                 <div class="flex-1 overflow-hidden" style="--md-bk-color: transparent;">
                     <MdEditor v-model="form.content" @onUploadImg="onUploadImg" :language="$i18n.locale === 'zh' ? 'zh-CN' : 'en-US'" class="h-full border-none!" previewTheme="github" />
@@ -238,7 +238,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
             </div>
 
             <div class="w-[320px] shrink-0 bg-white rounded-card shadow-card overflow-y-auto p-6 hidden lg:block border border-separator-weak">
-                <h3 class="text-title-section font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
+                <h3 class="text-title-section font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
                 <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
 
@@ -246,7 +246,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                     <label class="text-body font-medium text-label mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
                     <div class="flex gap-2">
                         <DatePicker v-model="publishAt" showTime hourFormat="24" dateFormat="yy-mm-dd" unstyled :pt="DATEPICKER_PT" class="flex-1" />
-                        <Button unstyled @click="schedule" :disabled="loading" :class="BTN.ghost">{{ $t('action.schedule') }}</Button>
+                        <Button unstyled @click="schedule" :disabled="loading" :class="BTN.secondary">{{ $t('action.schedule') }}</Button>
                     </div>
                 </div>
 
@@ -283,7 +283,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 <div v-if="showMobilePanel && isMobile"
                     class="fixed right-0 top-0 bottom-0 z-50 w-[85vw] max-w-[380px] bg-white shadow-2xl overflow-y-auto p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-title-section font-display font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
+                        <h3 class="text-title-section font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
                         <button @click="showMobilePanel = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer">
                             <LucideX :size="16" />
                         </button>

@@ -119,7 +119,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
             <Button unstyled @click="openFileDialog" :disabled="disabled || uploading" :class="[BTN.primary, 'min-w-max']">
                 <LucideUpload :size="16" /> {{ uploading ? $t('fileUploader.uploading') : (label || $t('action.upload')) }}
             </Button>
-            <Button v-if="library" unstyled @click="openLibrary" :disabled="disabled || uploading" :class="[BTN.ghost, 'min-w-max']">
+            <Button v-if="library" unstyled @click="openLibrary" :disabled="disabled || uploading" :class="[BTN.secondary, 'min-w-max']">
                 <LucideFolderOpen :size="16" /> {{ $t('fileUploader.chooseFromLibrary') }}
             </Button>
         </div>

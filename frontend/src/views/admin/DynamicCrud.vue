@@ -37,7 +37,7 @@
     <!-- Modal Form -->
     <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim backdrop-blur-sm overflow-y-auto pt-20 pb-20">
       <div class="bg-white rounded-card w-full max-w-2xl shadow-2xl p-8 relative">
-        <h2 class="text-[28px] font-display font-semibold mb-6 tracking-tight">{{ isEditing ? 'Edit Record' : 'New Record' }}</h2>
+        <h2 class="text-[28px] font-semibold mb-6 tracking-tight">{{ isEditing ? 'Edit Record' : 'New Record' }}</h2>
         
         <form @submit.prevent="saveRecord" class="space-y-5">
           <div v-for="field in currentSchema?.fields || []" :key="field.name">

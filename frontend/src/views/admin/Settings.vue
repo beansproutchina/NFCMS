@@ -274,7 +274,7 @@ onMounted(() => {
                 <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.settings') }}</h1>
             </div>
             <div class="flex gap-4 items-center">
-                <Button :disabled="restarting" unstyled @click="restartBackend" :class="BTN.ghost">
+                <Button :disabled="restarting" unstyled @click="restartBackend" :class="BTN.secondary">
                     <LucideRefreshCw :size="16" :class="{'animate-spin': restarting}" /> {{ $t('action.restart')  }}
                 </Button>
                 <Button :disabled="saving" unstyled @click="saveSettings" :class="BTN.primary">
@@ -384,7 +384,7 @@ onMounted(() => {
 
             <!-- Test Connection Button -->
             <div class="flex items-center gap-3 mt-6">
-                <Button :disabled="testing" unstyled @click="testStorageConnection" :class="BTN.ghost">
+                <Button :disabled="testing" unstyled @click="testStorageConnection" :class="BTN.secondary">
                     <LucideLoader v-if="testing" :size="16" class="animate-spin" />
                     <LucidePlug v-else :size="16" />
                     {{ testing ? ($t('form.testing') ) : ($t('form.testConnection') ) }}

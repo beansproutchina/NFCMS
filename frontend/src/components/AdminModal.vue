@@ -2,17 +2,19 @@
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm p-4">
     <div class="bg-white rounded-card w-full shadow-2xl flex flex-col max-h-[90vh] relative" :class="widthClass">
       <div class="p-6 border-b border-separator-weak flex justify-between items-center">
-        <h2 class="text-title-section font-display font-semibold">{{ title }}</h2>
-        <Button unstyled @click="$emit('close')" class="text-gray-400 hover:text-black focus:outline-none transition-colors">✕</Button>
+        <h2 class="text-title-section font-semibold">{{ title }}</h2>
+        <Button unstyled @click="$emit('close')" :class="DIALOG_CLOSE">✕</Button>
       </div>
 
       <div class="p-6 overflow-y-auto flex-1 bg-surface">
         <slot></slot>
       </div>
 
+      <!-- Buttons come from BTN, never hand-written: this footer having its own padding and its own
+           borderless cancel is exactly why the two dialogs stopped matching. -->
       <div class="p-6 border-t border-separator-weak bg-white rounded-b-card flex justify-end gap-3">
-        <Button @click="$emit('close')" unstyled class="px-5 py-2 border border-separator text-label rounded-control hover:bg-fill focus:outline-none transition-colors font-medium border-transparent">{{ $t('action.cancel') || 'Cancel' }}</Button>
-        <Button @click="$emit('save')" unstyled class="px-5 py-2 bg-accent text-white rounded-control hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors font-medium flex items-center justify-center gap-2" :disabled="disableSave">{{ saveText || $t('action.save') }}</Button>
+        <Button @click="$emit('close')" unstyled :class="BTN.secondary">{{ $t('action.cancel') || 'Cancel' }}</Button>
+        <Button @click="$emit('save')" unstyled :class="BTN.primary" :disabled="disableSave">{{ saveText || $t('action.save') }}</Button>
       </div>
     </div>
   </div>
@@ -20,6 +22,7 @@
 
 <script setup lang="ts">
 import Button from 'primevue/button';
+import { BTN, DIALOG_CLOSE } from '../ui/presets';
 
 defineProps({
   title: {

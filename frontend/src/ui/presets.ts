@@ -88,16 +88,33 @@ export const DATEPICKER_PT = {
   pcClearButton: { root: 'text-small text-label-3 hover:underline cursor-pointer' },
 };
 
-/** Reusable button classes. Append size/width via the component's own class if needed. */
+/**
+ * Buttons. Three of them, and deliberately no fourth.
+ *
+ * There is exactly ONE neutral button: filled grey with a border. It used to be called `ghost`,
+ * which was a lie — a ghost button has no fill and no border — and the lie had a cost: AdminModal
+ * hand-rolled a genuinely transparent, borderless cancel, so the same "cancel" read as grey-with-a
+ * -border in one dialog and invisible in the next. Two neutral styles at near-identical emphasis is
+ * the ambiguity, not the solution; macOS alerts settle it the same way, with a filled grey Cancel
+ * beside a filled blue OK.
+ *
+ * So: `primary` for the action, `secondary` for everything neutral, `danger` when the neutral one
+ * needs to read as destructive. Size lives in BTN_BASE — do not re-specify padding at the call site,
+ * that is how two dialogs ended up with different button heights.
+ */
 const BTN_BASE = 'inline-flex items-center justify-center gap-2 h-9 px-4 rounded-control text-body font-medium cursor-pointer transition-colors focus:outline-none disabled:opacity-50';
 export const BTN = {
-  /** Primary call-to-action (blue). */
+  /** The action being confirmed. One per view. */
   primary: `${BTN_BASE} bg-accent hover:bg-accent-hover text-white border border-transparent`,
-  /** Neutral secondary action (light gray). */
-  ghost: `${BTN_BASE} bg-surface hover:bg-surface-hover text-label border border-separator-weak`,
-  /** Destructive / warning-tinted secondary action. */
+  /** Every neutral action: cancel, preview, save-draft, test-connection. */
+  secondary: `${BTN_BASE} bg-surface hover:bg-surface-hover text-label border border-separator-weak`,
+  /** `secondary` re-tinted for a destructive action; same weight, different colour. */
   danger: `${BTN_BASE} bg-surface hover:bg-surface-hover text-warn border border-separator-weak`,
 };
+
+/** The ✕ in a dialog header. Shared so AdminModal and the pickers can't drift apart again. */
+export const DIALOG_CLOSE =
+  'text-label-3 hover:text-label focus:outline-none transition-colors cursor-pointer shrink-0';
 
 /**
  * Unstyled passthrough for the global `<ConfirmDialog>`.
@@ -117,12 +134,12 @@ export const CONFIRM_PT = {
   root: 'bg-white rounded-card shadow-2xl w-full max-w-md flex flex-col',
   header: 'px-6 pt-6 pb-4 flex items-start justify-between gap-4',
   title: 'text-title-section font-semibold',
-  pcCloseButton: { root: 'text-label-3 hover:text-label transition-colors cursor-pointer shrink-0' },
+  pcCloseButton: { root: DIALOG_CLOSE },
   content: 'px-6 pb-6 flex items-start gap-3',
   // The severity icon is decorative; the message already says everything.
   icon: 'hidden',
   message: 'text-body text-label-2 leading-relaxed',
   footer: 'px-6 pb-6 flex justify-end gap-3',
-  pcRejectButton: { root: BTN.ghost },
+  pcRejectButton: { root: BTN.secondary },
   pcAcceptButton: { root: BTN.primary },
 };
