@@ -129,8 +129,8 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
             <template v-if="size === 'sm'">
                 <div v-for="(u, i) in urls" :key="u + i" class="flex items-center gap-2 bg-canvas rounded-control px-3 py-2">
                     <img v-if="isImage(u)" :src="u" class="h-10 w-10 object-cover rounded" />
-                    <LucideFile v-else :size="18" class="text-[rgba(0,0,0,0.35)] shrink-0" />
-                    <a :href="u" target="_blank" class="text-[13px] text-accent hover:underline truncate flex-1">{{ nameOf(u) }}</a>
+                    <LucideFile v-else :size="18" class="text-label-3 shrink-0" />
+                    <a :href="u" target="_blank" class="text-small text-accent hover:underline truncate flex-1">{{ nameOf(u) }}</a>
                     <span v-if="!disabled && !multiple" @click="openFileDialog" class="text-small text-accent cursor-pointer hover:underline shrink-0">{{ $t('fileUploader.replace') }}</span>
                     <span v-if="!disabled" @click="removeAt(Number(i))" class="text-small text-red-500 cursor-pointer hover:underline shrink-0">{{ $t('action.remove') }}</span>
                 </div>
@@ -139,11 +139,11 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
             <!-- preview boxes (size='md' | 'lg') -->
             <div v-else-if="urls.length" class="flex flex-wrap gap-3">
                 <div v-for="(u, i) in urls" :key="u + i" class="flex flex-col gap-1">
-                    <div :class="BOX_CLASS" class="relative border border-[rgba(0,0,0,0.1)] rounded-card overflow-hidden bg-[#fafafa] flex items-center justify-center">
+                    <div :class="BOX_CLASS" class="relative border border-separator rounded-card overflow-hidden bg-surface flex items-center justify-center">
                         <img v-if="isImage(u)" :src="u" class="w-full h-full object-contain" />
-                        <a v-else :href="u" target="_blank" class="flex flex-col items-center gap-1 p-2 text-[rgba(0,0,0,0.45)] hover:text-accent">
+                        <a v-else :href="u" target="_blank" class="flex flex-col items-center gap-1 p-2 text-label-3 hover:text-accent">
                             <LucideFile :size="22" />
-                            <span class="text-[11px] max-w-full truncate">{{ nameOf(u) }}</span>
+                            <span class="text-small max-w-full truncate">{{ nameOf(u) }}</span>
                         </a>
                     </div>
                     <div v-if="!disabled" class="flex gap-3 justify-end">
@@ -156,11 +156,11 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
             <!-- empty dropzone (also the "add more" affordance when multiple) -->
             <div v-if="showDropzone"
                 :class="[size === 'sm' ? 'w-full h-10' : BOX_CLASS, disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-accent']"
-                class="relative border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-card flex items-center justify-center overflow-hidden transition-colors group"
+                class="relative border-2 border-dashed border-separator rounded-card flex items-center justify-center overflow-hidden transition-colors group"
                 @click="openFileDialog">
                 <div class="text-center text-label-3 group-hover:text-accent transition-colors flex flex-col items-center">
                     <LucideImage v-if="size !== 'sm'" :size="24" class="mb-2 opacity-50 group-hover:opacity-100" />
-                    <span class="text-[13px] font-medium">{{ uploading ? $t('fileUploader.uploading') : $t('fileUploader.dropHint') }}</span>
+                    <span class="text-small font-medium">{{ uploading ? $t('fileUploader.uploading') : $t('fileUploader.dropHint') }}</span>
                 </div>
             </div>
 

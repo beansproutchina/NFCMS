@@ -1,8 +1,8 @@
 <template>
   <VueDraggableNext :list="items" class="space-y-2" handle=".handle" @change="emitUpdate">
-    <div v-for="(item, index) in items" :key="index" class="border border-[rgba(0,0,0,0.15)] rounded-control bg-white overflow-hidden shadow-sm">
-        <div class="flex items-center gap-3 p-3 bg-surface border-b border-[rgba(0,0,0,0.05)]">
-            <span class="handle cursor-move text-gray-400 hover:text-[rgba(0,0,0,0.8)] transition-colors">☰</span>
+    <div v-for="(item, index) in items" :key="index" class="border border-separator rounded-control bg-white overflow-hidden shadow-sm">
+        <div class="flex items-center gap-3 p-3 bg-surface border-b border-separator-weak">
+            <span class="handle cursor-move text-gray-400 hover:text-label transition-colors">☰</span>
             <InputText unstyled v-model="item.label" :placeholder="$t('form.label') || 'Label'" :class="[INPUT_CLASS, 'flex-1 max-w-[200px]']" @input="emitUpdate"/>
 
             <Select v-model="item.type" :options="typeOptions" optionLabel="label" optionValue="value" @change="emitUpdate" unstyled :pt="SELECT_PT" class="w-[140px] shrink-0"/>

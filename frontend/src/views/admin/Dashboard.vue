@@ -81,91 +81,91 @@ const formatDate = (dateString: string) => {
 <template>
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
       <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('dashboard.welcome') }}, {{ user?.username || 'Admin' }}</h1>
-      <p class="text-[21px] text-[rgba(0,0,0,0.8)] font-normal leading-[1.19] mb-12">{{ $t('dashboard.overviewPrefix') }}</p>
+      <p class="text-title-section text-label font-normal leading-[1.19] mb-12">{{ $t('dashboard.overviewPrefix') }}</p>
       
       <div v-if="loading" class="opacity-50 flex items-center gap-2 mb-10"><LucideActivity class="animate-spin" :size="20" /> {{ $t('system.loading') }}</div>
       
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
-        <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-[16px] p-6 shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-fill flex flex-col hover:-translate-y-1 transition-transform duration-300">
+        <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-card p-6 shadow-card border border-fill flex flex-col hover:-translate-y-1 transition-transform duration-300">
           <div class="flex items-center justify-between mb-4">
               <div :class="['w-10 h-10 rounded-full flex items-center justify-center', stat.bg, stat.color]">
                   <component :is="stat.icon" :size="20" />
               </div>
           </div>
           <p class="text-[32px] font-semibold leading-title tracking-[-0.01em] mb-1">{{ stat.value }}</p>
-          <h3 class="text-body font-medium text-[rgba(0,0,0,0.5)]">{{ $t(stat.label) }}</h3>
+          <h3 class="text-body font-medium text-label-3">{{ $t(stat.label) }}</h3>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          <div class="lg:col-span-2 bg-white rounded-[16px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-fill overflow-hidden flex flex-col">
-              <div class="p-6 border-b border-[rgba(0,0,0,0.05)] flex justify-between items-center bg-[#fbfbfd]">
-                  <h2 class="text-[19px] font-semibold flex items-center gap-2 text-[rgba(0,0,0,0.9)]"><LucideFileText :size="20" class="text-accent" /> {{ $t('dashboard.recentArticles') }}</h2>
+          <div class="lg:col-span-2 bg-white rounded-card shadow-card border border-fill overflow-hidden flex flex-col">
+              <div class="p-6 border-b border-separator-weak flex justify-between items-center bg-surface">
+                  <h2 class="text-title-section font-semibold flex items-center gap-2 text-label"><LucideFileText :size="20" class="text-accent" /> {{ $t('dashboard.recentArticles') }}</h2>
                   <button @click="router.push('/admin/articles/new')" class="text-body text-accent hover:underline flex items-center gap-1 bg-transparent border-0 cursor-pointer"><LucidePlusCircle :size="16"/> {{ $t('action.new') }}</button>
               </div>
               <div class="flex-1 p-0">
                   <div v-if="!recentArticles.length" class="p-8 text-center text-body text-label-3">
                       {{ $t('system.noEntries') }}
                   </div>
-                  <div v-for="article in recentArticles" :key="article.id" class="px-6 py-4 flex items-center justify-between hover:bg-canvas transition-colors cursor-pointer border-b border-[rgba(0,0,0,0.03)] last:border-0" @click="router.push('/admin/articles/edit/'+article.id)">
+                  <div v-for="article in recentArticles" :key="article.id" class="px-6 py-4 flex items-center justify-between hover:bg-canvas transition-colors cursor-pointer border-b border-separator-weak last:border-0" @click="router.push('/admin/articles/edit/'+article.id)">
                       <div class="flex-1 min-w-0 pr-4">
-                          <h4 class="text-[16px] font-medium text-[rgba(0,0,0,0.9)] truncate mb-1">{{ article.title }}</h4>
-                          <div class="text-small text-[rgba(0,0,0,0.5)] truncate max-w-full">
+                          <h4 class="text-body font-medium text-label truncate mb-1">{{ article.title }}</h4>
+                          <div class="text-small text-label-3 truncate max-w-full">
                               <span v-if="article.is_top" class="text-red-500 font-semibold mr-2 border border-red-500/20 bg-red-500/10 px-1 rounded">{{ $t('form.is_top') }}</span>
                               {{ article.description || article.slug }}
                           </div>
                       </div>
                       <div class="flex flex-col items-end gap-1 shrink-0">
                            <span class="text-small text-label-3">{{ formatDate(article.created_at) }}</span>
-                           <span :class="['text-[11px] px-2 py-0.5 rounded-full font-medium', article.status === 'visible' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600']">{{ $t('contentStatus.' + (article.status || 'hidden')) }}</span>
+                           <span :class="['text-small px-2 py-0.5 rounded-full font-medium', article.status === 'visible' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600']">{{ $t('contentStatus.' + (article.status || 'hidden')) }}</span>
                       </div>
                   </div>
               </div>
-              <div class="p-3 bg-[#fbfbfd] border-t border-[rgba(0,0,0,0.05)] text-center">
+              <div class="p-3 bg-surface border-t border-separator-weak text-center">
                   <button @click="router.push('/admin/articles')" class="text-body text-accent hover:underline flex items-center justify-center gap-1 w-full py-1 bg-transparent border-0 cursor-pointer">View All <LucideChevronRight :size="16"/></button>
               </div>
           </div>
 
           <div class="flex flex-col gap-6">
               <!-- System Status -->
-              <div class="bg-white rounded-[16px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-fill p-6 flex flex-col gap-5">
-                  <h2 class="text-[19px] font-semibold flex items-center gap-2 text-[rgba(0,0,0,0.9)]"><LucideShieldCheck :size="20" class="text-emerald-500" /> {{ $t('dashboard.systemStatus') }}</h2>
+              <div class="bg-white rounded-card shadow-card border border-fill p-6 flex flex-col gap-5">
+                  <h2 class="text-title-section font-semibold flex items-center gap-2 text-label"><LucideShieldCheck :size="20" class="text-emerald-500" /> {{ $t('dashboard.systemStatus') }}</h2>
                   <div class="flex flex-col gap-4 mt-2">
                       <div class="flex justify-between items-center text-body">
                           <span class="text-label-2">Platform Core</span>
-                          <span class="font-medium text-[rgba(0,0,0,0.9)] bg-canvas px-2 py-0.5 rounded">NFCMS Engine</span>
+                          <span class="font-medium text-label bg-canvas px-2 py-0.5 rounded">NFCMS Engine</span>
                       </div>
                       <div class="flex justify-between items-center text-body">
                           <span class="text-label-2">Active DB Node</span>
-                          <span class="flex items-center gap-1.5 font-medium text-[rgba(0,0,0,0.9)] text-[13px]"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Connected</span>
+                          <span class="flex items-center gap-1.5 font-medium text-label text-small"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Connected</span>
                       </div>
                       <div class="flex justify-between items-center text-body">
                           <span class="text-label-2">Sys Config</span>
-                          <span class="flex items-center gap-1.5 font-medium text-[rgba(0,0,0,0.9)] text-[13px]"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Complete</span>
+                          <span class="flex items-center gap-1.5 font-medium text-label text-small"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Complete</span>
                       </div>
                   </div>
               </div>
 
               <!-- Quick Actions -->
-              <div class="bg-white rounded-[16px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-fill p-6 flex-1">
-                  <h2 class="text-[19px] font-semibold flex items-center gap-2 mb-6 text-[rgba(0,0,0,0.9)]"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
+              <div class="bg-white rounded-card shadow-card border border-fill p-6 flex-1">
+                  <h2 class="text-title-section font-semibold flex items-center gap-2 mb-6 text-label"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
                   <div class="grid grid-cols-2 gap-3">
-                      <button v-if="isSuper" @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
                           <LucideFolder :size="24" class="text-amber-500"/>
-                          <span class="text-[13px] font-medium">{{ $t('system.categories') }}</span>
+                          <span class="text-small font-medium">{{ $t('system.categories') }}</span>
                       </button>
-                      <button v-if="isSuper" @click="router.push('/admin/menus')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/menus')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
                           <LucideBox :size="24" class="text-purple-500"/>
-                          <span class="text-[13px] font-medium">{{ $t('system.menus') }}</span>
+                          <span class="text-small font-medium">{{ $t('system.menus') }}</span>
                       </button>
-                      <button v-if="canFiles" @click="router.push('/admin/files')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="canFiles" @click="router.push('/admin/files')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
                           <LucideImage :size="24" class="text-pink-500"/>
-                          <span class="text-[13px] font-medium">{{ $t('system.files') }}</span>
+                          <span class="text-small font-medium">{{ $t('system.files') }}</span>
                       </button>
-                      <button v-if="isSuper" @click="router.push('/admin/settings')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-[rgba(0,0,0,0.8)] border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/settings')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
                           <LucideShieldCheck :size="24" class="text-slate-500"/>
-                          <span class="text-[13px] font-medium">{{ $t('system.settings') }}</span>
+                          <span class="text-small font-medium">{{ $t('system.settings') }}</span>
                       </button>
                   </div>
               </div>

@@ -6,14 +6,14 @@
                 </h1>
             </div>
             <Button unstyled @click="openForm()"
-                class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                class="bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-body font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                 <LucidePlus :size="16" /> {{ $t('action.new') }}
             </Button>
         </div>
 
         <div
-            class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.05)] p-6 flex-1 overflow-auto">
-            <div v-if="loading" class="text-center py-10 text-[rgba(0,0,0,0.5)]">{{ $t('system.loading') || 'Loading...'
+            class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex-1 overflow-auto">
+            <div v-if="loading" class="text-center py-10 text-label-3">{{ $t('system.loading') || 'Loading...'
             }}</div>
             <div v-else>
                 <!-- Simple custom tree implementation since PrimeVue TreeTable can be complex to setup perfectly -->
@@ -21,7 +21,7 @@
                     <CategoryItem v-for="cat in rootCategories" :key="cat.id" :category="cat"
                         :allCategories="categories" @edit="openForm" @delete="deleteCategory" />
                 </ul>
-                <div v-if="rootCategories.length === 0" class="text-center py-10 text-[rgba(0,0,0,0.5)]">{{
+                <div v-if="rootCategories.length === 0" class="text-center py-10 text-label-3">{{
                     $t('system.noEntries') || 'No entries found.' }}</div>
             </div>
         </div>

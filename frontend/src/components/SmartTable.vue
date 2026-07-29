@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] relative">
+  <div class="bg-white rounded-card shadow-card overflow-hidden border border-separator-weak relative">
     <DataTable 
       v-bind="$attrs"
       :value="data" 
@@ -68,17 +68,17 @@ const tablePt = {
     root: { class: 'w-full text-left relative' },
     wrapper: { class: 'relative' },
     table: { class: 'min-w-full border-collapse table-fixed' },
-    thead: { class: 'bg-canvas border-b border-[rgba(0,0,0,0.05)]' },
+    thead: { class: 'bg-canvas border-b border-separator-weak' },
     headerRow: { class: 'text-body' },
     tbody: { class: 'bg-white relative' },
-    bodyRow: { class: 'hover:bg-surface transition-colors text-body border-b border-[rgba(0,0,0,0.05)]' },
+    bodyRow: { class: 'hover:bg-surface transition-colors text-body border-b border-separator-weak' },
     pcPaginator: customPaginatorPt as any,
     mask: { class: 'absolute top-0 left-0 right-0 bottom-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center min-h-[150px]' },
     loadingIcon: { class: 'w-10 h-10 text-accent animate-spin' }
 };
 
 const columnPt = {
-    headerCell: { class: 'py-4 px-6 font-semibold text-[rgba(0,0,0,0.8)] text-left whitespace-nowrap' },
+    headerCell: { class: 'py-4 px-6 font-semibold text-label text-left whitespace-nowrap' },
     columnHeaderContent: { class: 'flex items-center gap-2 cursor-pointer hover:text-accent select-none' },
     sortIcon: { class: 'w-3 h-3 fill-current text-label-3' },
     bodyCell: { class: 'py-5 px-6 text-left align-middle truncate' },

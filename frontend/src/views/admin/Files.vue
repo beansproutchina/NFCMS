@@ -140,19 +140,19 @@ onMounted(fetchFiles);
 
         <div v-if="loading && files.length === 0" class="text-body opacity-60">Loading...</div>
         
-        <div v-else-if="files.length === 0" class="text-center py-20 text-[rgba(0,0,0,0.5)] bg-white rounded-card border border-[rgba(0,0,0,0.05)] shadow-[0px_5px_30px_rgba(0,0,0,0.06)]">
+        <div v-else-if="files.length === 0" class="text-center py-20 text-label-3 bg-white rounded-card border border-separator-weak shadow-card">
             {{ $t('system.noEntries', 'No entries found.') }}
         </div>
 
         <div v-else>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 mb-6">
-                <div v-for="file in files" :key="file.id" class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] group relative">
+                <div v-for="file in files" :key="file.id" class="bg-white rounded-card shadow-card overflow-hidden border border-separator-weak group relative">
                     
                     <div class="h-40 bg-canvas flex items-center justify-center relative overflow-hidden">
                         <img v-if="file.mime_type?.startsWith('image/')" :src="file.url" class="object-cover w-full h-full" />
-                        <LucideFile v-else :size="48" class="text-[rgba(0,0,0,0.2)]" />
+                        <LucideFile v-else :size="48" class="text-label-4" />
                         
-                        <div class="absolute inset-0 bg-[rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                        <div class="absolute inset-0 bg-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                             <Button unstyled @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:scale-110 transition-transform cursor-pointer" title="新窗口打开">
                                 <LucideEye :size="18" />
                             </Button>
@@ -165,9 +165,9 @@ onMounted(fetchFiles);
                         </div>
                     </div>
                     
-                    <div class="p-4 border-t border-[rgba(0,0,0,0.05)]">
-                        <div class="text-body font-medium text-[rgba(0,0,0,0.8)] truncate" :title="file.filename">{{ file.filename }}</div>
-                        <div class="text-small text-[rgba(0,0,0,0.5)] mt-1">{{ (file.size / 1024).toFixed(2) }} KB</div>
+                    <div class="p-4 border-t border-separator-weak">
+                        <div class="text-body font-medium text-label truncate" :title="file.filename">{{ file.filename }}</div>
+                        <div class="text-small text-label-3 mt-1">{{ (file.size / 1024).toFixed(2) }} KB</div>
                     </div>
                 </div>
             </div>

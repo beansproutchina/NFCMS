@@ -82,10 +82,10 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
 </script>
 
 <template>
-    <div v-if="visible" class="fixed inset-0 z-60 flex items-center justify-center bg-label-3 backdrop-blur-sm p-4" @click.self="close">
+    <div v-if="visible" class="fixed inset-0 z-60 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" @click.self="close">
         <div class="bg-white rounded-card w-full max-w-2xl shadow-2xl flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-separator-weak flex items-center justify-between">
-                <h2 class="text-[18px] font-display font-semibold">{{ $t('fileUploader.pickTitle') }}</h2>
+                <h2 class="text-title-section font-display font-semibold">{{ $t('fileUploader.pickTitle') }}</h2>
                 <Button unstyled @click="close" class="text-gray-400 hover:text-black cursor-pointer"><LucideX :size="18" /></Button>
             </div>
 
@@ -100,13 +100,13 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
                     <div v-else-if="!files.length" class="text-body text-label-3 py-8 text-center">{{ $t('fileUploader.empty') }}</div>
                     <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         <button v-for="f in files" :key="f.id" @click="pick(f)" type="button"
-                            class="relative text-left border rounded-[10px] overflow-hidden hover:border-accent transition-colors cursor-pointer"
-                            :class="isPicked(f) ? 'border-accent ring-1 ring-accent' : 'border-[rgba(0,0,0,0.08)]'">
+                            class="relative text-left border rounded-control overflow-hidden hover:border-accent transition-colors cursor-pointer"
+                            :class="isPicked(f) ? 'border-accent ring-1 ring-accent' : 'border-separator-weak'">
                             <span class="h-24 bg-canvas flex items-center justify-center overflow-hidden">
                                 <img v-if="f.mime_type?.startsWith('image/') || IMAGE_RE.test(f.url || '')" :src="f.url" class="object-cover w-full h-full" />
-                                <LucideFile v-else :size="28" class="text-[rgba(0,0,0,0.2)]" />
+                                <LucideFile v-else :size="28" class="text-label-4" />
                             </span>
-                            <span class="block px-2 py-1.5 text-small truncate text-[rgba(0,0,0,0.7)]" :title="f.filename">{{ f.filename }}</span>
+                            <span class="block px-2 py-1.5 text-small truncate text-label-2" :title="f.filename">{{ f.filename }}</span>
                             <span v-if="isPicked(f)" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center">
                                 <LucideCheck :size="12" />
                             </span>
@@ -115,13 +115,13 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
                 </div>
 
                 <div class="flex items-center justify-between pt-1">
-                    <Button unstyled @click="prev" :disabled="page === 0" class="text-[13px] px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer">{{ $t('common.prev') }}</Button>
-                    <span class="text-small text-[rgba(0,0,0,0.5)]">{{ page + 1 }} / {{ pages() }}</span>
-                    <Button unstyled @click="next" :disabled="page >= pages() - 1" class="text-[13px] px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer">{{ $t('common.next') }}</Button>
+                    <Button unstyled @click="prev" :disabled="page === 0" class="text-small px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer">{{ $t('common.prev') }}</Button>
+                    <span class="text-small text-label-3">{{ page + 1 }} / {{ pages() }}</span>
+                    <Button unstyled @click="next" :disabled="page >= pages() - 1" class="text-small px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer">{{ $t('common.next') }}</Button>
                 </div>
 
                 <div v-if="multiple" class="flex items-center justify-end gap-3 pt-2 border-t border-separator-weak">
-                    <span class="text-small text-[rgba(0,0,0,0.5)]">{{ $t('fileUploader.selectedN', { n: picked.length }) }}</span>
+                    <span class="text-small text-label-3">{{ $t('fileUploader.selectedN', { n: picked.length }) }}</span>
                     <Button unstyled @click="confirmMulti" :disabled="!picked.length" :class="BTN.primary">{{ $t('confirm.accept') }}</Button>
                 </div>
             </div>

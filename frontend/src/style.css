@@ -31,8 +31,16 @@
   --color-separator: rgba(0, 0, 0, 0.12);      /* a visible edge: field borders, card outlines */
   --color-separator-weak: rgba(0, 0, 0, 0.06); /* a hairline inside a card */
 
-  /* ── Fill, 1 level ────────────────────────────────────────────────────────────────────── */
-  --color-fill: rgba(0, 0, 0, 0.04);    /* the faint wash under a hovered row */
+  /* ── Fills, 2 levels — hover vs selected. They MUST differ: several lists pair
+        `hover:bg-fill` with a selected state, and collapsing them makes "selected"
+        invisible. ──────────────────────────────────────────────────────────────────────── */
+  --color-fill: rgba(0, 0, 0, 0.04);        /* the faint wash under a hovered row */
+  --color-fill-strong: rgba(0, 0, 0, 0.08); /* the current nav item, the selected role */
+
+  /* ── Overlays. Not label colours: a scrim is a layer, not text, and mapping it onto the
+        label ladder by value alone reads as nonsense at the call site. ─────────────────── */
+  --color-scrim: rgba(0, 0, 0, 0.45);   /* behind a dialog or a mobile drawer */
+  --color-chrome: rgba(0, 0, 0, 0.8);   /* dark translucent app bar (paired with backdrop-blur) */
 
   /* ── Surfaces, by role rather than by lightness ───────────────────────────────────────── */
   /* white (built-in) = a card. canvas is darker than `surface` on purpose: role, not brightness. */
@@ -49,7 +57,8 @@
   --color-link: #0066cc;
   --color-warn: #c2410c;                /* destructive action text */
   --color-warn-fill: #fff7ed;
-  --color-info-fill: #e0f2fe;           /* "published" status chip (background only) */
+  --color-info: #b3d4fc;                /* edge of an informational panel */
+  --color-info-fill: #e0f2fe;           /* its tint, and the "published" status chip */
   --color-indigo: #3730a3;              /* role chip text */
   --color-indigo-fill: #eef2ff;
 
@@ -63,6 +72,9 @@
   /* ── Radius, 2 steps (+ rounded-full for pills) ───────────────────────────────────────── */
   --radius-control: 8px;                /* inputs, buttons, chips */
   --radius-card: 12px;                  /* cards, dialogs, panels */
+
+  /* ── The one card shadow this UI has. It was written out 14 times. ─────────────────────── */
+  --shadow-card: 0px 5px 30px rgba(0, 0, 0, 0.06);
 
   /* ── Line height used by the page title ──────────────────────────────────────────────── */
   --leading-title: 1.1;

@@ -76,10 +76,10 @@ watch(() => route.path, () => {
 </script>
 
 <template>
-  <div class="h-screen w-full flex flex-col md:flex-row bg-[#ffffff] text-label font-text text-body">
+  <div class="h-screen w-full flex flex-col md:flex-row bg-white text-label font-text text-body">
     
     <!-- Mobile Header Bar -->
-    <header class="md:hidden h-[48px] bg-[rgba(0,0,0,0.8)] backdrop-blur-[20px] flex items-center justify-between px-4 shrink-0 z-30" style="-webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);">
+    <header class="md:hidden h-[48px] bg-chrome backdrop-blur-[20px] flex items-center justify-between px-4 shrink-0 z-30" style="-webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);">
       <span class="font-display font-semibold text-title-item text-white flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
         <LucideSettings :size="18" /> {{ $t('system.title') }}
       </span>
@@ -93,7 +93,7 @@ watch(() => route.path, () => {
     <Transition name="fade">
       <div 
         v-if="sidebarVisible" 
-        class="md:hidden fixed inset-0 bg-[rgba(0,0,0,0.5)] z-30 top-[48px]"
+        class="md:hidden fixed inset-0 bg-scrim z-30 top-[48px]"
         @click="sidebarVisible = false"
       ></div>
     </Transition>
@@ -108,7 +108,7 @@ watch(() => route.path, () => {
     >
       <!-- Sidebar Header (desktop only, mobile has its own header) -->
       <div class="hidden md:flex px-6 py-6 border-b border-divider border-opacity-60 items-center justify-between">
-        <span class="font-display font-semibold text-[18px] flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
+        <span class="font-display font-semibold text-title-section flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
           <LucideSettings :size="20"/> {{ $t('system.title') }}
         </span>
       </div>
@@ -122,12 +122,12 @@ watch(() => route.path, () => {
 
       <div class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-6">
         <div v-for="(group, idx) in menuGroups" :key="idx" class="flex flex-col gap-1">
-          <div class="text-small font-semibold text-[rgba(0,0,0,0.48)] uppercase tracking-wider mb-2 px-2">{{ $t(group.title) }}</div>
+          <div class="text-small font-semibold text-label-3 uppercase tracking-wider mb-2 px-2">{{ $t(group.title) }}</div>
           <Button unstyled 
             v-for="item in group.items" :key="item.path"
             @click="navigateTo(item.path)"
             class="flex items-center gap-3 px-3 py-2 rounded-control transition-colors w-full text-left"
-            :class="isCurrentPath(item.path) ? 'bg-[rgba(0,0,0,0.08)] text-black font-semibold' : 'text-[rgba(0,0,0,0.8)] hover:bg-fill'"
+            :class="isCurrentPath(item.path) ? 'bg-fill-strong text-black font-semibold' : 'text-label hover:bg-fill'"
           >
             <component :is="item.icon" :size="18" :class="{'opacity-70': !isCurrentPath(item.path)}" />
             {{ $t(item.label) }}
@@ -136,10 +136,10 @@ watch(() => route.path, () => {
       </div>
 
       <div class="p-4 border-t border-divider border-opacity-60 flex flex-col gap-1">
-        <Button unstyled @click="navigateTo('/')" class="flex items-center gap-3 w-full text-left px-3 py-2 text-[rgba(0,0,0,0.8)] hover:bg-fill rounded-control transition-colors">
+        <Button unstyled @click="navigateTo('/')" class="flex items-center gap-3 w-full text-left px-3 py-2 text-label hover:bg-fill rounded-control transition-colors">
             <LucideGlobe :size="18" class="opacity-70" />  {{$t('system.visitSite')}}
         </Button>  
-        <Button unstyled @click="logout" class="flex items-center gap-3 w-full text-left px-3 py-2 text-[rgba(0,0,0,0.8)] hover:bg-fill rounded-control transition-colors">
+        <Button unstyled @click="logout" class="flex items-center gap-3 w-full text-left px-3 py-2 text-label hover:bg-fill rounded-control transition-colors">
             <LucideLogOut :size="18" class="opacity-70" /> {{ $t('auth.logout') }}
         </Button>
       </div>

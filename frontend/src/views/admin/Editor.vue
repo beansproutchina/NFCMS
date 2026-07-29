@@ -55,7 +55,7 @@ const articleDataFields = computed(() => {
 });
 
 const statusCls = computed(() => ({
-    hidden: 'bg-[#f3f4f6] text-label-2',
+    hidden: 'bg-canvas text-label-2',
     scheduled: 'bg-warn-fill text-warn',
     visible: 'bg-info-fill text-link'
 }[status.value] || 'bg-gray-100'));
@@ -202,7 +202,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
     <div class="h-full flex flex-col pt-6 pb-0 px-6 max-w-screen-2xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-4">
-                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-[rgba(0,0,0,0.48)] hover:bg-white hover:border-2 hover:border-accent hover:text-black transition-all cursor-pointer">
+                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-label-3 hover:bg-white hover:border-2 hover:border-accent hover:text-black transition-all cursor-pointer">
                     <LucideChevronLeft :size="20" />
                 </Button>
                 <div>
@@ -228,8 +228,8 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
         </div>
 
         <div class="flex-1 flex gap-6 pb-6 h-[calc(100vh-140px)]">
-            <div class="flex-1 flex flex-col bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)]">
-                <div class="px-6 py-4 border-b border-[rgba(0,0,0,0.05)] flex flex-col gap-2">
+            <div class="flex-1 flex flex-col bg-white rounded-card shadow-card overflow-hidden border border-separator-weak">
+                <div class="px-6 py-4 border-b border-separator-weak flex flex-col gap-2">
                     <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-display font-semibold outline-none placeholder:opacity-30" />
                 </div>
                 <div class="flex-1 overflow-hidden" style="--md-bk-color: transparent;">
@@ -237,13 +237,13 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 </div>
             </div>
 
-            <div class="w-[320px] shrink-0 bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
-                <h3 class="text-[21px] font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
+            <div class="w-[320px] shrink-0 bg-white rounded-card shadow-card overflow-y-auto p-6 hidden lg:block border border-separator-weak">
+                <h3 class="text-title-section font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
                 <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
 
                 <div class="mt-4">
-                    <label class="text-body font-medium text-[rgba(0,0,0,0.8)] mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
+                    <label class="text-body font-medium text-label mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
                     <div class="flex gap-2">
                         <DatePicker v-model="publishAt" showTime hourFormat="24" dateFormat="yy-mm-dd" unstyled :pt="DATEPICKER_PT" class="flex-1" />
                         <Button unstyled @click="schedule" :disabled="loading" :class="BTN.ghost">{{ $t('action.schedule') }}</Button>
@@ -251,12 +251,12 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 </div>
 
                 <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-separator-weak">
-                    <label class="text-body font-medium text-[rgba(0,0,0,0.8)] mb-3 flex items-center gap-1"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
+                    <label class="text-body font-medium text-label mb-3 flex items-center gap-1"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
                     <ul class="flex flex-col gap-2 max-h-[220px] overflow-y-auto">
-                        <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-small bg-[#f9f9fb] rounded-control px-3 py-2">
+                        <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-small bg-surface rounded-control px-3 py-2">
                             <div class="min-w-0">
-                                <div class="font-medium text-[rgba(0,0,0,0.8)]">v{{ rev.version_no }} · {{ rev.note }}</div>
-                                <div class="text-[rgba(0,0,0,0.45)] truncate">{{ rev.created_at ? new Date(rev.created_at).toLocaleString() : '' }}</div>
+                                <div class="font-medium text-label">v{{ rev.version_no }} · {{ rev.note }}</div>
+                                <div class="text-label-3 truncate">{{ rev.created_at ? new Date(rev.created_at).toLocaleString() : '' }}</div>
                             </div>
                             <button @click="rollback(rev.version_no)" class="text-link hover:underline shrink-0 ml-2 cursor-pointer">{{ $t('action.rollback') }}</button>
                         </li>
@@ -271,7 +271,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
 
         <!-- Below lg the sidebar is hidden, so the same panel opens as a drawer. -->
         <button v-if="isMobile" @click="showMobilePanel = true"
-            class="fixed right-4 bottom-6 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center hover:bg-[#0077ED] transition-colors cursor-pointer">
+            class="fixed right-4 bottom-6 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center hover:bg-accent-hover transition-colors cursor-pointer">
             <LucideSettings :size="22" />
         </button>
 
@@ -283,7 +283,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 <div v-if="showMobilePanel && isMobile"
                     class="fixed right-0 top-0 bottom-0 z-50 w-[85vw] max-w-[380px] bg-white shadow-2xl overflow-y-auto p-6">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-[21px] font-display font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
+                        <h3 class="text-title-section font-display font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
                         <button @click="showMobilePanel = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer">
                             <LucideX :size="16" />
                         </button>

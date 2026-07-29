@@ -50,7 +50,7 @@ onMounted(fetchSchemas);
                 <span class="text-gray-500 font-mono text-body">/api/{{ data.routePath }}</span>
             </template>
             <template #fields="{ data }">
-                <span class="bg-canvas px-3 py-1 rounded-[6px] text-[13px] font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
+                <span class="bg-canvas px-3 py-1 rounded-control text-small font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
             </template>
             <template #actions="{ data }">
                 <router-link :to="`/admin/crud/${data.routePath}`" class="text-accent hover:underline font-medium text-body">

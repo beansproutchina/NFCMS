@@ -6,7 +6,7 @@
             </div>
             <div>
                 <Button unstyled v-if="isSuperAdmin" @click="openEditor()"
-                    class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                    class="bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-body font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
                 </Button>
             </div>
@@ -17,7 +17,7 @@
             <template #role="{ data }">
                 <span
                     :class="{ 'bg-purple-100 text-purple-700': data.role === 'super_admin', 'bg-blue-100 text-blue-700': data.role !== 'super_admin' }"
-                    class="px-2 py-1 rounded-[5px] text-small font-medium tracking-wider">
+                    class="px-2 py-1 rounded-control text-small font-medium tracking-wider">
                     {{ data.role === 'super_admin' ? $t('form.superadmin') : $t('form.admin') }}
                 </span>
             </template>

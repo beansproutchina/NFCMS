@@ -146,16 +146,16 @@ onMounted(async () => {
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="mb-8">
             <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.roles') }}</h1>
-            <p class="text-[15px] text-[rgba(0,0,0,0.55)]">{{ $t('roles.desc') }}</p>
+            <p class="text-body text-label-2">{{ $t('roles.desc') }}</p>
         </div>
 
         <div class="flex gap-6">
             <!-- Roles list -->
-            <div class="w-[280px] shrink-0 bg-[#f9f9fb] rounded-card border border-separator-weak p-4 h-fit">
+            <div class="w-[280px] shrink-0 bg-surface rounded-card border border-separator-weak p-4 h-fit">
                 <div class="flex flex-col gap-1 mb-4">
                     <button v-for="r in roles" :key="r.id" @click="selectRole(r)"
                         class="flex items-center justify-between px-3 py-2 rounded-control text-left transition-colors cursor-pointer"
-                        :class="selectedRole?.id === r.id ? 'bg-[rgba(0,0,0,0.08)] font-semibold' : 'hover:bg-fill'">
+                        :class="selectedRole?.id === r.id ? 'bg-fill-strong font-semibold' : 'hover:bg-fill'">
                         <span>{{ r.label || r.name }} <span class="text-small text-label-3">{{ r.name }}</span></span>
                         <LucideTrash2 v-if="!r.is_system" :size="14" class="opacity-40 hover:opacity-100 hover:text-red-500" @click.stop="deleteRole(r)" />
                     </button>
@@ -173,8 +173,8 @@ onMounted(async () => {
             <div class="flex-1 bg-white rounded-card border border-separator-weak p-6">
                 <div v-if="!selectedRole" class="text-label-3">{{ $t('roles.selectPane') }}</div>
                 <template v-else>
-                    <h2 class="text-[21px] font-semibold mb-1">{{ selectedRole.label || selectedRole.name }}</h2>
-                    <div class="text-[13px] text-[rgba(0,0,0,0.45)] mb-5">{{ selectedRole.name }}<span v-if="isSystem"> · {{ $t('roles.builtin') }}</span></div>
+                    <h2 class="text-title-section font-semibold mb-1">{{ selectedRole.label || selectedRole.name }}</h2>
+                    <div class="text-small text-label-3 mb-5">{{ selectedRole.name }}<span v-if="isSystem"> · {{ $t('roles.builtin') }}</span></div>
 
                     <div v-if="selectedRole.name === 'super_admin'" class="text-body text-label-2 bg-canvas rounded-control px-4 py-3">
                         {{ $t('roles.superAll') }}
@@ -182,12 +182,12 @@ onMounted(async () => {
                     <template v-else>
                         <table class="w-full text-body mb-4">
                             <thead>
-                                <tr class="text-left text-small uppercase tracking-wider text-[rgba(0,0,0,0.45)] border-b border-[rgba(0,0,0,0.08)]">
+                                <tr class="text-left text-small uppercase tracking-wider text-label-3 border-b border-separator-weak">
                                     <th class="py-2">{{ $t('roles.model') }}</th><th class="py-2">{{ $t('roles.act') }}</th><th class="py-2">{{ $t('roles.scope') }}</th><th class="py-2 w-10"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="p in perms" :key="p.id" class="border-b border-[rgba(0,0,0,0.05)]">
+                                <tr v-for="p in perms" :key="p.id" class="border-b border-separator-weak">
                                     <td class="py-2 font-medium">{{ p.model }}</td>
                                     <td class="py-2"><span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ p.action }}</span></td>
                                     <td class="py-2"><span :class="p.scope === 'own' ? 'text-warn' : 'text-link'">{{ p.scope }}</span></td>
@@ -198,7 +198,7 @@ onMounted(async () => {
                         </table>
 
                         <!-- add permission row -->
-                        <div class="flex gap-2 items-center bg-[#f9f9fb] rounded-control p-3">
+                        <div class="flex gap-2 items-center bg-surface rounded-control p-3">
                             <Select v-model="newPerm.model" :options="modelOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="flex-1 min-w-0" />
                             <Select v-model="newPerm.action" :options="ACTIONS" unstyled :pt="SELECT_PT" class="w-[130px] shrink-0" />
                             <Select v-model="newPerm.scope" :options="scopeOptions" unstyled :pt="SELECT_PT" class="w-[110px] shrink-0" />
@@ -208,23 +208,23 @@ onMounted(async () => {
                         </div>
 
                         <!-- Category-scoped article grants: manage articles within a category subtree -->
-                        <div class="mt-8 pt-5 border-t border-[rgba(0,0,0,0.08)]">
-                            <h3 class="text-[15px] font-semibold mb-1">{{ $t('roles.categoryGrants') }}</h3>
-                            <p class="text-[13px] text-[rgba(0,0,0,0.5)] mb-4">{{ $t('roles.categoryGrantsHint') }}</p>
+                        <div class="mt-8 pt-5 border-t border-separator-weak">
+                            <h3 class="text-body font-semibold mb-1">{{ $t('roles.categoryGrants') }}</h3>
+                            <p class="text-small text-label-3 mb-4">{{ $t('roles.categoryGrantsHint') }}</p>
 
                             <ul v-if="catGrants.length" class="flex flex-col gap-2 mb-3">
-                                <li v-for="g in catGrants" :key="g.id" class="flex items-center justify-between text-body bg-[#f9f9fb] rounded-control px-3 py-2">
+                                <li v-for="g in catGrants" :key="g.id" class="flex items-center justify-between text-body bg-surface rounded-control px-3 py-2">
                                     <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ g.access }}</span></span>
                                     <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-red-500 cursor-pointer" @click="revokeCatGrant(g)" />
                                 </li>
                             </ul>
-                            <div v-else class="text-[13px] text-label-3 mb-3">{{ $t('roles.noCategoryGrants') }}</div>
+                            <div v-else class="text-small text-label-3 mb-3">{{ $t('roles.noCategoryGrants') }}</div>
 
-                            <div class="flex gap-2 items-center bg-[#f9f9fb] rounded-control p-3 flex-wrap">
+                            <div class="flex gap-2 items-center bg-surface rounded-control p-3 flex-wrap">
                                 <Select v-model="catForm.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="$t('roles.pickCategory')" unstyled :pt="SELECT_PT" class="w-[200px] shrink-0" />
                                 <button v-for="a in CAT_ACTIONS" :key="a" @click="toggleCatAccess(a)"
-                                    class="px-2.5 h-8 rounded-control text-[13px] border cursor-pointer transition-colors"
-                                    :class="catForm.access.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-canvas'">
+                                    class="px-2.5 h-8 rounded-control text-small border cursor-pointer transition-colors"
+                                    :class="catForm.access.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-label-2 border-separator hover:bg-canvas'">
                                     {{ a }}
                                 </button>
                                 <Button unstyled @click="addCatGrant" :class="[BTN.primary, 'ml-auto']">

@@ -114,13 +114,13 @@ const deleteArticle = async (id: number) => {
 };
 
 const STATUS_CLS: Record<string, string> = {
-    hidden: 'bg-[#f3f4f6] text-label-2',
+    hidden: 'bg-canvas text-label-2',
     scheduled: 'bg-warn-fill text-warn',
     visible: 'bg-info-fill text-link'
 };
 const statusMeta = (s: string) => ({
     label: s ? t('contentStatus.' + s) : '-',
-    cls: STATUS_CLS[s] || 'bg-[#f3f4f6] text-label-2'
+    cls: STATUS_CLS[s] || 'bg-canvas text-label-2'
 });
 
 const toggleVisibility = async (data: any) => {
@@ -186,13 +186,13 @@ const toggleVisibility = async (data: any) => {
                 <span class="font-semibold text-label text-title-item tracking-tight">{{ data.title }}</span>
             </template>
             <template #category_id="{ data }">
-                <span class="text-body text-[rgba(0,0,0,0.8)]">{{ getCategoryName(data.category_id) }}</span>
+                <span class="text-body text-label">{{ getCategoryName(data.category_id) }}</span>
             </template>
             <template #is_top="{ data }">
                 <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">TOP</span>
             </template>
             <template #status="{ data }">
-                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-[5px] text-small font-medium uppercase tracking-wider">
+                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-control text-small font-medium uppercase tracking-wider">
                     {{ statusMeta(data.status).label }}
                 </span>
             </template>
@@ -204,7 +204,7 @@ const toggleVisibility = async (data: any) => {
                     <Button unstyled @click="editArticle(data.id)" class="text-link hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
                     </Button>
-                    <Button unstyled @click="toggleVisibility(data)" class="text-[rgba(0,0,0,0.7)] hover:underline text-body flex items-center cursor-pointer">
+                    <Button unstyled @click="toggleVisibility(data)" class="text-label-2 hover:underline text-body flex items-center cursor-pointer">
                         {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
                     <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
