@@ -37,6 +37,14 @@ const PREFETCH_APIS: Record<string, (...args: any[]) => Promise<any>> = {
 /** Themes may abbreviate the namespace: `crud.getList` == `crudAPI.getList`. */
 const PREFETCH_ALIASES: Record<string, string> = { crud: 'crudAPI', content: 'contentAPI', system: 'systemAPI' };
 
+/**
+ * How long a prefetch may wait for a `$data.x` value that another prefetch still has to publish.
+ * Only ever spent when a dependency is genuinely in flight: a waiter bails out early once every
+ * remaining prefetch is also waiting, so a mistyped key costs no wall-clock time at all.
+ */
+const PREFETCH_WAIT_MS = 3000;
+const PREFETCH_POLL_MS = 5;
+
 function resolvePrefetchApi(name: string): ((...args: any[]) => Promise<any>) | undefined {
     const [ns, method] = String(name).split('.');
     return PREFETCH_APIS[`${PREFETCH_ALIASES[ns] ?? ns}.${method}`];
@@ -140,9 +148,34 @@ const fetchContentData = async (to: any) => {
         }
     }
     
+    /**
+     * Live view of prefetch results, published the moment each one lands.
+     *
+     * This is what makes a prefetch able to depend on an earlier prefetch's output — e.g. fetch a
+     * category by slug, then list articles with `filter: { category_id: '$data.thatKey.id' }`.
+     * `extraData` cannot serve that purpose: it is only filled after `Promise.all` below, so a
+     * waiter reading it would block on a result that, in turn, waits for the waiter.
+     *
+     * `PREFETCH_DEPTH_LIMIT` bounds how long a dependent may wait. `blocked` / `pending` let a
+     * waiter give up the instant no runnable prefetch is left, so a bad key costs nothing instead
+     * of burning the whole budget.
+     */
+    const live: Record<string, any> = {};
+    const liveOwner: Record<string, number> = {};   // fetchQueue index that published each key
+    const blocked = new Map<number, number>();      // fetchQueue index → how many of its args wait
+    let pending = fetchQueue.length;
+
+    const publish = (key: string, data: any, idx: number) => {
+        if (data === undefined || data === null) return;
+        // fetchQueue runs child → parent, so the lower index (child) wins — the same precedence the
+        // final merge into `extraData` applies. Without this, whichever request happened to finish
+        // last would win, making a duplicated key resolve differently run to run.
+        if (!(key in live) || idx < liveOwner[key]) { live[key] = data; liveOwner[key] = idx; }
+    };
+
     // Execute all prefetches in parallel. Since queue goes from child to parent,
     // later items (parent) shouldn't override earlier items (child) if they share a key.
-    const promises = fetchQueue.map(async (fetchInfo: any) => {
+    const promises = fetchQueue.map(async (fetchInfo: any, fetchIndex: number) => {
         try {
             const apiFn = resolvePrefetchApi(fetchInfo.api);
             if (!apiFn) console.warn(`[prefetch] unknown api "${fetchInfo.api}" — see PREFETCH_APIS in router/index.ts`);
@@ -155,29 +188,33 @@ const fetchContentData = async (to: any) => {
                         if (arg.startsWith('$params.')) return to.params[arg.split('.')[1]];
                         if (arg.startsWith('$data.')) {
                             const path = arg.split('.').slice(1);
-                            
-                            // Polling for the data resolution 
-                            let maxWait = 5000; // 5x1000ms max
-                            let waited = 0;
-                            while (waited < maxWait) {
-                                let val: any = { ...entityData, ...extraData };
-                                let valid = true;
-                                for (const k of path) {
-                                    if (val && typeof val === 'object' && k in val) {
-                                        val = val[k];
-                                    } else {
-                                        valid = false;
-                                        break;
-                                    }
+                            // `live` last: an already-published prefetch key beats a stale entity key.
+                            const scope = () => ({ ...entityData, ...extraData, ...live });
+
+                            let val = getByPath(scope(), path);
+                            if (val !== undefined) return val;
+
+                            // Not there yet — it may be another prefetch's output still in flight.
+                            const deadline = Date.now() + PREFETCH_WAIT_MS;
+                            blocked.set(fetchIndex, (blocked.get(fetchIndex) || 0) + 1);
+                            try {
+                                while (Date.now() < deadline) {
+                                    // Every prefetch still running is itself waiting → nobody can
+                                    // publish anything more. Give up now rather than at the deadline.
+                                    if (blocked.size >= pending) break;
+                                    await new Promise(r => setTimeout(r, PREFETCH_POLL_MS));
+                                    val = getByPath(scope(), path);
+                                    if (val !== undefined) return val;
                                 }
-                                if (valid && val !== undefined) return val;
-                                await new Promise(r => setTimeout(r, 1));
-                                waited += 1;
+                            } finally {
+                                const n = (blocked.get(fetchIndex) || 1) - 1;
+                                if (n > 0) blocked.set(fetchIndex, n); else blocked.delete(fetchIndex);
                             }
-                            // Default fallback if timeout
-                            let fallback: any = { ...entityData, ...extraData };
-                            for (const k of path) fallback = fallback ? fallback[k] : undefined;
-                            return fallback;
+                            // Deliberately loud: silently returning undefined drops the key from the
+                            // request (JSON.stringify omits it), which for a filter means "no filter"
+                            // — i.e. a page quietly showing everything instead of one category.
+                            console.warn(`[prefetch] "${arg}" never resolved for key "${fetchInfo.key}" — check the key name and that whatever provides it is prefetched too`);
+                            return undefined;
                         }
                     } else if (Array.isArray(arg)) {
                         return Promise.all(arg.map(resolveArgAsync));
@@ -198,10 +235,15 @@ const fetchContentData = async (to: any) => {
                 const meta = (res && (res.total !== undefined || res.pages !== undefined))
                     ? { total: res.total, pages: res.pages }
                     : undefined;
+                publish(fetchInfo.key, res.data, fetchIndex);   // let dependents proceed immediately
                 return { key: fetchInfo.key, data: res.data, meta };
             }
         } catch (e) {
             console.error('Prefetch error for', fetchInfo.key, e);
+        } finally {
+            // Whether it succeeded, failed or was skipped, this one can no longer publish anything —
+            // which is how a waiter learns that nothing runnable is left.
+            pending -= 1;
         }
         return { key: fetchInfo.key, data: null, meta: undefined };
     });
