@@ -76,7 +76,7 @@ watch(() => route.path, () => {
 </script>
 
 <template>
-  <div class="h-screen w-full flex flex-col md:flex-row bg-[#ffffff] text-apple-text-dark font-text text-[14px]">
+  <div class="h-screen w-full flex flex-col md:flex-row bg-[#ffffff] text-label font-text text-[14px]">
     
     <!-- Mobile Header Bar -->
     <header class="md:hidden h-[48px] bg-[rgba(0,0,0,0.8)] backdrop-blur-[20px] flex items-center justify-between px-4 shrink-0 z-30" style="-webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);">

@@ -183,7 +183,7 @@ const toggleVisibility = async (data: any) => {
             ]"
         >
             <template #title="{ data }">
-                <span class="font-semibold text-apple-text-dark text-[17px] tracking-tight">{{ data.title }}</span>
+                <span class="font-semibold text-label text-[17px] tracking-tight">{{ data.title }}</span>
             </template>
             <template #category_id="{ data }">
                 <span class="text-[14px] text-[rgba(0,0,0,0.8)]">{{ getCategoryName(data.category_id) }}</span>
@@ -201,7 +201,7 @@ const toggleVisibility = async (data: any) => {
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
-                    <Button unstyled @click="editArticle(data.id)" class="text-apple-link hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="editArticle(data.id)" class="text-link hover:underline text-[14px] flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled @click="toggleVisibility(data)" class="text-[rgba(0,0,0,0.7)] hover:underline text-[14px] flex items-center cursor-pointer">

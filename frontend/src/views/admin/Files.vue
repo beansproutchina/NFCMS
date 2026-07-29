@@ -153,10 +153,10 @@ onMounted(fetchFiles);
                         <LucideFile v-else :size="48" class="text-[rgba(0,0,0,0.2)]" />
                         
                         <div class="absolute inset-0 bg-[rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                            <Button unstyled @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform cursor-pointer" title="新窗口打开">
+                            <Button unstyled @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:scale-110 transition-transform cursor-pointer" title="新窗口打开">
                                 <LucideEye :size="18" />
                             </Button>
-                            <Button unstyled @click.stop="copyLink(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform cursor-pointer" :title="$t('fileUploader.copyLink')">
+                            <Button unstyled @click.stop="copyLink(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:scale-110 transition-transform cursor-pointer" :title="$t('fileUploader.copyLink')">
                                 <LucideLink :size="18" />
                             </Button>
                             <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">

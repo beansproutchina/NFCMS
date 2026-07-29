@@ -17,7 +17,7 @@
 /** Shared visual base for text inputs / select triggers (flat Apple-style field). */
 const FIELD_BASE =
   'h-10 px-3 bg-white text-[14px] text-[rgba(0,0,0,0.8)] border border-[rgba(0,0,0,0.15)] rounded-[8px] ' +
-  'transition-shadow focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue';
+  'transition-shadow focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent';
 
 /** Plain text input (InputText / Textarea / Password inner input). Full width by default. */
 export const INPUT_CLASS = `w-full ${FIELD_BASE}`;
@@ -25,7 +25,7 @@ export const INPUT_CLASS = `w-full ${FIELD_BASE}`;
 /** Compact variant for dense toolbars (h-9, smaller text). */
 export const INPUT_CLASS_SM =
   'w-full h-9 px-3 bg-white text-[13px] text-[rgba(0,0,0,0.8)] border border-[rgba(0,0,0,0.15)] rounded-[8px] ' +
-  'transition-shadow focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue';
+  'transition-shadow focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent';
 
 /**
  * Unstyled PrimeVue Select passthrough.
@@ -42,7 +42,7 @@ export const SELECT_PT = {
   option: ({ context }: any) => ({
     class: [
       'px-3 py-2 text-[14px] cursor-pointer',
-      context?.selected ? 'bg-apple-blue text-white' : 'text-[rgba(0,0,0,0.8)] hover:bg-[#f5f5f7]',
+      context?.selected ? 'bg-accent text-white' : 'text-[rgba(0,0,0,0.8)] hover:bg-[#f5f5f7]',
     ],
   }),
   emptyMessage: 'px-3 py-2 text-[14px] text-[rgba(0,0,0,0.4)]',
@@ -67,15 +67,15 @@ export const DATEPICKER_PT = {
   day: ({ context }: any) => ({
     class: [
       'w-9 h-9 rounded-full text-[13px] flex items-center justify-center cursor-pointer mx-auto',
-      context?.selected ? 'bg-apple-blue text-white'
+      context?.selected ? 'bg-accent text-white'
         : context?.disabled ? 'opacity-30 cursor-default'
         : 'hover:bg-[#f5f5f7] text-[rgba(0,0,0,0.8)]',
     ],
   }),
   monthView: 'grid grid-cols-3 gap-2 p-1',
-  month: ({ context }: any) => ({ class: ['py-2 rounded-[8px] text-[13px] cursor-pointer text-center', context?.selected ? 'bg-apple-blue text-white' : 'hover:bg-[#f5f5f7]'] }),
+  month: ({ context }: any) => ({ class: ['py-2 rounded-[8px] text-[13px] cursor-pointer text-center', context?.selected ? 'bg-accent text-white' : 'hover:bg-[#f5f5f7]'] }),
   yearView: 'grid grid-cols-2 gap-2 p-1',
-  year: ({ context }: any) => ({ class: ['py-2 rounded-[8px] text-[13px] cursor-pointer text-center', context?.selected ? 'bg-apple-blue text-white' : 'hover:bg-[#f5f5f7]'] }),
+  year: ({ context }: any) => ({ class: ['py-2 rounded-[8px] text-[13px] cursor-pointer text-center', context?.selected ? 'bg-accent text-white' : 'hover:bg-[#f5f5f7]'] }),
   timePicker: 'flex items-center justify-center gap-2 mt-3 pt-3 border-t border-[rgba(0,0,0,0.08)]',
   hourPicker: 'flex flex-col items-center w-10 text-[14px]',
   minutePicker: 'flex flex-col items-center w-10 text-[14px]',
@@ -84,7 +84,7 @@ export const DATEPICKER_PT = {
   pcIncrementButton: { root: 'w-7 h-7 rounded-[6px] flex items-center justify-center hover:bg-[#f5f5f7] cursor-pointer' },
   pcDecrementButton: { root: 'w-7 h-7 rounded-[6px] flex items-center justify-center hover:bg-[#f5f5f7] cursor-pointer' },
   buttonbar: 'flex items-center justify-between mt-3 pt-2 border-t border-[rgba(0,0,0,0.08)]',
-  pcTodayButton: { root: 'text-[13px] text-apple-blue hover:underline cursor-pointer' },
+  pcTodayButton: { root: 'text-[13px] text-accent hover:underline cursor-pointer' },
   pcClearButton: { root: 'text-[13px] text-[rgba(0,0,0,0.5)] hover:underline cursor-pointer' },
 };
 
@@ -92,7 +92,7 @@ export const DATEPICKER_PT = {
 const BTN_BASE = 'inline-flex items-center justify-center gap-2 h-9 px-4 rounded-[8px] text-[14px] font-medium cursor-pointer transition-colors focus:outline-none disabled:opacity-50';
 export const BTN = {
   /** Primary call-to-action (blue). */
-  primary: `${BTN_BASE} bg-apple-blue hover:bg-[#0077ED] text-white border border-transparent`,
+  primary: `${BTN_BASE} bg-accent hover:bg-[#0077ED] text-white border border-transparent`,
   /** Neutral secondary action (light gray). */
   ghost: `${BTN_BASE} bg-[#fafafc] hover:bg-[#ededf2] text-[rgba(0,0,0,0.8)] border border-[rgba(0,0,0,0.08)]`,
   /** Destructive / warning-tinted secondary action. */

@@ -6,7 +6,7 @@
         <span class="text-[12px] text-[rgba(0,0,0,0.5)] font-mono">/{{ category.slug }}</span>
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-        <Button unstyled @click="$emit('edit', category)" class="text-apple-link text-[14px] font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
+        <Button unstyled @click="$emit('edit', category)" class="text-link text-[14px] font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
         <Button unstyled @click="$emit('delete', category.id)" class="text-red-500 text-[14px] font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
       </div>
     </div>

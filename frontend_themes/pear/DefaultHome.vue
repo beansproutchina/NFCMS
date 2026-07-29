@@ -67,7 +67,7 @@ const openArticle = (article: any) => {
                         {{ item.published_at ? new Date(item.published_at).toLocaleDateString() : '-' }}
                     </span>
                     <button
-                        class="bg-transparent text-apple-link rounded-[980px] border border-apple-link px-[15px] py-[8px] text-[14px] leading-[1.43] tracking-[-0.224px] cursor-pointer "
+                        class="bg-transparent text-link rounded-[980px] border border-link px-[15px] py-[8px] text-[14px] leading-[1.43] tracking-[-0.224px] cursor-pointer "
                         @click.stop="openArticle(item)">
                         {{ $t('front.readMore') }} &gt;
                     </button>

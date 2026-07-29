@@ -42,22 +42,22 @@
           <div v-for="(field, idx) in formData.articleFieldDefs" :key="idx" class="flex gap-2 items-start">
             <div class="w-1/4">
               <InputText v-model="field.key" unstyled placeholder="Key"
-                class="w-full h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-apple-blue" />
+                class="w-full h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
             </div>
             <div class="w-1/4">
               <InputText v-model="field.title" unstyled :placeholder="$t('form.fieldTitle')"
-                class="w-full h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-apple-blue" />
+                class="w-full h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
             </div>
             <div class="w-1/4">
               <Select v-model="field.type" :options="fieldTypeOptions" optionLabel="label" optionValue="value" unstyled
-                :pt="{ root: 'w-full h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-apple-blue flex items-center justify-between cursor-pointer relative bg-white', label: 'text-xs truncate', dropdown: 'w-3 h-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-2 py-1 text-xs cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-apple-blue text-white hover:bg-apple-blue' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
+                :pt="{ root: 'w-full h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent flex items-center justify-between cursor-pointer relative bg-white', label: 'text-xs truncate', dropdown: 'w-3 h-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-[rgba(0,0,0,0.15)] rounded shadow-lg mt-1 py-1 z-[9999]', option: ({ context }: any) => ({ class: ['px-2 py-1 text-xs cursor-pointer hover:bg-[#f5f5f7]', context.selected ? 'bg-accent text-white hover:bg-accent' : 'text-[rgba(0,0,0,0.8)]'] }) }" />
             </div>
             <Button type="button" @click="formData.articleFieldDefs.splice(idx, 1)" unstyled
               class="text-red-500 hover:text-red-700 text-xs px-2 focus:outline-none mt-1">X</Button>
           </div>
           <Button type="button"
             @click="formData.articleFieldDefs.push({ key: '', title: '', type: 'text' })"
-            unstyled class="text-apple-blue text-[13px] hover:underline mt-1 focus:outline-none">+ {{ $t('action.new') }}</Button>
+            unstyled class="text-accent text-[13px] hover:underline mt-1 focus:outline-none">+ {{ $t('action.new') }}</Button>
         </div>
       </div>
 
@@ -66,15 +66,15 @@
         <div class="border rounded-[8px] border-[rgba(0,0,0,0.15)] p-2 bg-white  max-h-40 overflow-y-auto ">
           <div v-for="(item, idx) in formData.metaPairs" :key="idx" class="flex gap-2 mb-2">
             <InputText v-model="item.key" unstyled placeholder="Key"
-              class="w-1/3 h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-apple-blue" />
+              class="w-1/3 h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
             <InputText v-model="item.value" unstyled placeholder="Value"
-              class="flex-1 h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-apple-blue" />
+              class="flex-1 h-8 px-2 border border-[rgba(0,0,0,0.15)] rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
             <Button type="button" @click="formData.metaPairs.splice(idx, 1)" unstyled
               class="text-red-500 hover:text-red-700 text-xs px-2 focus:outline-none">X</Button>
           </div>
           <Button type="button"
             @click="formData.metaPairs = formData.metaPairs || []; formData.metaPairs.push({ key: '', value: '' })"
-            unstyled class="text-apple-blue text-[13px] hover:underline mt-1 focus:outline-none">+ {{ $t('action.new') }}</Button>
+            unstyled class="text-accent text-[13px] hover:underline mt-1 focus:outline-none">+ {{ $t('action.new') }}</Button>
         </div>
       </div>
       <button type="submit" class="hidden"></button>

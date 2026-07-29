@@ -106,7 +106,7 @@ watch(() => [props.model, props.resourceId], load);
             <div class="flex gap-2">
                 <Select v-model="form.grantee_type" :options="granteeTypeOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[96px] shrink-0" @change="form.grantee_id = null; form.user_label = ''" />
                 <template v-if="form.grantee_type === 'user'">
-                    <button @click="pickerVisible = true" class="flex-1 min-w-0 h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[14px] bg-white text-left truncate cursor-pointer hover:border-apple-blue">
+                    <button @click="pickerVisible = true" class="flex-1 min-w-0 h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[14px] bg-white text-left truncate cursor-pointer hover:border-accent">
                         <span v-if="form.user_label">{{ form.user_label }}</span>
                         <span v-else class="text-[rgba(0,0,0,0.4)]">{{ $t('acl.pickUser') }}</span>
                     </button>
@@ -117,7 +117,7 @@ watch(() => [props.model, props.resourceId], load);
             <div class="flex flex-wrap gap-1.5">
                 <button v-for="a in actions" :key="a" @click="toggleAccess(a)"
                     class="px-2.5 h-8 rounded-[8px] text-[13px] border cursor-pointer transition-colors"
-                    :class="selectedAccess.includes(a) ? 'bg-apple-blue text-white border-apple-blue' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
+                    :class="selectedAccess.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
                     {{ a }}
                 </button>
                 <Button unstyled @click="addGrant" :class="[BTN.primary, 'ml-auto']"><LucidePlus :size="14" /> {{ $t('acl.add') }}</Button>

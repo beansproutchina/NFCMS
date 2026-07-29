@@ -202,7 +202,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
     <div class="h-full flex flex-col pt-6 pb-0 px-6 max-w-screen-2xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-4">
-                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-[rgba(0,0,0,0.48)] hover:bg-white hover:border-2 hover:border-apple-blue hover:text-black transition-all cursor-pointer">
+                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-[rgba(0,0,0,0.48)] hover:bg-white hover:border-2 hover:border-accent hover:text-black transition-all cursor-pointer">
                     <LucideChevronLeft :size="20" />
                 </Button>
                 <div>
@@ -271,7 +271,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
 
         <!-- Below lg the sidebar is hidden, so the same panel opens as a drawer. -->
         <button v-if="isMobile" @click="showMobilePanel = true"
-            class="fixed right-4 bottom-6 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-lg flex items-center justify-center hover:bg-[#0077ED] transition-colors cursor-pointer">
+            class="fixed right-4 bottom-6 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center hover:bg-[#0077ED] transition-colors cursor-pointer">
             <LucideSettings :size="22" />
         </button>
 

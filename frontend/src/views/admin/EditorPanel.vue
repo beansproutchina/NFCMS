@@ -59,7 +59,7 @@ defineProps<{
             <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.description') ||
                 'Description' }}</label>
             <Textarea unstyled v-model="form.description" rows="4" placeholder="..."
-                class="w-full border border-[rgba(0,0,0,0.04)] py-2 px-3 rounded-[11px] text-[14px] focus:outline-none focus:border-apple-blue transition-colors resize-none"></Textarea>
+                class="w-full border border-[rgba(0,0,0,0.04)] py-2 px-3 rounded-[11px] text-[14px] focus:outline-none focus:border-accent transition-colors resize-none"></Textarea>
         </div>
 
         <!-- Dynamic article data fields from category definition -->
@@ -74,7 +74,7 @@ defineProps<{
                 <!-- textarea -->
                 <Textarea v-else-if="field.type === 'textarea'" unstyled v-model="form.data[field.key]"
                     :placeholder="field.title" rows="3"
-                    class="w-full border border-[rgba(0,0,0,0.04)] py-2 px-3 rounded-[11px] text-[14px] focus:outline-none focus:border-apple-blue transition-colors resize-none" />
+                    class="w-full border border-[rgba(0,0,0,0.04)] py-2 px-3 rounded-[11px] text-[14px] focus:outline-none focus:border-accent transition-colors resize-none" />
 
                 <!-- number -->
                 <InputText v-else-if="field.type === 'number'" unstyled v-model="form.data[field.key]"

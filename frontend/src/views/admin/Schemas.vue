@@ -44,7 +44,7 @@ onMounted(fetchSchemas);
             ]"
         >
             <template #modelName="{ data }">
-                <span class="font-semibold text-apple-text-dark text-[17px] tracking-tight">{{ data.modelName }}</span>
+                <span class="font-semibold text-label text-[17px] tracking-tight">{{ data.modelName }}</span>
             </template>
             <template #routePath="{ data }">
                 <span class="text-gray-500 font-mono text-[14px]">/api/{{ data.routePath }}</span>
@@ -53,7 +53,7 @@ onMounted(fetchSchemas);
                 <span class="bg-[#f5f5f7] px-3 py-1 rounded-[6px] text-[13px] font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
             </template>
             <template #actions="{ data }">
-                <router-link :to="`/admin/crud/${data.routePath}`" class="text-apple-blue hover:underline font-medium text-[14px]">
+                <router-link :to="`/admin/crud/${data.routePath}`" class="text-accent hover:underline font-medium text-[14px]">
                     Manage Data
                 </router-link>
             </template>

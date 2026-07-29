@@ -74,12 +74,12 @@ const tablePt = {
     bodyRow: { class: 'hover:bg-[#fafafc] transition-colors text-[14px] border-b border-[rgba(0,0,0,0.05)]' },
     pcPaginator: customPaginatorPt as any,
     mask: { class: 'absolute top-0 left-0 right-0 bottom-0 bg-white/50 backdrop-blur-sm z-50 flex items-center justify-center min-h-[150px]' },
-    loadingIcon: { class: 'w-10 h-10 text-apple-blue animate-spin' }
+    loadingIcon: { class: 'w-10 h-10 text-accent animate-spin' }
 };
 
 const columnPt = {
     headerCell: { class: 'py-4 px-6 font-semibold text-[rgba(0,0,0,0.8)] text-left whitespace-nowrap' },
-    columnHeaderContent: { class: 'flex items-center gap-2 cursor-pointer hover:text-apple-blue select-none' },
+    columnHeaderContent: { class: 'flex items-center gap-2 cursor-pointer hover:text-accent select-none' },
     sortIcon: { class: 'w-3 h-3 fill-current text-[rgba(0,0,0,0.4)]' },
     bodyCell: { class: 'py-5 px-6 text-left align-middle truncate' },
 };

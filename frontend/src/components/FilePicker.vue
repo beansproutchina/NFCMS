@@ -100,14 +100,14 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
                     <div v-else-if="!files.length" class="text-[14px] text-[rgba(0,0,0,0.4)] py-8 text-center">{{ $t('fileUploader.empty') }}</div>
                     <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         <button v-for="f in files" :key="f.id" @click="pick(f)" type="button"
-                            class="relative text-left border rounded-[10px] overflow-hidden hover:border-apple-blue transition-colors cursor-pointer"
-                            :class="isPicked(f) ? 'border-apple-blue ring-1 ring-apple-blue' : 'border-[rgba(0,0,0,0.08)]'">
+                            class="relative text-left border rounded-[10px] overflow-hidden hover:border-accent transition-colors cursor-pointer"
+                            :class="isPicked(f) ? 'border-accent ring-1 ring-accent' : 'border-[rgba(0,0,0,0.08)]'">
                             <span class="h-24 bg-[#f5f5f7] flex items-center justify-center overflow-hidden">
                                 <img v-if="f.mime_type?.startsWith('image/') || IMAGE_RE.test(f.url || '')" :src="f.url" class="object-cover w-full h-full" />
                                 <LucideFile v-else :size="28" class="text-[rgba(0,0,0,0.2)]" />
                             </span>
                             <span class="block px-2 py-1.5 text-[12px] truncate text-[rgba(0,0,0,0.7)]" :title="f.filename">{{ f.filename }}</span>
-                            <span v-if="isPicked(f)" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-apple-blue text-white flex items-center justify-center">
+                            <span v-if="isPicked(f)" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center">
                                 <LucideCheck :size="12" />
                             </span>
                         </button>

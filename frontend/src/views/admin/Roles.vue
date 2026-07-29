@@ -224,7 +224,7 @@ onMounted(async () => {
                                 <Select v-model="catForm.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="$t('roles.pickCategory')" unstyled :pt="SELECT_PT" class="w-[200px] shrink-0" />
                                 <button v-for="a in CAT_ACTIONS" :key="a" @click="toggleCatAccess(a)"
                                     class="px-2.5 h-8 rounded-[8px] text-[13px] border cursor-pointer transition-colors"
-                                    :class="catForm.access.includes(a) ? 'bg-apple-blue text-white border-apple-blue' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
+                                    :class="catForm.access.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
                                     {{ a }}
                                 </button>
                                 <Button unstyled @click="addCatGrant" :class="[BTN.primary, 'ml-auto']">

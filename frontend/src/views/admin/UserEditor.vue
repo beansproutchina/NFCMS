@@ -22,7 +22,7 @@
         <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('roles.additionalRoles') }} <span class="text-[12px] text-[rgba(0,0,0,0.45)]">({{ $t('roles.additionalHint') }})</span></label>
         <div class="flex flex-wrap gap-2">
           <label v-for="r in roles.filter(x => x.name !== formData.role)" :key="r.id" class="flex items-center gap-1.5 px-2.5 py-1.5 border rounded-[8px] text-[13px] cursor-pointer transition-colors"
-            :class="additionalRoleIds.includes(r.id) ? 'bg-apple-blue text-white border-apple-blue' : 'border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
+            :class="additionalRoleIds.includes(r.id) ? 'bg-accent text-white border-accent' : 'border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
             <input type="checkbox" :value="r.id" v-model="additionalRoleIds" class="hidden" />
             {{ r.label || r.name }}
           </label>

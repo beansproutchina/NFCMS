@@ -6,7 +6,7 @@
                 </h1>
             </div>
             <Button unstyled @click="openForm()"
-                class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                 <LucidePlus :size="16" /> {{ $t('action.new') }}
             </Button>
         </div>

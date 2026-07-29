@@ -6,7 +6,7 @@
             </div>
             <div>
                 <Button unstyled v-if="isSuperAdmin" @click="openEditor()"
-                    class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                    class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
                 </Button>
             </div>
@@ -28,7 +28,7 @@
             <template #actions="{ data }">
                 <div class="flex gap-2">
                     <Button unstyled @click="openEditor(data)"
-                        class="text-apple-link hover:underline text-[14px] flex items-center cursor-pointer">
+                        class="text-link hover:underline text-[14px] flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled v-if="isSuperAdmin && data.username !== currentUser.username"

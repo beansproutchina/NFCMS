@@ -12,7 +12,7 @@
 
       <div class="p-6 border-t border-[rgba(0,0,0,0.05)] bg-white rounded-b-[12px] flex justify-end gap-3">
         <Button @click="$emit('close')" unstyled class="px-5 py-2 border border-[rgba(0,0,0,0.15)] text-[rgba(0,0,0,0.8)] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)] focus:outline-none transition-colors font-medium border-transparent">{{ $t('action.cancel') || 'Cancel' }}</Button>
-        <Button @click="$emit('save')" unstyled class="px-5 py-2 bg-apple-blue text-white rounded-[8px] hover:bg-[#0077ED] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors font-medium flex items-center justify-center gap-2" :disabled="disableSave">{{ saveText || $t('action.save') }}</Button>
+        <Button @click="$emit('save')" unstyled class="px-5 py-2 bg-accent text-white rounded-[8px] hover:bg-[#0077ED] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors font-medium flex items-center justify-center gap-2" :disabled="disableSave">{{ saveText || $t('action.save') }}</Button>
       </div>
     </div>
   </div>

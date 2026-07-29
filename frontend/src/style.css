@@ -1,18 +1,77 @@
 @import "tailwindcss";
 
+/**
+ * Admin design tokens.
+ *
+ * Naming: by ROLE, never by brand or by value. `label-3` says "third-level text"; a name like
+ * `ink-45` would just be `rgba(0,0,0,0.45)` spelled differently — and a token that only renames a
+ * literal is worse than the literal, because it adds indirection without reducing choices.
+ *
+ * Scale sizing follows Apple's HIG, whose whole point is that it is SMALL: all of iOS gets by with
+ * four label levels and two separators. Rules kept here so the set can't quietly grow back:
+ *
+ *   1. At most ~5 steps per family, and adjacent steps must be tellable apart by eye. Two steps you
+ *      cannot distinguish are one step.
+ *   2. Families need not be spread apart from EACH OTHER. `bg-fill` (0.04) and
+ *      `border-separator-weak` (0.06) sit close, but one is a background and the other a border —
+ *      they are never compared. Ambiguity only matters WITHIN a family.
+ *   3. One value, one token. Two tokens sharing a value make Tailwind's canonicalizer (see
+ *      scripts/audit-classes.mjs) pick between them arbitrarily.
+ *   4. Custom names only — `--text-sm: 14px` silently fails to canonicalize because it collides
+ *      with Tailwind's own `--text-sm: 0.875rem`. Hence `--text-body`.
+ */
 @theme {
-  --color-apple-blue: #0071e3;
-  --color-apple-link: #0066cc;
-  --color-apple-black: #000000;
-  --color-apple-gray: #f5f5f7;
-  --color-apple-text-dark: #1d1d1f;
-  
+  /* ── Text, 4 levels (HIG: label / secondary / tertiary / quaternaryLabel) ────────────── */
+  --color-label: #1d1d1f;               /* primary text — also the page default */
+  --color-label-2: rgba(0, 0, 0, 0.6);  /* secondary: descriptions, meta */
+  --color-label-3: rgba(0, 0, 0, 0.4);  /* tertiary: hints, timestamps, placeholders */
+  --color-label-4: rgba(0, 0, 0, 0.25); /* quaternary: disabled, decorative separators */
+
+  /* ── Separators, 2 levels ─────────────────────────────────────────────────────────────── */
+  --color-separator: rgba(0, 0, 0, 0.12);      /* a visible edge: field borders, card outlines */
+  --color-separator-weak: rgba(0, 0, 0, 0.06); /* a hairline inside a card */
+
+  /* ── Fill, 1 level ────────────────────────────────────────────────────────────────────── */
+  --color-fill: rgba(0, 0, 0, 0.04);    /* the faint wash under a hovered row */
+
+  /* ── Surfaces, by role rather than by lightness ───────────────────────────────────────── */
+  /* white (built-in) = a card. canvas is darker than `surface` on purpose: role, not brightness. */
+  --color-canvas: #f5f5f7;              /* page background */
+  --color-surface: #fafafc;             /* secondary surface inside a card; ghost button face */
+  --color-surface-hover: #e8e8ed;       /* hover for the above */
+  --color-border-opaque: #e5e5e5;       /* solid divider, for where a translucent one won't do */
+
+  /* ── Brand & semantic. A CATEGORY, not a ladder — "heavier" is meaningless here, so the
+        ≤5 rule does not apply. ─────────────────────────────────────────────────────────── */
+  --color-accent: #0071e3;              /* primary action, focus ring (HIG accentColor) */
+  --color-accent-hover: #0077ed;
+  --color-link: #0066cc;
+  --color-warn: #c2410c;                /* destructive action text */
+  --color-warn-bg: #fff7ed;
+  --color-info-bg: #e0f2fe;             /* "published" status chip */
+  --color-indigo: #3730a3;              /* role chip text */
+  --color-indigo-bg: #eef2ff;
+
+  /* ── Type scale, 5 steps: 40 / 20 / 17 / 14 / 12 ──────────────────────────────────────── */
+  --text-title-page: 40px;
+  --text-title-section: 20px;           /* dialog + section headings */
+  --text-title-item: 17px;              /* card / list-row titles */
+  --text-body: 14px;                    /* body copy and every form control */
+  --text-small: 12px;                   /* captions, chips, dense toolbars */
+
+  /* ── Radius, 2 steps (+ rounded-full for pills) ───────────────────────────────────────── */
+  --radius-control: 8px;                /* inputs, buttons, chips */
+  --radius-card: 12px;                  /* cards, dialogs, panels */
+
+  /* ── Line height used by the page title ──────────────────────────────────────────────── */
+  --leading-title: 1.1;
+
   --font-sans: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   --font-text: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
 
 body {
-  @apply bg-apple-gray text-apple-text-dark font-sans tracking-tight;
+  @apply bg-canvas text-label font-sans tracking-tight;
   margin: 0;
   padding: 0;
 }

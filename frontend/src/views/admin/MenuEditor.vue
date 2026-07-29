@@ -26,7 +26,7 @@
       <div>
           <div class="flex justify-between items-center mb-3">
             <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)]">{{ $t('form.menuItems') || 'Menu Items (Tree)' }}</label>
-            <Button unstyled @click="addItem(formData.items)" type="button" class="text-[13px] font-medium text-apple-blue whitespace-nowrap px-3 py-2 bg-[#e0f2fe] hover:bg-[#bae6fd] rounded-[8px] focus:outline-none transition-colors">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
+            <Button unstyled @click="addItem(formData.items)" type="button" class="text-[13px] font-medium text-accent whitespace-nowrap px-3 py-2 bg-[#e0f2fe] hover:bg-[#bae6fd] rounded-[8px] focus:outline-none transition-colors">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
           </div>
           <div class="bg-[#f5f5f7] border border-[rgba(0,0,0,0.05)] rounded-[12px] p-4 min-h-[200px]">
             <MenuItemEditor v-if="formData.items && formData.items.length" :items="formData.items" :categories="categories" :articles="articles" @update="formData.items = $event" />

@@ -101,8 +101,8 @@ const formatDate = (dateString: string) => {
           
           <div class="lg:col-span-2 bg-white rounded-[16px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.04)] overflow-hidden flex flex-col">
               <div class="p-6 border-b border-[rgba(0,0,0,0.05)] flex justify-between items-center bg-[#fbfbfd]">
-                  <h2 class="text-[19px] font-semibold flex items-center gap-2 text-[rgba(0,0,0,0.9)]"><LucideFileText :size="20" class="text-apple-blue" /> {{ $t('dashboard.recentArticles') }}</h2>
-                  <button @click="router.push('/admin/articles/new')" class="text-[14px] text-apple-blue hover:underline flex items-center gap-1 bg-transparent border-0 cursor-pointer"><LucidePlusCircle :size="16"/> {{ $t('action.new') }}</button>
+                  <h2 class="text-[19px] font-semibold flex items-center gap-2 text-[rgba(0,0,0,0.9)]"><LucideFileText :size="20" class="text-accent" /> {{ $t('dashboard.recentArticles') }}</h2>
+                  <button @click="router.push('/admin/articles/new')" class="text-[14px] text-accent hover:underline flex items-center gap-1 bg-transparent border-0 cursor-pointer"><LucidePlusCircle :size="16"/> {{ $t('action.new') }}</button>
               </div>
               <div class="flex-1 p-0">
                   <div v-if="!recentArticles.length" class="p-8 text-center text-[14px] text-[rgba(0,0,0,0.4)]">
@@ -123,7 +123,7 @@ const formatDate = (dateString: string) => {
                   </div>
               </div>
               <div class="p-3 bg-[#fbfbfd] border-t border-[rgba(0,0,0,0.05)] text-center">
-                  <button @click="router.push('/admin/articles')" class="text-[14px] text-apple-blue hover:underline flex items-center justify-center gap-1 w-full py-1 bg-transparent border-0 cursor-pointer">View All <LucideChevronRight :size="16"/></button>
+                  <button @click="router.push('/admin/articles')" class="text-[14px] text-accent hover:underline flex items-center justify-center gap-1 w-full py-1 bg-transparent border-0 cursor-pointer">View All <LucideChevronRight :size="16"/></button>
               </div>
           </div>
 

@@ -5,7 +5,7 @@
         <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ schemaName }} Management</h1>
         <p class="text-[rgba(0,0,0,0.5)]">Managing records dynamically.</p>
       </div>
-      <Button unstyled @click="openForm()" class="bg-apple-blue hover:bg-[#0066cc] text-white px-5 py-2.5 rounded-[980px] font-medium transition-colors">
+      <Button unstyled @click="openForm()" class="bg-accent hover:bg-[#0066cc] text-white px-5 py-2.5 rounded-[980px] font-medium transition-colors">
         New Record
       </Button>
     </div>
@@ -27,7 +27,7 @@
 
       <template #actions="{ data }">
         <div class="flex justify-end gap-3 text-[14px]">
-          <Button unstyled @click="openForm(data)" class="text-apple-blue hover:underline">Edit</Button>
+          <Button unstyled @click="openForm(data)" class="text-accent hover:underline">Edit</Button>
           <Button unstyled @click="deleteRecord(data)" class="text-red-500 hover:underline">Delete</Button>
         </div>
       </template>
@@ -52,19 +52,19 @@
                    :class="INPUT_CLASS" />
                    
             <label v-else-if="field.type === 'boolean'" class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-apple-blue text-apple-blue border-gray-300 rounded focus:ring-2 focus:ring-apple-blue">
+              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-accent text-accent border-gray-300 rounded focus:ring-2 focus:ring-accent">
               <span class="text-[15px] text-[#1d1d1f]">Enabled/True</span>
             </label>
 
             <Textarea unstyled v-else-if="field.type === 'object'" 
                       v-model="formData[field.name]" 
-                      class="w-full min-h-[120px] p-4 border border-[#d2d2d7] rounded-[8px] focus:border-apple-blue focus:ring-1 font-mono text-[13px]"
+                      class="w-full min-h-[120px] p-4 border border-[#d2d2d7] rounded-[8px] focus:border-accent focus:ring-1 font-mono text-[13px]"
                       placeholder="{}"></Textarea>
           </div>
           
           <div class="flex justify-end gap-3 pt-6 mt-8 border-t border-[rgba(0,0,0,0.05)]">
             <Button unstyled type="button" @click="showModal = false" class="px-6 py-2.5 rounded-[980px] hover:bg-[#f5f5f7] text-[#1d1d1f] transition-colors font-medium">Cancel</Button>
-            <Button unstyled type="submit" class="bg-apple-blue hover:bg-[#0066cc] text-white px-6 py-2.5 rounded-[980px] transition-colors font-medium">Save Record</Button>
+            <Button unstyled type="submit" class="bg-accent hover:bg-[#0066cc] text-white px-6 py-2.5 rounded-[980px] transition-colors font-medium">Save Record</Button>
           </div>
         </form>
       </div>
