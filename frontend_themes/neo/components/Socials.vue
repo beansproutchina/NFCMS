@@ -140,5 +140,8 @@ onBeforeUnmount(() => { document.removeEventListener('click', closeAll); documen
 @media (max-width: 560px) {
   /* Anchor left on narrow screens so the card cannot overflow the right edge. */
   .qr-pop { left: 0; right: auto; }
+  /* Keep the large matrix tappable without pushing 7 cells past a 375px viewport. */
+  .size-lg .social { width: 44px; height: 44px; }
+  .size-lg .social :deep(svg) { width: 20px; height: 20px; }
 }
 </style>
