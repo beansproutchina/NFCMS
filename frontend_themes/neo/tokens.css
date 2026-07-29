@@ -1,0 +1,25 @@
+/**
+ * neo theme design tokens — the single source shared by every page shell.
+ *
+ * Scoped to the `.neo-scope` class (not `:root`) on purpose: the theme bundle can end up in the
+ * same chunk as the admin app, and a class selector matches nothing there, so nothing leaks
+ * into /admin. Both shells (`Layout.vue`, `MemberLayout.vue`) `import './tokens.css'` — Vite
+ * de-duplicates it into one stylesheet — and put `neo-scope` on their root element.
+ *
+ * Custom properties inherit down the DOM tree, so `<style scoped>` in descendants
+ * (AHeader / AFooter / every template) resolves `var(--ink)` normally: `scoped` only constrains
+ * which elements a selector may match, it does not stop property inheritance.
+ */
+.neo-scope {
+  --bg-page: #F4F1EA;
+  --surface: #FFFFFF;
+  --ink: #1C1C1C;
+  --accent: #D64933;
+  --border-light: #D1CCC5;
+  --shadow-hard: 8px 8px 0 #1C1C1C;
+  --shadow-soft: 4px 4px 0 #1C1C1C;
+
+  background: var(--bg-page);
+  color: var(--ink);
+  font-family: 'Manrope', sans-serif;
+}
