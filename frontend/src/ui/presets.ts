@@ -98,3 +98,31 @@ export const BTN = {
   /** Destructive / warning-tinted secondary action. */
   danger: `${BTN_BASE} bg-surface hover:bg-surface-hover text-warn border border-separator-weak`,
 };
+
+/**
+ * Unstyled passthrough for the global `<ConfirmDialog>`.
+ *
+ * PrimeVue runs on the Aura theme here and components opt out of it one by one with `unstyled`.
+ * `<ConfirmDialog>` in App.vue never did, so the one dialog CLAUDE.md tells everyone to use — via
+ * `useConfirm()`, in place of native `confirm()` — was also the one control ignoring the design
+ * system entirely, right down to Aura's green buttons.
+ *
+ * Section names come from ConfirmDialog (`icon`, `message`, `pcRejectButton`, `pcAcceptButton`) plus
+ * the Dialog it wraps (`mask`, `root`, `header`, `title`, `content`, `footer`, `pcCloseButton`).
+ * Deliberately mirrors AdminModal.vue so both dialogs read as the same object.
+ */
+export const CONFIRM_PT = {
+  // Above the pickers (z-60) — a confirm can be raised from inside one.
+  mask: 'fixed inset-0 z-70 flex items-center justify-center bg-scrim backdrop-blur-sm p-4',
+  root: 'bg-white rounded-card shadow-2xl w-full max-w-md flex flex-col',
+  header: 'px-6 pt-6 pb-4 flex items-start justify-between gap-4',
+  title: 'text-title-section font-semibold',
+  pcCloseButton: { root: 'text-label-3 hover:text-label transition-colors cursor-pointer shrink-0' },
+  content: 'px-6 pb-6 flex items-start gap-3',
+  // The severity icon is decorative; the message already says everything.
+  icon: 'hidden',
+  message: 'text-body text-label-2 leading-relaxed',
+  footer: 'px-6 pb-6 flex justify-end gap-3',
+  pcRejectButton: { root: BTN.ghost },
+  pcAcceptButton: { root: BTN.primary },
+};
