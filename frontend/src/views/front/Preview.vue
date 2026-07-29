@@ -30,16 +30,16 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
-        <div class="sticky top-0 z-10 bg-[#c2410c] text-white text-center text-[13px] py-2 font-medium tracking-wide">
+    <div class="min-h-screen bg-canvas text-label">
+        <div class="sticky top-0 z-10 bg-warn text-white text-center text-[13px] py-2 font-medium tracking-wide">
             {{ $t('preview.banner') }}
         </div>
         <div class="max-w-[800px] mx-auto px-6 py-12">
             <div v-if="loading" class="text-[rgba(0,0,0,0.5)]">{{ $t('preview.loading') }}</div>
             <div v-else-if="error" class="text-red-600">{{ error }}</div>
             <template v-else>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-3">{{ article.title }}</h1>
-                <p v-if="article.description" class="text-[17px] text-[rgba(0,0,0,0.6)] mb-8">{{ article.description }}</p>
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-3">{{ article.title }}</h1>
+                <p v-if="article.description" class="text-title-item text-label-2 mb-8">{{ article.description }}</p>
                 <div class="prose max-w-none" v-html="rendered"></div>
             </template>
         </div>

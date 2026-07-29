@@ -121,7 +121,7 @@ onMounted(fetchFiles);
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.files', '文件库') }}</h1>
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.files', '文件库') }}</h1>
             </div>
             
             <div class="flex gap-3 items-center">
@@ -138,17 +138,17 @@ onMounted(fetchFiles);
             <InputText unstyled readonly :model-value="fallbackUrl" :class="INPUT_CLASS" @focus="($event.target as HTMLInputElement).select()" />
         </div>
 
-        <div v-if="loading && files.length === 0" class="text-[14px] opacity-60">Loading...</div>
+        <div v-if="loading && files.length === 0" class="text-body opacity-60">Loading...</div>
         
-        <div v-else-if="files.length === 0" class="text-center py-20 text-[rgba(0,0,0,0.5)] bg-white rounded-[12px] border border-[rgba(0,0,0,0.05)] shadow-[0px_5px_30px_rgba(0,0,0,0.06)]">
+        <div v-else-if="files.length === 0" class="text-center py-20 text-[rgba(0,0,0,0.5)] bg-white rounded-card border border-[rgba(0,0,0,0.05)] shadow-[0px_5px_30px_rgba(0,0,0,0.06)]">
             {{ $t('system.noEntries', 'No entries found.') }}
         </div>
 
         <div v-else>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 mb-6">
-                <div v-for="file in files" :key="file.id" class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] group relative">
+                <div v-for="file in files" :key="file.id" class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] group relative">
                     
-                    <div class="h-40 bg-[#f5f5f7] flex items-center justify-center relative overflow-hidden">
+                    <div class="h-40 bg-canvas flex items-center justify-center relative overflow-hidden">
                         <img v-if="file.mime_type?.startsWith('image/')" :src="file.url" class="object-cover w-full h-full" />
                         <LucideFile v-else :size="48" class="text-[rgba(0,0,0,0.2)]" />
                         
@@ -166,8 +166,8 @@ onMounted(fetchFiles);
                     </div>
                     
                     <div class="p-4 border-t border-[rgba(0,0,0,0.05)]">
-                        <div class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] truncate" :title="file.filename">{{ file.filename }}</div>
-                        <div class="text-[12px] text-[rgba(0,0,0,0.5)] mt-1">{{ (file.size / 1024).toFixed(2) }} KB</div>
+                        <div class="text-body font-medium text-[rgba(0,0,0,0.8)] truncate" :title="file.filename">{{ file.filename }}</div>
+                        <div class="text-small text-[rgba(0,0,0,0.5)] mt-1">{{ (file.size / 1024).toFixed(2) }} KB</div>
                     </div>
                 </div>
             </div>

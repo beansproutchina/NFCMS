@@ -1,7 +1,7 @@
 <template>
   <VueDraggableNext :list="items" class="space-y-2" handle=".handle" @change="emitUpdate">
-    <div v-for="(item, index) in items" :key="index" class="border border-[rgba(0,0,0,0.15)] rounded-[8px] bg-white overflow-hidden shadow-sm">
-        <div class="flex items-center gap-3 p-3 bg-[#fafafc] border-b border-[rgba(0,0,0,0.05)]">
+    <div v-for="(item, index) in items" :key="index" class="border border-[rgba(0,0,0,0.15)] rounded-control bg-white overflow-hidden shadow-sm">
+        <div class="flex items-center gap-3 p-3 bg-surface border-b border-[rgba(0,0,0,0.05)]">
             <span class="handle cursor-move text-gray-400 hover:text-[rgba(0,0,0,0.8)] transition-colors">☰</span>
             <InputText unstyled v-model="item.label" :placeholder="$t('form.label') || 'Label'" :class="[INPUT_CLASS, 'flex-1 max-w-[200px]']" @input="emitUpdate"/>
 
@@ -17,8 +17,8 @@
                  <InputText unstyled v-model="item.url" :placeholder="$t('form.url') || 'URL (e.g. /about)'" :class="[INPUT_CLASS, 'flex-1 min-w-[200px]']" @input="emitUpdate"/>
             </template>
 
-            <Button unstyled @click="addChild(item)" class="text-sm font-medium text-accent whitespace-nowrap px-3 py-2 mx-1 hover:bg-[#e0f2fe] rounded-[8px] focus:outline-none transition-colors">+ {{ $t('action.addSub') || 'Sub' }}</Button>
-            <Button unstyled @click="removeItem(index)" class="text-red-500 hover:text-white hover:bg-red-500 px-3 py-2 rounded-[8px] transition-colors ml-auto focus:outline-none">✕</Button>
+            <Button unstyled @click="addChild(item)" class="text-sm font-medium text-accent whitespace-nowrap px-3 py-2 mx-1 hover:bg-info-fill rounded-control focus:outline-none transition-colors">+ {{ $t('action.addSub') || 'Sub' }}</Button>
+            <Button unstyled @click="removeItem(index)" class="text-red-500 hover:text-white hover:bg-red-500 px-3 py-2 rounded-control transition-colors ml-auto focus:outline-none">✕</Button>
         </div>
         <div v-if="item.children && item.children.length" class="p-3 pl-10 bg-white">
             <MenuItemEditor :items="item.children" :categories="categories" :articles="articles" @update="emitUpdate" />

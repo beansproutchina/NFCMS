@@ -39,18 +39,19 @@
   --color-canvas: #f5f5f7;              /* page background */
   --color-surface: #fafafc;             /* secondary surface inside a card; ghost button face */
   --color-surface-hover: #e8e8ed;       /* hover for the above */
-  --color-border-opaque: #e5e5e5;       /* solid divider, for where a translucent one won't do */
+  --color-divider: #e5e5e5;             /* solid divider, for where a translucent one won't do */
 
+  /* Suffix convention: bare name = foreground, `-fill` = the tinted background behind it. */
   /* ── Brand & semantic. A CATEGORY, not a ladder — "heavier" is meaningless here, so the
         ≤5 rule does not apply. ─────────────────────────────────────────────────────────── */
   --color-accent: #0071e3;              /* primary action, focus ring (HIG accentColor) */
   --color-accent-hover: #0077ed;
   --color-link: #0066cc;
   --color-warn: #c2410c;                /* destructive action text */
-  --color-warn-bg: #fff7ed;
-  --color-info-bg: #e0f2fe;             /* "published" status chip */
+  --color-warn-fill: #fff7ed;
+  --color-info-fill: #e0f2fe;           /* "published" status chip (background only) */
   --color-indigo: #3730a3;              /* role chip text */
-  --color-indigo-bg: #eef2ff;
+  --color-indigo-fill: #eef2ff;
 
   /* ── Type scale, 5 steps: 40 / 20 / 17 / 14 / 12 ──────────────────────────────────────── */
   --text-title-page: 40px;

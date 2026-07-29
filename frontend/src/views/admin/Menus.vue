@@ -2,7 +2,7 @@
   <div class="max-w-7xl mx-auto py-10 w-full px-6">
     <div class="mb-8 flex justify-between items-end">
       <div>
-        <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.menus') }}</h1>
+        <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.menus') }}</h1>
       </div>
       <div>
         <Button unstyled @click="openEditor()" :class="BTN.primary">
@@ -19,10 +19,10 @@
     >
       <template #actions="{ data }">
         <div class="flex gap-2">
-            <Button unstyled @click="openEditor(data)" class="text-link hover:underline text-[14px] flex items-center cursor-pointer">
+            <Button unstyled @click="openEditor(data)" class="text-link hover:underline text-body flex items-center cursor-pointer">
                 {{ $t('action.edit') }}
             </Button>
-            <Button unstyled @click="deleteMenu(data.id)" class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">
+            <Button unstyled @click="deleteMenu(data.id)" class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
                 {{ $t('action.delete') }}
             </Button>
         </div>

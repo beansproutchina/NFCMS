@@ -3,19 +3,19 @@
     <div class="space-y-6">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.name') }} <span class="text-red-500">*</span></label>
+          <label class="block text-body font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.name') }} <span class="text-red-500">*</span></label>
           <InputText unstyled v-model="formData.name" :class="INPUT_CLASS"/>
         </div>
         <div>
-          <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.locationKey') || 'Key Location (e.g. "header")' }}</label>
+          <label class="block text-body font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.locationKey') || 'Key Location (e.g. "header")' }}</label>
           <InputText unstyled v-model="formData.location" :class="INPUT_CLASS"/>
         </div>
       </div>
 
-      <div class="bg-[#fafafc] border border-[rgba(0,0,0,0.05)] rounded-[8px] p-4 flex items-center justify-between">
+      <div class="bg-surface border border-[rgba(0,0,0,0.05)] rounded-control p-4 flex items-center justify-between">
           <div>
-              <h3 class="text-[14px] font-semibold text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.generateRecursively') || 'Generate from Category' }}</h3>
-              <p class="text-[12px] text-[rgba(0,0,0,0.5)]">{{ $t('form.generateDesc') || 'Automatically fetch subcategories to build nested menu.' }}</p>
+              <h3 class="text-body font-semibold text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.generateRecursively') || 'Generate from Category' }}</h3>
+              <p class="text-small text-[rgba(0,0,0,0.5)]">{{ $t('form.generateDesc') || 'Automatically fetch subcategories to build nested menu.' }}</p>
           </div>
           <div class="flex gap-2 items-center">
               <Select v-model="selectedCategoryForGenerate" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[220px] shrink-0" />
@@ -25,12 +25,12 @@
 
       <div>
           <div class="flex justify-between items-center mb-3">
-            <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)]">{{ $t('form.menuItems') || 'Menu Items (Tree)' }}</label>
-            <Button unstyled @click="addItem(formData.items)" type="button" class="text-[13px] font-medium text-accent whitespace-nowrap px-3 py-2 bg-[#e0f2fe] hover:bg-[#bae6fd] rounded-[8px] focus:outline-none transition-colors">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
+            <label class="block text-body font-medium text-[rgba(0,0,0,0.8)]">{{ $t('form.menuItems') || 'Menu Items (Tree)' }}</label>
+            <Button unstyled @click="addItem(formData.items)" type="button" class="text-[13px] font-medium text-accent whitespace-nowrap px-3 py-2 bg-info-fill hover:bg-[#bae6fd] rounded-control focus:outline-none transition-colors">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
           </div>
-          <div class="bg-[#f5f5f7] border border-[rgba(0,0,0,0.05)] rounded-[12px] p-4 min-h-[200px]">
+          <div class="bg-canvas border border-[rgba(0,0,0,0.05)] rounded-card p-4 min-h-[200px]">
             <MenuItemEditor v-if="formData.items && formData.items.length" :items="formData.items" :categories="categories" :articles="articles" @update="formData.items = $event" />
-            <div v-else class="text-center text-[rgba(0,0,0,0.4)] py-12 text-[14px]">{{ $t('system.noEntries') || 'No items added.' }}</div>
+            <div v-else class="text-center text-label-3 py-12 text-body">{{ $t('system.noEntries') || 'No items added.' }}</div>
           </div>
       </div>
     </div>

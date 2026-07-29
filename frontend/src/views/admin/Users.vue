@@ -2,11 +2,11 @@
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="mb-8 flex justify-between items-end">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.users') }}</h1>
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.users') }}</h1>
             </div>
             <div>
                 <Button unstyled v-if="isSuperAdmin" @click="openEditor()"
-                    class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                    class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
                 </Button>
             </div>
@@ -17,23 +17,23 @@
             <template #role="{ data }">
                 <span
                     :class="{ 'bg-purple-100 text-purple-700': data.role === 'super_admin', 'bg-blue-100 text-blue-700': data.role !== 'super_admin' }"
-                    class="px-2 py-1 rounded-[5px] text-[12px] font-medium tracking-wider">
+                    class="px-2 py-1 rounded-[5px] text-small font-medium tracking-wider">
                     {{ data.role === 'super_admin' ? $t('form.superadmin') : $t('form.admin') }}
                 </span>
             </template>
             <template #lastontime="{ data }">
-                <span class="text-[rgba(0,0,0,0.6)]">{{ data.lastontime ? new Date(data.lastontime).toLocaleString() :
+                <span class="text-label-2">{{ data.lastontime ? new Date(data.lastontime).toLocaleString() :
                     '-' }}</span>
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
                     <Button unstyled @click="openEditor(data)"
-                        class="text-link hover:underline text-[14px] flex items-center cursor-pointer">
+                        class="text-link hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled v-if="isSuperAdmin && data.username !== currentUser.username"
                         @click="deleteUser(data.id)"
-                        class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">
+                        class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>

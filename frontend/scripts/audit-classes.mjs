@@ -16,6 +16,10 @@
  *   node scripts/audit-classes.mjs               # report only
  *   node scripts/audit-classes.mjs --json        # machine-readable
  *   node scripts/audit-classes.mjs --check       # exit 1 if anything is non-canonical (CI / lint)
+ *   node scripts/audit-classes.mjs --fix         # rewrite the css-equivalent ones in place
+ *
+ * `--fix` only touches rewrites proven css-equivalent. Anything else (merging 13px into 12px, say)
+ * changes how the UI looks and is a decision for a human, so it is reported and left alone.
  */
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 import { Scanner } from '@tailwindcss/oxide';
@@ -72,16 +76,47 @@ const where = collectCandidates();
  * Keep only candidates that actually compile to CSS; anything else is not a class at all.
  */
 const candidates = [...where.keys()].filter((c) => ds.candidatesToCss([c])[0] != null);
-const canonical = ds.canonicalizeCandidates(candidates);
+
+/**
+ * One candidate per call. `canonicalizeCandidates` DEDUPLICATES its result — feed it
+ * `['bg-[#f5f5f7]', 'bg-canvas']` and two inputs come back as one output — so a batch is not
+ * index-aligned with its input and zipping the two lists silently produces nonsense mappings
+ * (`border` → `border-0`, `flex` → `flex-1`).
+ */
+const canonicalOf = (c) => ds.canonicalizeCandidates([c])[0];
+
+/**
+ * Compare two utilities by the values they *resolve to*, not by their CSS text.
+ *
+ * `bg-[#f5f5f7]` emits `background-color: #f5f5f7` while `bg-canvas` emits
+ * `background-color: var(--color-canvas)` — different text, identical result. So substitute every
+ * `var(--token)` for its theme value first. What survives this comparison is a real difference:
+ * `text-[13px]` vs `text-small` stays 13px vs 12px, and gets left for a human.
+ */
+const resolved = (css) => {
+  if (css == null) return null;
+  // Drop the outer selector: it is derived from the class name and so always differs
+  // (`.text-\[14px\]` vs `.text-body`). Only the declarations decide equivalence.
+  const open = css.indexOf('{');
+  const body = open === -1 ? css : css.slice(open + 1, css.lastIndexOf('}'));
+  return body
+    .replace(/var\((--[a-z0-9-]+)\)/gi, (m, name) => ds.resolveThemeValue(name) ?? m)
+    .replace(/\s+/g, ' ')
+    // `rgba(0,0,0,.4)` and `rgba(0, 0, 0, .4)` are the same colour; the class writes one form and
+    // the token definition the other, and that spacing is the only thing left between them.
+    .replace(/,\s+/g, ',')
+    .trim();
+};
 
 const findings = [];
-for (const [i, from] of candidates.entries()) {
-  const to = canonical[i];
+for (const from of candidates) {
+  const to = canonicalOf(from);
   if (!to || to === from) continue;
-  // Equivalence proof: identical CSS means the rewrite is purely cosmetic.
-  const before = ds.candidatesToCss([from])[0];
-  const after = ds.candidatesToCss([to])[0];
-  if (after == null) continue;   // canonical form isn't a real utility — nothing to suggest
+  const beforeCss = ds.candidatesToCss([from])[0];
+  const afterCss = ds.candidatesToCss([to])[0];
+  if (afterCss == null) continue;   // canonical form isn't a real utility — nothing to suggest
+  const before = resolved(beforeCss);
+  const after = resolved(afterCss);
   findings.push({
     from,
     to,
@@ -93,6 +128,41 @@ for (const [i, from] of candidates.entries()) {
 }
 
 findings.sort((a, b) => b.files.length - a.files.length || a.from.localeCompare(b.from));
+
+if (process.argv.includes('--fix')) {
+  /**
+   * Themes are reported but not rewritten unless asked. They carry their own token systems
+   * (neo has tokens.css) and are a separate job — see docs/design-system-refactor.md §7.
+   */
+  const themesToo = process.argv.includes('--include-themes');
+  const inScope = (rel) => themesToo || !rel.startsWith('..');
+  const safe = findings
+    .map((f) => ({ ...f, files: f.files.filter(inScope) }))
+    .filter((f) => f.equivalent && f.files.length);
+  // Longest first: rewriting `text-[14px]` before `text-[14px]/5` would corrupt the latter.
+  safe.sort((a, b) => b.from.length - a.from.length);
+  const touched = new Map();
+  for (const { from, to, files } of safe) {
+    for (const rel of files) {
+      const abs = path.join(ROOT, rel);
+      const before = touched.get(abs) ?? fs.readFileSync(abs, 'utf8');
+      // Class candidates sit between quotes, whitespace, backticks or `[`/`]` of a :class array.
+      // Bounding on those keeps `bg-canvas` from matching inside e.g. `bg-canvas-alt`.
+      const pattern = new RegExp(`(^|[\\s"'\`\\[])${from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=[\\s"'\`\\]]|$)`, 'g');
+      touched.set(abs, before.replace(pattern, (_m, lead) => `${lead}${to}`));
+    }
+  }
+  let changed = 0;
+  for (const [abs, content] of touched) {
+    if (content !== fs.readFileSync(abs, 'utf8')) { fs.writeFileSync(abs, content); changed += 1; }
+  }
+  console.log(`--fix: applied ${safe.length} css-equivalent rewrite(s) across ${changed} file(s).`);
+  const notEquivalent = findings.filter((f) => !f.equivalent).length;
+  if (notEquivalent) console.log(`${notEquivalent} finding(s) skipped — not css-equivalent, a human must decide.`);
+  const themeOnly = findings.length - safe.length - notEquivalent;
+  if (themeOnly) console.log(`${themeOnly} finding(s) skipped — only occur in themes (pass --include-themes).`);
+  process.exit(0);
+}
 
 if (process.argv.includes('--json')) {
   console.log(JSON.stringify(findings, null, 2));

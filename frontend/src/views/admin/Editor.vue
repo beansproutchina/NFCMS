@@ -55,9 +55,9 @@ const articleDataFields = computed(() => {
 });
 
 const statusCls = computed(() => ({
-    hidden: 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]',
-    scheduled: 'bg-[#fff7ed] text-[#c2410c]',
-    visible: 'bg-[#e0f2fe] text-[#0066cc]'
+    hidden: 'bg-[#f3f4f6] text-label-2',
+    scheduled: 'bg-warn-fill text-warn',
+    visible: 'bg-info-fill text-link'
 }[status.value] || 'bg-gray-100'));
 
 onMounted(async () => {
@@ -211,7 +211,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
             </div>
 
             <div class="flex gap-2 items-center">
-                <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-lg text-[12px] font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
+                <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-lg text-small font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
                 <Button unstyled @click="doPreview" :disabled="loading" :class="BTN.ghost">
                     <LucideEye :size="16" /> {{ $t('action.preview') }}
                 </Button>
@@ -228,42 +228,42 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
         </div>
 
         <div class="flex-1 flex gap-6 pb-6 h-[calc(100vh-140px)]">
-            <div class="flex-1 flex flex-col bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)]">
+            <div class="flex-1 flex flex-col bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)]">
                 <div class="px-6 py-4 border-b border-[rgba(0,0,0,0.05)] flex flex-col gap-2">
-                    <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-[40px] font-display font-semibold outline-none placeholder:opacity-30" />
+                    <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-display font-semibold outline-none placeholder:opacity-30" />
                 </div>
                 <div class="flex-1 overflow-hidden" style="--md-bk-color: transparent;">
-                    <MdEditor v-model="form.content" @onUploadImg="onUploadImg" :language="$i18n.locale === 'zh' ? 'zh-CN' : 'en-US'" class="h-full !border-none" previewTheme="github" />
+                    <MdEditor v-model="form.content" @onUploadImg="onUploadImg" :language="$i18n.locale === 'zh' ? 'zh-CN' : 'en-US'" class="h-full border-none!" previewTheme="github" />
                 </div>
             </div>
 
-            <div class="w-[320px] shrink-0 bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
+            <div class="w-[320px] shrink-0 bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
                 <h3 class="text-[21px] font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
                 <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
 
                 <div class="mt-4">
-                    <label class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
+                    <label class="text-body font-medium text-[rgba(0,0,0,0.8)] mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
                     <div class="flex gap-2">
                         <DatePicker v-model="publishAt" showTime hourFormat="24" dateFormat="yy-mm-dd" unstyled :pt="DATEPICKER_PT" class="flex-1" />
                         <Button unstyled @click="schedule" :disabled="loading" :class="BTN.ghost">{{ $t('action.schedule') }}</Button>
                     </div>
                 </div>
 
-                <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
-                    <label class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-3 flex items-center gap-1"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
+                <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-separator-weak">
+                    <label class="text-body font-medium text-[rgba(0,0,0,0.8)] mb-3 flex items-center gap-1"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
                     <ul class="flex flex-col gap-2 max-h-[220px] overflow-y-auto">
-                        <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-[12px] bg-[#f9f9fb] rounded-[8px] px-3 py-2">
+                        <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-small bg-[#f9f9fb] rounded-control px-3 py-2">
                             <div class="min-w-0">
                                 <div class="font-medium text-[rgba(0,0,0,0.8)]">v{{ rev.version_no }} · {{ rev.note }}</div>
                                 <div class="text-[rgba(0,0,0,0.45)] truncate">{{ rev.created_at ? new Date(rev.created_at).toLocaleString() : '' }}</div>
                             </div>
-                            <button @click="rollback(rev.version_no)" class="text-[#0066cc] hover:underline shrink-0 ml-2 cursor-pointer">{{ $t('action.rollback') }}</button>
+                            <button @click="rollback(rev.version_no)" class="text-link hover:underline shrink-0 ml-2 cursor-pointer">{{ $t('action.rollback') }}</button>
                         </li>
                     </ul>
                 </div>
 
-                <div v-if="isEdit" class="mt-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
+                <div v-if="isEdit" class="mt-6 pt-4 border-t border-separator-weak">
                     <AclEditor model="articles" :resource-id="articleId" :actions="['R', 'U', 'D', 'publish']" :title="$t('article.sharing')" />
                 </div>
             </div>

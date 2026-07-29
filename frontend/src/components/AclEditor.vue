@@ -92,23 +92,23 @@ watch(() => [props.model, props.resourceId], load);
 
 <template>
     <div>
-        <label v-if="title" class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-3 block">{{ title }}</label>
+        <label v-if="title" class="text-body font-medium text-[rgba(0,0,0,0.8)] mb-3 block">{{ title }}</label>
 
         <ul v-if="grants.length" class="flex flex-col gap-2 mb-3">
-            <li v-for="g in grants" :key="g.id" class="flex items-center justify-between text-[13px] bg-[#f9f9fb] rounded-[8px] px-3 py-2">
+            <li v-for="g in grants" :key="g.id" class="flex items-center justify-between text-[13px] bg-[#f9f9fb] rounded-control px-3 py-2">
                 <span class="text-[rgba(0,0,0,0.8)] min-w-0 truncate">{{ granteeLabel(g) }} · <span class="font-medium">{{ g.access }}</span></span>
                 <button @click="revoke(g)" class="text-red-500 hover:text-red-600 shrink-0 ml-2 cursor-pointer"><LucideTrash2 :size="15" /></button>
             </li>
         </ul>
-        <div v-else class="text-[13px] text-[rgba(0,0,0,0.4)] mb-3">{{ $t('acl.none') }}</div>
+        <div v-else class="text-[13px] text-label-3 mb-3">{{ $t('acl.none') }}</div>
 
-        <div class="flex flex-col gap-2 bg-[#f9f9fb] rounded-[8px] p-3">
+        <div class="flex flex-col gap-2 bg-[#f9f9fb] rounded-control p-3">
             <div class="flex gap-2">
                 <Select v-model="form.grantee_type" :options="granteeTypeOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[96px] shrink-0" @change="form.grantee_id = null; form.user_label = ''" />
                 <template v-if="form.grantee_type === 'user'">
-                    <button @click="pickerVisible = true" class="flex-1 min-w-0 h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] text-[14px] bg-white text-left truncate cursor-pointer hover:border-accent">
+                    <button @click="pickerVisible = true" class="flex-1 min-w-0 h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-control text-body bg-white text-left truncate cursor-pointer hover:border-accent">
                         <span v-if="form.user_label">{{ form.user_label }}</span>
-                        <span v-else class="text-[rgba(0,0,0,0.4)]">{{ $t('acl.pickUser') }}</span>
+                        <span v-else class="text-label-3">{{ $t('acl.pickUser') }}</span>
                     </button>
                 </template>
                 <Select v-else v-model="form.grantee_id" :options="roleOptions" optionLabel="label" optionValue="value" :placeholder="$t('acl.pickRole')" unstyled :pt="SELECT_PT" class="flex-1 min-w-0" />
@@ -116,8 +116,8 @@ watch(() => [props.model, props.resourceId], load);
 
             <div class="flex flex-wrap gap-1.5">
                 <button v-for="a in actions" :key="a" @click="toggleAccess(a)"
-                    class="px-2.5 h-8 rounded-[8px] text-[13px] border cursor-pointer transition-colors"
-                    :class="selectedAccess.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
+                    class="px-2.5 h-8 rounded-control text-[13px] border cursor-pointer transition-colors"
+                    :class="selectedAccess.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-[rgba(0,0,0,0.7)] border-[rgba(0,0,0,0.15)] hover:bg-canvas'">
                     {{ a }}
                 </button>
                 <Button unstyled @click="addGrant" :class="[BTN.primary, 'ml-auto']"><LucidePlus :size="14" /> {{ $t('acl.add') }}</Button>

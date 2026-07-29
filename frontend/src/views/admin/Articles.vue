@@ -114,13 +114,13 @@ const deleteArticle = async (id: number) => {
 };
 
 const STATUS_CLS: Record<string, string> = {
-    hidden: 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]',
-    scheduled: 'bg-[#fff7ed] text-[#c2410c]',
-    visible: 'bg-[#e0f2fe] text-[#0066cc]'
+    hidden: 'bg-[#f3f4f6] text-label-2',
+    scheduled: 'bg-warn-fill text-warn',
+    visible: 'bg-info-fill text-link'
 };
 const statusMeta = (s: string) => ({
     label: s ? t('contentStatus.' + s) : '-',
-    cls: STATUS_CLS[s] || 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]'
+    cls: STATUS_CLS[s] || 'bg-[#f3f4f6] text-label-2'
 });
 
 const toggleVisibility = async (data: any) => {
@@ -138,7 +138,7 @@ const toggleVisibility = async (data: any) => {
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.articles') }}</h1>
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.articles') }}</h1>
             </div>
             <div class="flex flex-wrap gap-4 items-center">
                 <Select 
@@ -183,31 +183,31 @@ const toggleVisibility = async (data: any) => {
             ]"
         >
             <template #title="{ data }">
-                <span class="font-semibold text-label text-[17px] tracking-tight">{{ data.title }}</span>
+                <span class="font-semibold text-label text-title-item tracking-tight">{{ data.title }}</span>
             </template>
             <template #category_id="{ data }">
-                <span class="text-[14px] text-[rgba(0,0,0,0.8)]">{{ getCategoryName(data.category_id) }}</span>
+                <span class="text-body text-[rgba(0,0,0,0.8)]">{{ getCategoryName(data.category_id) }}</span>
             </template>
             <template #is_top="{ data }">
                 <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">TOP</span>
             </template>
             <template #status="{ data }">
-                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-[5px] text-[12px] font-medium uppercase tracking-wider">
+                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-[5px] text-small font-medium uppercase tracking-wider">
                     {{ statusMeta(data.status).label }}
                 </span>
             </template>
             <template #published_at="{ data }">
-                <span class="text-[rgba(0,0,0,0.6)]">{{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}</span>
+                <span class="text-label-2">{{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}</span>
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
-                    <Button unstyled @click="editArticle(data.id)" class="text-link hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="editArticle(data.id)" class="text-link hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.edit') }}
                     </Button>
-                    <Button unstyled @click="toggleVisibility(data)" class="text-[rgba(0,0,0,0.7)] hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="toggleVisibility(data)" class="text-[rgba(0,0,0,0.7)] hover:underline text-body flex items-center cursor-pointer">
                         {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
-                    <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>

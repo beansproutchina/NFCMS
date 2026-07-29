@@ -1,5 +1,5 @@
 <template>
-  <nav class="flex items-center gap-2 text-[14px] text-[rgba(0,0,0,0.5)]">
+  <nav class="flex items-center gap-2 text-body text-[rgba(0,0,0,0.5)]">
     <router-link to="/" class="hover:text-link transition-colors">{{ $t('front.home') }}</router-link>
     <template v-for="crumb in items" :key="crumb.id || crumb.slug">
       <span class="text-[rgba(0,0,0,0.3)]">/</span>

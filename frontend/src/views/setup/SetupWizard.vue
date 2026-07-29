@@ -95,7 +95,7 @@ const performSetup = async () => {
 </script>
 
 <template>
-  <div class="h-screen w-full flex flex-col justify-center items-center bg-[#f5f5f7] text-[#1d1d1f]">
+  <div class="h-screen w-full flex flex-col justify-center items-center bg-canvas text-label">
     <div class="max-w-md w-full px-6">
       <div class="text-center mb-10">
         <h1 class="text-[56px] leading-[1.07] font-semibold tracking-[-0.28px] mb-2">NFCMS</h1>
@@ -104,21 +104,21 @@ const performSetup = async () => {
 
       <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
         <!-- Mode Toggle -->
-        <div class="flex rounded-[8px] overflow-hidden border border-[rgba(0,0,0,0.1)]">
+        <div class="flex rounded-control overflow-hidden border border-[rgba(0,0,0,0.1)]">
           <Button
             @click="importMode = false; clearImportFile()"
             unstyled
             :class="[
-              'flex-1 py-2.5 text-[14px] font-medium transition-colors cursor-pointer',
-              !importMode ? 'bg-[#0071e3] text-white' : 'bg-white text-[rgba(0,0,0,0.6)] hover:bg-[#f5f5f7]'
+              'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
+              !importMode ? 'bg-accent text-white' : 'bg-white text-label-2 hover:bg-canvas'
             ]"
           >新建站点</Button>
           <Button
             @click="importMode = true"
             unstyled
             :class="[
-              'flex-1 py-2.5 text-[14px] font-medium transition-colors cursor-pointer',
-              importMode ? 'bg-[#0071e3] text-white' : 'bg-white text-[rgba(0,0,0,0.6)] hover:bg-[#f5f5f7]'
+              'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
+              importMode ? 'bg-accent text-white' : 'bg-white text-label-2 hover:bg-canvas'
             ]"
           >导入数据</Button>
         </div>
@@ -126,34 +126,34 @@ const performSetup = async () => {
         <!-- New Site Mode -->
         <template v-if="!importMode">
           <div class="flex flex-col gap-2">
-            <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Site Name</label>
+            <label class="text-body text-[rgba(0,0,0,0.8)] px-1 font-medium">Site Name</label>
             <InputText v-model="siteName" unstyled
-              class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all"
+              class="w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all"
               placeholder="My Awesome Website" />
           </div>
 
           <div class="flex flex-col gap-2">
-            <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Username</label>
+            <label class="text-body text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Username</label>
             <InputText v-model="adminUsername" unstyled
-              class="w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all"
+              class="w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all"
               placeholder="admin" autocomplete="username" />
           </div>
 
           <div class="flex flex-col gap-2">
-            <label class="text-[14px] text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Password</label>
+            <label class="text-body text-[rgba(0,0,0,0.8)] px-1 font-medium">Admin Password</label>
             <Password v-model="adminPassword" unstyled :feedback="false" toggleMask fluid
-              :inputProps="{ class: 'w-full bg-[#f5f5f7] text-[#1d1d1f] border border-transparent rounded-[8px] py-4 px-4 text-[17px] focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all relative', placeholder: '••••••••', autocomplete: 'new-password' }"
+              :inputProps="{ class: 'w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all relative', placeholder: '••••••••', autocomplete: 'new-password' }"
               :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
           </div>
         </template>
 
         <!-- Import Mode -->
         <template v-else>
-          <p class="text-[14px] text-[rgba(0,0,0,0.6)]">选择之前导出的 NFCMS 数据文件，系统将从中恢复所有数据。</p>
+          <p class="text-body text-label-2">选择之前导出的 NFCMS 数据文件，系统将从中恢复所有数据。</p>
 
-          <div v-if="importFileName" class="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-[8px] border border-[#b3d4fc]">
-            <LucideFileText :size="20" class="text-[#0071e3] shrink-0" />
-            <span class="text-[14px] text-[rgba(0,0,0,0.8)] truncate flex-1">{{ importFileName }}</span>
+          <div v-if="importFileName" class="flex items-center gap-3 p-3 bg-[#f0f7ff] rounded-control border border-[#b3d4fc]">
+            <LucideFileText :size="20" class="text-accent shrink-0" />
+            <span class="text-body text-[rgba(0,0,0,0.8)] truncate flex-1">{{ importFileName }}</span>
             <button @click="clearImportFile" class="shrink-0 opacity-50 hover:opacity-100 cursor-pointer">
               <LucideX :size="16" />
             </button>
@@ -161,16 +161,16 @@ const performSetup = async () => {
 
           <input ref="fileInput" type="file" accept=".json,application/json" class="hidden" @change="onFileChange" />
           <button @click="handleFileSelect" type="button" unstyled
-            class="w-full border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[8px] py-6 flex flex-col items-center justify-center gap-2 text-[rgba(0,0,0,0.5)] hover:border-[#0071e3] hover:text-[#0071e3] transition-colors cursor-pointer bg-transparent">
+            class="w-full border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-control py-6 flex flex-col items-center justify-center gap-2 text-[rgba(0,0,0,0.5)] hover:border-accent hover:text-accent transition-colors cursor-pointer bg-transparent">
             <LucideUpload :size="24" />
-            <span class="text-[14px] font-medium">选择导出文件 (.json)</span>
+            <span class="text-body font-medium">选择导出文件 (.json)</span>
           </button>
         </template>
 
-        <div v-if="error" class="text-red-500 text-[14px] text-center">{{ error }}</div>
+        <div v-if="error" class="text-red-500 text-body text-center">{{ error }}</div>
 
         <Button :loading="loading" @click="performSetup" unstyled
-          class="mt-4 bg-accent hover:bg-link text-white text-[17px] py-[14px] rounded-[8px] w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
+          class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
           {{ importMode ? '导入并初始化' : 'Complete Setup' }}
         </Button>
       </div>

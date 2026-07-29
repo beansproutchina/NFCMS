@@ -2,17 +2,17 @@
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="flex justify-between items-end mb-8">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.categories') }}
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.categories') }}
                 </h1>
             </div>
             <Button unstyled @click="openForm()"
-                class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                class="bg-accent hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
                 <LucidePlus :size="16" /> {{ $t('action.new') }}
             </Button>
         </div>
 
         <div
-            class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.05)] p-6 flex-1 overflow-auto">
+            class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.05)] p-6 flex-1 overflow-auto">
             <div v-if="loading" class="text-center py-10 text-[rgba(0,0,0,0.5)]">{{ $t('system.loading') || 'Loading...'
             }}</div>
             <div v-else>

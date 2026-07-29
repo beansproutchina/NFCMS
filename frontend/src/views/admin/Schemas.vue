@@ -28,7 +28,7 @@ onMounted(fetchSchemas);
     <div class="max-w-7xl mx-auto py-10 w-full px-6">
         <div class="flex justify-between items-end mb-8">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.schemas') }}</h1>
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.schemas') }}</h1>
             </div>
         </div>
 
@@ -44,16 +44,16 @@ onMounted(fetchSchemas);
             ]"
         >
             <template #modelName="{ data }">
-                <span class="font-semibold text-label text-[17px] tracking-tight">{{ data.modelName }}</span>
+                <span class="font-semibold text-label text-title-item tracking-tight">{{ data.modelName }}</span>
             </template>
             <template #routePath="{ data }">
-                <span class="text-gray-500 font-mono text-[14px]">/api/{{ data.routePath }}</span>
+                <span class="text-gray-500 font-mono text-body">/api/{{ data.routePath }}</span>
             </template>
             <template #fields="{ data }">
-                <span class="bg-[#f5f5f7] px-3 py-1 rounded-[6px] text-[13px] font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
+                <span class="bg-canvas px-3 py-1 rounded-[6px] text-[13px] font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
             </template>
             <template #actions="{ data }">
-                <router-link :to="`/admin/crud/${data.routePath}`" class="text-accent hover:underline font-medium text-[14px]">
+                <router-link :to="`/admin/crud/${data.routePath}`" class="text-accent hover:underline font-medium text-body">
                     Manage Data
                 </router-link>
             </template>

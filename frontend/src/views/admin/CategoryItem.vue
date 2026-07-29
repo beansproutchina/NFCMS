@@ -1,13 +1,13 @@
 <template>
   <li class="mb-1">
-    <div class="flex items-center justify-between p-3 bg-[#f5f5f7] rounded-[8px] hover:bg-[#ebebeb] transition-colors group">
+    <div class="flex items-center justify-between p-3 bg-canvas rounded-control hover:bg-[#ebebeb] transition-colors group">
       <div class="flex items-center gap-3">
-        <span class="font-medium text-[#1d1d1f]">{{ category.name }}</span>
-        <span class="text-[12px] text-[rgba(0,0,0,0.5)] font-mono">/{{ category.slug }}</span>
+        <span class="font-medium text-label">{{ category.name }}</span>
+        <span class="text-small text-[rgba(0,0,0,0.5)] font-mono">/{{ category.slug }}</span>
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-        <Button unstyled @click="$emit('edit', category)" class="text-link text-[14px] font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
-        <Button unstyled @click="$emit('delete', category.id)" class="text-red-500 text-[14px] font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
+        <Button unstyled @click="$emit('edit', category)" class="text-link text-body font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
+        <Button unstyled @click="$emit('delete', category.id)" class="text-red-500 text-body font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
       </div>
     </div>
     

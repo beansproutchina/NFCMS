@@ -271,7 +271,7 @@ onMounted(() => {
     <div class="max-w-4xl mx-auto py-10 w-full px-6">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.settings') }}</h1>
+                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.settings') }}</h1>
             </div>
             <div class="flex gap-4 items-center">
                 <Button :disabled="restarting" unstyled @click="restartBackend" :class="BTN.ghost">
@@ -284,74 +284,74 @@ onMounted(() => {
         </div>
 
         <!-- General Site Config -->
-        <div class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
+        <div class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
             <div class="flex flex-col gap-6 mb-6" v-if="!loading">
 
                 <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.site_name') }}</label>
+                    <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.site_name') }}</label>
                     <InputText v-model="configsMap.site_name" unstyled placeholder="..." :class="INPUT_CLASS" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.subtitle')}}</label>
+                    <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.subtitle')}}</label>
                     <InputText v-model="configsMap.subtitle" unstyled placeholder="..." :class="INPUT_CLASS" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.icp_record') }}</label>
+                    <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.icp_record') }}</label>
                     <InputText v-model="configsMap.icp_record" unstyled placeholder="e.g. 京ICP备xxxxxxx号" :class="INPUT_CLASS" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.mourning_mode')}}</label>
+                    <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.mourning_mode')}}</label>
                     <Select v-model="configsMap.mourning_mode" :options="[{label: '关闭', value: '0'}, {label: '开启 (全站置灰)', value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
                 </div>
 
                 <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">前台首页渲染模版</label>
+                    <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">前台首页渲染模版</label>
                     <InputText v-model="configsMap.home_template" unstyled placeholder="DefaultHome" :class="INPUT_CLASS" />
                 </div>
 
             </div>
-            <div v-else class="text-[14px] opacity-60">Loading...</div>
+            <div v-else class="text-body opacity-60">Loading...</div>
         </div>
 
         <!-- Active Theme Config (theme_<name>_* keys declared by the theme) -->
-        <div v-if="!loading && themeConfigSchema.length" class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
+        <div v-if="!loading && themeConfigSchema.length" class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
             <div class="flex items-center gap-3 mb-2">
                 <LucidePalette :size="20" class="text-rose-500" />
-                <h2 class="text-[20px] font-semibold">{{ $t('form.themeSettings') }}</h2>
+                <h2 class="text-title-section font-semibold">{{ $t('form.themeSettings') }}</h2>
             </div>
-            <p class="text-[14px] text-[rgba(0,0,0,0.5)] mb-6">
+            <p class="text-body text-[rgba(0,0,0,0.5)] mb-6">
                 {{ $t('form.themeSettingsDesc') }}<span v-if="themeInfo.name"> · {{ themeInfo.name }}</span>
             </p>
 
             <div v-for="grp in themeConfigGroups" :key="grp.name" class="mb-6 last:mb-0">
-                <h3 v-if="grp.name" class="text-[15px] font-medium text-[rgba(0,0,0,0.7)] mb-3 pb-2 border-b border-[rgba(0,0,0,0.06)]">{{ grp.name }}</h3>
+                <h3 v-if="grp.name" class="text-[15px] font-medium text-[rgba(0,0,0,0.7)] mb-3 pb-2 border-b border-separator-weak">{{ grp.name }}</h3>
                 <div class="flex flex-col gap-6">
                     <div v-for="f in grp.fields" :key="f.key" class="flex flex-col gap-2 max-w-lg">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ f.label }}</label>
+                        <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">{{ f.label }}</label>
                         <textarea v-if="f.type === 'textarea'" v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="INPUT_CLASS" rows="3"></textarea>
                         <!-- `image` gets a real uploader + library picker (it carries its own preview). -->
                         <FileUploader v-else-if="f.type === 'image'" v-model="themeConfig[f.key]" accept="image/*" size="md" />
                         <InputText v-else v-model="themeConfig[f.key]" :type="f.type === 'number' ? 'number' : 'text'" unstyled :placeholder="f.placeholder" :class="INPUT_CLASS" />
-                        <span v-if="f.hint" class="text-[12px] text-[rgba(0,0,0,0.45)]">{{ f.hint }}</span>
+                        <span v-if="f.hint" class="text-small text-[rgba(0,0,0,0.45)]">{{ f.hint }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Storage Configuration -->
-        <div class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6" v-if="!loading">
+        <div class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6" v-if="!loading">
             <div class="flex items-center gap-3 mb-2">
                 <LucidePlug :size="20" class="text-indigo-500" />
-                <h2 class="text-[20px] font-semibold">{{ $t('form.storageConfig')  }}</h2>
+                <h2 class="text-title-section font-semibold">{{ $t('form.storageConfig')  }}</h2>
             </div>
-            <p class="text-[14px] text-[rgba(0,0,0,0.5)] mb-6">{{ $t('form.storageConfigDesc') }}</p>
+            <p class="text-body text-[rgba(0,0,0,0.5)] mb-6">{{ $t('form.storageConfigDesc') }}</p>
 
             <!-- Provider Selector -->
             <div class="flex flex-col gap-2 max-w-lg ">
-                <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.storageProvider')  }}</label>
+                <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.storageProvider')  }}</label>
                 <Select v-model="activeProvider" :options="storageProviders.map(p => ({ label: p.label, value: p.name }))" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
             </div>
 
@@ -363,7 +363,7 @@ onMounted(() => {
             <!-- Dynamic config fields for selected provider -->
             <div class="flex flex-col gap-5" v-if="currentFields.length > 0">
                 <div v-for="field in currentFields" :key="field.key" class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">
+                    <label class="text-body text-[rgba(0,0,0,0.8)] font-medium">
                         {{ field.label }}
                         <span v-if="field.required" class="text-red-400 ml-0.5">*</span>
                     </label>
@@ -389,21 +389,21 @@ onMounted(() => {
                     <LucidePlug v-else :size="16" />
                     {{ testing ? ($t('form.testing') ) : ($t('form.testConnection') ) }}
                 </Button>
-                <div v-if="testResult" class="flex items-center gap-1.5 text-[14px]">
+                <div v-if="testResult" class="flex items-center gap-1.5 text-body">
                     <LucideCheck v-if="testResult.success" :size="16" class="text-emerald-500" />
                     <LucideX v-else :size="16" class="text-red-500" />
                     <span :class="testResult.success ? 'text-emerald-600' : 'text-red-600'">
                         {{ testResult.success ? ($t('form.testSuccess') ) : ($t('form.testFailed') ) }}
                     </span>
-                    <span v-if="testResult.error" class="text-[rgba(0,0,0,0.4)] ml-1">- {{ testResult.error }}</span>
+                    <span v-if="testResult.error" class="text-label-3 ml-1">- {{ testResult.error }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Export Section -->
-        <div class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8">
-            <h2 class="text-[20px] font-semibold mb-2">{{ $t('form.exportTitle')  }}</h2>
-            <p class="text-[14px] text-[rgba(0,0,0,0.6)] mb-6">{{ $t('form.exportDesc')  }}</p>
+        <div class="bg-white rounded-card shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8">
+            <h2 class="text-title-section font-semibold mb-2">{{ $t('form.exportTitle')  }}</h2>
+            <p class="text-body text-label-2 mb-6">{{ $t('form.exportDesc')  }}</p>
 
             <div class="flex gap-4 items-start">
                 <Button :disabled="exporting" unstyled @click="handleExport" :class="BTN.primary">
