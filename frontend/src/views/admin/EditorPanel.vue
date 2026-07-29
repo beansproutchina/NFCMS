@@ -2,7 +2,7 @@
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import { FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT } from '../../ui/presets';
+import { FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXTAREA_CLASS } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
 
 /**
@@ -59,7 +59,7 @@ defineProps<{
             <label :class="LABEL_BARE">{{ $t('form.description') ||
                 'Description' }}</label>
             <Textarea unstyled v-model="form.description" rows="4" placeholder="..."
-                class="resize-none" :class="INPUT_CLASS"></Textarea>
+                :class="TEXTAREA_CLASS"></Textarea>
         </div>
 
         <!-- Dynamic article data fields from category definition -->
@@ -74,7 +74,7 @@ defineProps<{
                 <!-- textarea -->
                 <Textarea v-else-if="field.type === 'textarea'" unstyled v-model="form.data[field.key]"
                     :placeholder="field.title" rows="3"
-                    class="resize-none" :class="INPUT_CLASS" />
+                    :class="TEXTAREA_CLASS" />
 
                 <!-- number -->
                 <InputText v-else-if="field.type === 'number'" unstyled v-model="form.data[field.key]"

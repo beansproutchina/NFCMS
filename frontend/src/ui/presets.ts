@@ -14,13 +14,29 @@
  * merges it into the root element, so `class="flex-1"` composes with SELECT_PT.root.
  */
 
-/** Shared visual base for text inputs / select triggers (flat Apple-style field). */
-const FIELD_BASE =
-  'h-10 px-3 bg-white text-body text-label border border-separator rounded-control ' +
+/**
+ * How a field LOOKS, with no size in it — height belongs to the specific control.
+ *
+ * Split out because folding a textarea onto INPUT_CLASS pinned it to `h-10`: one line tall, unable
+ * to grow. A single-line input wants a fixed height; a textarea wants a minimum and room to expand.
+ */
+const FIELD_SKIN =
+  'bg-white text-body text-label border border-separator rounded-control ' +
   'transition-shadow focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent';
 
-/** Plain text input (InputText / Textarea / Password inner input). Full width by default. */
+/** Shared visual base for single-line inputs / select triggers (flat Apple-style field). */
+const FIELD_BASE = `h-10 px-3 ${FIELD_SKIN}`;
+
+/** Plain single-line text input (InputText / Password inner input). Full width by default. */
 export const INPUT_CLASS = `w-full ${FIELD_BASE}`;
+
+/**
+ * Multi-line field. `field-sizing-content` grows it with its content in browsers that support it,
+ * and `resize-y` leaves the user a handle everywhere else. Never give a textarea a fixed `h-*`.
+ */
+export const TEXTAREA_CLASS = `w-full min-h-24 px-3 py-2 field-sizing-content resize-y ${FIELD_SKIN}`;
+/** Same, for code / JSON payloads. */
+export const TEXTAREA_CLASS_MONO = `${TEXTAREA_CLASS} font-mono text-small`;
 
 /** Compact variant for dense toolbars (h-9, smaller text). */
 export const INPUT_CLASS_SM =
@@ -165,7 +181,20 @@ const BTN_ICON_SHAPE = 'w-10 h-10 rounded-full flex items-center justify-center 
 export const BTN_ICON = {
   plain: `${BTN_ICON_SHAPE} bg-white text-accent`,
   danger: `${BTN_ICON_SHAPE} bg-danger text-white hover:bg-danger-hover`,
+  /** Smaller, quieter round button — closing a drawer or a floating panel. */
+  subtle: 'w-8 h-8 rounded-full flex items-center justify-center bg-canvas hover:bg-surface-hover text-label-2 hover:text-label cursor-pointer transition-colors',
 };
+
+/**
+ * "Remove this row" — the inline ✕ or trash next to a repeatable item.
+ *
+ * One style, because there were five: red text with a real hover, red text with a hover that did
+ * nothing, red text that flipped to a solid red block on hover, and one that only changed opacity
+ * and never showed a colour at all. A destructive affordance has to react, and it has to react the
+ * same way everywhere, or people stop trusting that they clicked the right thing.
+ */
+export const BTN_REMOVE =
+  'text-danger hover:text-danger-hover transition-colors cursor-pointer focus:outline-none shrink-0';
 
 /** Segmented on/off cell for a permission bit (AclEditor, Roles). */
 export const TOGGLE = {

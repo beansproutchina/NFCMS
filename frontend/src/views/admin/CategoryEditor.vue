@@ -53,7 +53,7 @@
                 :pt="{ root: 'w-full h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent flex items-center justify-between cursor-pointer relative bg-white', label: 'text-small truncate', dropdown: 'w-3 h-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-separator rounded-chip shadow-lg mt-1 py-1 z-9999', option: ({ context }: any) => ({ class: ['px-2 py-1 text-small cursor-pointer hover:bg-canvas', context.selected ? 'bg-accent text-white hover:bg-accent' : 'text-label'] }) }" />
             </div>
             <Button type="button" @click="formData.articleFieldDefs.splice(idx, 1)" unstyled
-              class="text-danger hover:text-danger text-small px-2 focus:outline-none mt-1">X</Button>
+              class="text-small px-2 mt-1" :class="BTN_REMOVE">X</Button>
           </div>
           <Button type="button"
             @click="formData.articleFieldDefs.push({ key: '', title: '', type: 'text' })"
@@ -70,7 +70,7 @@
             <InputText v-model="item.value" unstyled placeholder="Value"
               class="flex-1 h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent" />
             <Button type="button" @click="formData.metaPairs.splice(idx, 1)" unstyled
-              class="text-danger hover:text-danger text-small px-2 focus:outline-none">X</Button>
+              class="text-small px-2" :class="BTN_REMOVE">X</Button>
           </div>
           <Button type="button"
             @click="formData.metaPairs = formData.metaPairs || []; formData.metaPairs.push({ key: '', value: '' })"
@@ -94,7 +94,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
-import { INPUT_CLASS, LABEL, LINK, SELECT_PT, TEXT } from '../../ui/presets';
+import { BTN_REMOVE, INPUT_CLASS, LABEL, LINK, SELECT_PT, TEXT } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 
 const { t } = useI18n();

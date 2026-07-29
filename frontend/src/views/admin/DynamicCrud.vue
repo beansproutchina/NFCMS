@@ -58,7 +58,7 @@
 
             <Textarea unstyled v-else-if="field.type === 'object'" 
                       v-model="formData[field.name]" 
-                      class="min-h-[120px] font-mono" :class="INPUT_CLASS"
+                      :class="TEXTAREA_CLASS_MONO"
                       placeholder="{}"></Textarea>
           </div>
           
@@ -78,7 +78,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crud } from '../../api';
-import { INPUT_CLASS, LABEL, LINK, PAGE, TEXT } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, LINK, PAGE, TEXT, TEXTAREA_CLASS_MONO } from '../../ui/presets';
 
 const route = useRoute();
 const schemaName = computed(() => route.params.modelName as string);

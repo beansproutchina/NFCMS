@@ -3,10 +3,11 @@ import { ref, computed, onMounted, watch } from 'vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
+import Textarea from 'primevue/textarea';
 import { systemAPI, uploadAPI } from '../../api';
 import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader, LucidePalette } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
-import { BTN, CARD, FIELD_GROUP, INPUT_CLASS, LABEL_BARE, PAGE, SECTION_TITLE, SELECT_PT, TEXT } from '../../ui/presets';
+import { BTN, CARD, FIELD_GROUP, INPUT_CLASS, LABEL_BARE, PAGE, SECTION_TITLE, SELECT_PT, TEXT, TEXTAREA_CLASS } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
 import * as activeTheme from '../front/templates/theme.config';
 import type { ThemeConfigField } from '../front/theme-runtime';
@@ -331,7 +332,7 @@ onMounted(() => {
                 <div class="flex flex-col gap-6">
                     <div v-for="f in grp.fields" :key="f.key" class="max-w-lg" :class="FIELD_GROUP">
                         <label :class="LABEL_BARE">{{ f.label }}</label>
-                        <textarea v-if="f.type === 'textarea'" v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="INPUT_CLASS" rows="3"></textarea>
+                        <Textarea v-if="f.type === 'textarea'" unstyled v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="TEXTAREA_CLASS" />
                         <!-- `image` gets a real uploader + library picker (it carries its own preview). -->
                         <FileUploader v-else-if="f.type === 'image'" v-model="themeConfig[f.key]" accept="image/*" size="md" />
                         <InputText v-else v-model="themeConfig[f.key]" :type="f.type === 'number' ? 'number' : 'text'" unstyled :placeholder="f.placeholder" :class="INPUT_CLASS" />

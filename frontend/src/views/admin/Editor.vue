@@ -12,7 +12,7 @@ import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideEyeOff, Lu
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { BTN, CARD, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE } from '../../ui/presets';
+import { BTN, BTN_ICON, CARD, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 import EditorPanel from './EditorPanel.vue';
 
@@ -284,7 +284,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                     class="fixed right-0 top-0 bottom-0 z-50 w-[85vw] max-w-[380px] bg-white shadow-2xl overflow-y-auto p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-title-section font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
-                        <button @click="showMobilePanel = false" class="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-label-2 hover:bg-surface-hover transition-colors cursor-pointer">
+                        <button @click="showMobilePanel = false" :class="BTN_ICON.subtle">
                             <LucideX :size="16" />
                         </button>
                     </div>

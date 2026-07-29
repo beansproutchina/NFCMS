@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG, TEXT } from '../../ui/presets';
+import { BTN_REMOVE, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG, TEXT } from '../../ui/presets';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { systemAPI } from '../../api';
@@ -155,7 +155,7 @@ const performSetup = async () => {
           <div v-if="importFileName" class="flex items-center gap-3 p-3 bg-info-fill rounded-control border border-info">
             <LucideFileText :size="20" class="text-accent shrink-0" />
             <span class="text-body text-label truncate flex-1">{{ importFileName }}</span>
-            <button @click="clearImportFile" class="shrink-0 opacity-50 hover:opacity-100 cursor-pointer">
+            <button @click="clearImportFile" :class="BTN_REMOVE">
               <LucideX :size="16" />
             </button>
           </div>

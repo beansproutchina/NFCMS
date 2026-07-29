@@ -18,7 +18,7 @@
             </template>
 
             <Button unstyled @click="addChild(item)" class="mx-1" :class="BTN_SM.secondary">+ {{ $t('action.addSub') || 'Sub' }}</Button>
-            <Button unstyled @click="removeItem(index)" class="text-danger hover:text-white hover:bg-danger px-3 py-2 rounded-control transition-colors ml-auto focus:outline-none">✕</Button>
+            <Button unstyled @click="removeItem(index)" class="px-3 py-2 ml-auto" :class="BTN_REMOVE">✕</Button>
         </div>
         <div v-if="item.children && item.children.length" class="p-3 pl-10 bg-white">
             <MenuItemEditor :items="item.children" :categories="categories" :articles="articles" @update="emitUpdate" />
@@ -34,7 +34,7 @@ import { VueDraggableNext } from 'vue-draggable-next';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import { BTN_SM, INPUT_CLASS, SELECT_PT } from '../../ui/presets';
+import { BTN_REMOVE, BTN_SM, INPUT_CLASS, SELECT_PT } from '../../ui/presets';
 
 const { t } = useI18n();
 const props = defineProps<{ items: any[], categories: any[], articles: any[] }>();
