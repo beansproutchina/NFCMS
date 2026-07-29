@@ -4,17 +4,20 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 
 import { uploadAPI } from '../../api';
-import { LucideUpload, LucideTrash, LucideFile, LucideEye, LucideSearch } from 'lucide-vue-next';
+import { LucideTrash, LucideFile, LucideEye, LucideSearch, LucideLink } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import { useI18n } from 'vue-i18n';
 import CustomPaginator from '../../components/CustomPaginator.vue';
-import { INPUT_CLASS, BTN } from '../../ui/presets';
+import FileUploader from '../../components/FileUploader.vue';
+import { INPUT_CLASS } from '../../ui/presets';
 
 const files = ref<any[]>([]);
 const totalRecords = ref(0);
 const loading = ref(true);
-const uploading = ref(false);
 const toast = useToast();
-const fileInput = ref<HTMLInputElement | null>(null);
+const confirm = useConfirm();
+const { t } = useI18n();
 
 const globalFilter = ref('');
 const lazyParams = ref({ page: 0, rows: 20 }); // Show 20 files per page
@@ -66,48 +69,49 @@ const onFilterChange = () => {
 
 watch(globalFilter, onFilterChange);
 
-const handleUpload = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-    
-    uploading.value = true;
-    const formData = new FormData();
-    for(let i=0; i<target.files.length; i++) {
-        formData.append('file', target.files[i]);
-    }
-
-    try {
-        await uploadAPI.upload(formData);
-        toast.add({ severity: 'success', summary: 'Success', detail: '文件上传成功', life: 3000 });
-        lazyParams.value.page = 0;
-        await fetchFiles();
-    } catch(e) {
-        console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '文件上传失败', life: 3000 });
-    } finally {
-        uploading.value = false;
-        if(fileInput.value) fileInput.value.value = '';
-    }
+// FileUploader owns the input + FormData + error toast; we only refresh the listing.
+const onUploaded = async () => {
+    lazyParams.value.page = 0;
+    await fetchFiles();
 };
 
-const deleteFile = async (id: number) => {
-    if(!confirm('确定要彻底删除该文件吗？')) return;
-    try {
-        await uploadAPI.remove(id);
-        toast.add({ severity: 'success', summary: 'Success', detail: '文件删除成功', life: 3000 });
-        await fetchFiles();
-    } catch(e) {
-        console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '文件删除失败', life: 3000 });
-    }
-};
-
-const triggerUpload = () => {
-    fileInput.value?.click();
+const deleteFile = (id: number) => {
+    confirm.require({
+        header: t('confirm.title'),
+        message: t('action.confirmDelete'),
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: t('confirm.accept'),
+        rejectLabel: t('confirm.reject'),
+        accept: async () => {
+            try {
+                await uploadAPI.remove(id);
+                toast.add({ severity: 'success', summary: 'Success', detail: '文件删除成功', life: 3000 });
+                await fetchFiles();
+            } catch(e) {
+                console.error(e);
+                toast.add({ severity: 'error', summary: 'Error', detail: '文件删除失败', life: 3000 });
+            }
+        }
+    });
 };
 
 const openUrl = (url: string) => {
     window.open(url, '_blank');
+};
+
+// Copying needs a secure context (https / localhost); when it is unavailable we surface the
+// URL in a read-only field so it can still be selected by hand.
+const fallbackUrl = ref('');
+const copyLink = async (url: string) => {
+    try {
+        await navigator.clipboard.writeText(url);
+        fallbackUrl.value = '';
+        toast.add({ severity: 'success', summary: t('fileUploader.copied'), detail: url, life: 2500 });
+    } catch (e) {
+        console.error(e);
+        fallbackUrl.value = url;
+        toast.add({ severity: 'warn', summary: t('fileUploader.copyFailed'), life: 4000 });
+    }
 };
 
 onMounted(fetchFiles);
@@ -125,11 +129,13 @@ onMounted(fetchFiles);
                     <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
                     <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, 'pl-9']" />
                 </span>
-                <input type="file" ref="fileInput" @change="handleUpload" class="hidden" multiple />
-                <Button unstyled @click="triggerUpload" :disabled="uploading" :class="[BTN.primary, 'min-w-max']">
-                    <LucideUpload :size="16" /> {{ uploading ? '...' : $t('action.upload', '上传文件') }}
-                </Button>
+                <!-- This page *is* the library, so the "choose from library" path would be circular. -->
+                <FileUploader mode="button" multiple :library="false" @uploaded="onUploaded" />
             </div>
+        </div>
+
+        <div v-if="fallbackUrl" class="mb-6 flex items-center gap-3 max-w-2xl">
+            <InputText unstyled readonly :model-value="fallbackUrl" :class="INPUT_CLASS" @focus="($event.target as HTMLInputElement).select()" />
         </div>
 
         <div v-if="loading && files.length === 0" class="text-[14px] opacity-60">Loading...</div>
@@ -149,6 +155,9 @@ onMounted(fetchFiles);
                         <div class="absolute inset-0 bg-[rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                             <Button unstyled @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform cursor-pointer" title="新窗口打开">
                                 <LucideEye :size="18" />
+                            </Button>
+                            <Button unstyled @click.stop="copyLink(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform cursor-pointer" :title="$t('fileUploader.copyLink')">
+                                <LucideLink :size="18" />
                             </Button>
                             <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">
                                 <LucideTrash :size="18" />
