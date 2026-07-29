@@ -66,7 +66,7 @@ const performLogin = async () => {
           <Password v-model="password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: 'w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all relative', placeholder: '••••••••', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
         </div>
 
-        <div v-if="error" class="text-red-500 text-body text-center">{{ error }}</div>
+        <div v-if="error" class="text-danger text-body text-center">{{ error }}</div>
 
         <Button :loading="loading" @click="performLogin" unstyled class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
           {{ $t('auth.signIn') }}

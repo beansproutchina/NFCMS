@@ -157,7 +157,7 @@ onMounted(async () => {
                         class="flex items-center justify-between px-3 py-2 rounded-control text-left transition-colors cursor-pointer"
                         :class="selectedRole?.id === r.id ? 'bg-fill-strong font-semibold' : 'hover:bg-fill'">
                         <span>{{ r.label || r.name }} <span class="text-small text-label-3">{{ r.name }}</span></span>
-                        <LucideTrash2 v-if="!r.is_system" :size="14" class="opacity-40 hover:opacity-100 hover:text-red-500" @click.stop="deleteRole(r)" />
+                        <LucideTrash2 v-if="!r.is_system" :size="14" class="opacity-40 hover:opacity-100 hover:text-danger" @click.stop="deleteRole(r)" />
                     </button>
                 </div>
                 <div class="border-t border-separator-weak pt-3 flex flex-col gap-2">
@@ -191,7 +191,7 @@ onMounted(async () => {
                                     <td class="py-2 font-medium">{{ p.model }}</td>
                                     <td class="py-2"><span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ p.action }}</span></td>
                                     <td class="py-2"><span :class="p.scope === 'own' ? 'text-warn' : 'text-link'">{{ p.scope }}</span></td>
-                                    <td class="py-2 text-right"><LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-red-500 cursor-pointer inline" @click="removePerm(p)" /></td>
+                                    <td class="py-2 text-right"><LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-danger cursor-pointer inline" @click="removePerm(p)" /></td>
                                 </tr>
                                 <tr v-if="!perms.length"><td colspan="4" class="py-4 text-label-3">{{ $t('roles.noPerms') }}</td></tr>
                             </tbody>
@@ -215,7 +215,7 @@ onMounted(async () => {
                             <ul v-if="catGrants.length" class="flex flex-col gap-2 mb-3">
                                 <li v-for="g in catGrants" :key="g.id" class="flex items-center justify-between text-body bg-surface rounded-control px-3 py-2">
                                     <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ g.access }}</span></span>
-                                    <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-red-500 cursor-pointer" @click="revokeCatGrant(g)" />
+                                    <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-danger cursor-pointer" @click="revokeCatGrant(g)" />
                                 </li>
                             </ul>
                             <div v-else class="text-small text-label-3 mb-3">{{ $t('roles.noCategoryGrants') }}</div>

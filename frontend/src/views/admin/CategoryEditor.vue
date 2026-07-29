@@ -53,7 +53,7 @@
                 :pt="{ root: 'w-full h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent flex items-center justify-between cursor-pointer relative bg-white', label: 'text-xs truncate', dropdown: 'w-3 h-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-separator rounded shadow-lg mt-1 py-1 z-9999', option: ({ context }: any) => ({ class: ['px-2 py-1 text-xs cursor-pointer hover:bg-canvas', context.selected ? 'bg-accent text-white hover:bg-accent' : 'text-label'] }) }" />
             </div>
             <Button type="button" @click="formData.articleFieldDefs.splice(idx, 1)" unstyled
-              class="text-red-500 hover:text-red-700 text-xs px-2 focus:outline-none mt-1">X</Button>
+              class="text-danger hover:text-danger text-xs px-2 focus:outline-none mt-1">X</Button>
           </div>
           <Button type="button"
             @click="formData.articleFieldDefs.push({ key: '', title: '', type: 'text' })"
@@ -70,7 +70,7 @@
             <InputText v-model="item.value" unstyled placeholder="Value"
               class="flex-1 h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
             <Button type="button" @click="formData.metaPairs.splice(idx, 1)" unstyled
-              class="text-red-500 hover:text-red-700 text-xs px-2 focus:outline-none">X</Button>
+              class="text-danger hover:text-danger text-xs px-2 focus:outline-none">X</Button>
           </div>
           <Button type="button"
             @click="formData.metaPairs = formData.metaPairs || []; formData.metaPairs.push({ key: '', value: '' })"

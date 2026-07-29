@@ -132,7 +132,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
                     <LucideFile v-else :size="18" class="text-label-3 shrink-0" />
                     <a :href="u" target="_blank" class="text-small text-accent hover:underline truncate flex-1">{{ nameOf(u) }}</a>
                     <span v-if="!disabled && !multiple" @click="openFileDialog" class="text-small text-accent cursor-pointer hover:underline shrink-0">{{ $t('fileUploader.replace') }}</span>
-                    <span v-if="!disabled" @click="removeAt(Number(i))" class="text-small text-red-500 cursor-pointer hover:underline shrink-0">{{ $t('action.remove') }}</span>
+                    <span v-if="!disabled" @click="removeAt(Number(i))" class="text-small text-danger cursor-pointer hover:underline shrink-0">{{ $t('action.remove') }}</span>
                 </div>
             </template>
 
@@ -148,7 +148,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
                     </div>
                     <div v-if="!disabled" class="flex gap-3 justify-end">
                         <span @click="openFileDialog" class="text-small text-accent cursor-pointer hover:underline">{{ $t('fileUploader.replace') }}</span>
-                        <span @click="removeAt(Number(i))" class="text-small text-red-500 cursor-pointer hover:underline">{{ $t('action.remove') }}</span>
+                        <span @click="removeAt(Number(i))" class="text-small text-danger cursor-pointer hover:underline">{{ $t('action.remove') }}</span>
                     </div>
                 </div>
             </div>

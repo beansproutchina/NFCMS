@@ -33,7 +33,7 @@
                     </Button>
                     <Button unstyled v-if="isSuperAdmin && data.username !== currentUser.username"
                         @click="deleteUser(data.id)"
-                        class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
+                        class="text-danger hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>

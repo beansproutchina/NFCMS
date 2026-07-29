@@ -22,7 +22,7 @@
             <Button unstyled @click="openEditor(data)" class="text-link hover:underline text-body flex items-center cursor-pointer">
                 {{ $t('action.edit') }}
             </Button>
-            <Button unstyled @click="deleteMenu(data.id)" class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
+            <Button unstyled @click="deleteMenu(data.id)" class="text-danger hover:underline text-body flex items-center cursor-pointer">
                 {{ $t('action.delete') }}
             </Button>
         </div>

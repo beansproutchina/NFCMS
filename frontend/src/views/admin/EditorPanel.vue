@@ -23,7 +23,7 @@ defineProps<{
 <template>
     <div class="mt-4">
         <label class="block text-body font-medium text-label mb-2">{{ $t('form.category_id')
-            || 'Category ID' }} <span class="text-red-500">*</span></label>
+            || 'Category ID' }} <span class="text-danger">*</span></label>
         <Select v-model.number="form.category_id" :options="categoryOptions" optionLabel="label"
             optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
     </div>

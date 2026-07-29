@@ -207,7 +207,7 @@ const toggleVisibility = async (data: any) => {
                     <Button unstyled @click="toggleVisibility(data)" class="text-label-2 hover:underline text-body flex items-center cursor-pointer">
                         {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
-                    <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-body flex items-center cursor-pointer">
+                    <Button unstyled @click="deleteArticle(data.id)" class="text-danger hover:underline text-body flex items-center cursor-pointer">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>

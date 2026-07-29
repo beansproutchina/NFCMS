@@ -2,13 +2,13 @@
   <AdminModal :title="isEditing ? $t('action.edit') : $t('user.new')" widthClass="max-w-lg" @close="emit('close')" @save="save" :disableSave="!formData.username || (!isEditing && !formData.password)">
     <form @submit.prevent="save" class="space-y-5" id="user-form">
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.username') }} <span class="text-red-500">*</span></label>
+        <label class="block text-body font-medium text-label mb-1">{{ $t('form.username') }} <span class="text-danger">*</span></label>
         <InputText v-model="formData.username" unstyled :class="INPUT_CLASS" required/>
       </div>
       
       <div>
         <label class="block text-body font-medium text-label mb-1">
-            {{ $t('form.password') }} <span v-if="!isEditing" class="text-red-500">*</span>
+            {{ $t('form.password') }} <span v-if="!isEditing" class="text-danger">*</span>
         </label>
         <Password v-model="formData.password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: INPUT_CLASS, placeholder: isEditing ? $t('form.leaveBlankToKeep') : '', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4', unmaskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4' }" />
       </div>

@@ -3,7 +3,7 @@
     <div class="space-y-6">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.name') }} <span class="text-red-500">*</span></label>
+          <label class="block text-body font-medium text-label mb-1">{{ $t('form.name') }} <span class="text-danger">*</span></label>
           <InputText unstyled v-model="formData.name" :class="INPUT_CLASS"/>
         </div>
         <div>

@@ -112,13 +112,13 @@ const formatDate = (dateString: string) => {
                       <div class="flex-1 min-w-0 pr-4">
                           <h4 class="text-body font-medium text-label truncate mb-1">{{ article.title }}</h4>
                           <div class="text-small text-label-3 truncate max-w-full">
-                              <span v-if="article.is_top" class="text-red-500 font-semibold mr-2 border border-red-500/20 bg-red-500/10 px-1 rounded">{{ $t('form.is_top') }}</span>
+                              <span v-if="article.is_top" class="text-danger font-semibold mr-2 border border-danger/20 bg-danger/10 px-1 rounded">{{ $t('form.is_top') }}</span>
                               {{ article.description || article.slug }}
                           </div>
                       </div>
                       <div class="flex flex-col items-end gap-1 shrink-0">
                            <span class="text-small text-label-3">{{ formatDate(article.created_at) }}</span>
-                           <span :class="['text-small px-2 py-0.5 rounded-full font-medium', article.status === 'visible' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600']">{{ $t('contentStatus.' + (article.status || 'hidden')) }}</span>
+                           <span :class="['text-small px-2 py-0.5 rounded-full font-medium', article.status === 'visible' ? 'bg-green-100 text-green-700' : 'bg-canvas text-label-2']">{{ $t('contentStatus.' + (article.status || 'hidden')) }}</span>
                       </div>
                   </div>
               </div>
@@ -164,7 +164,7 @@ const formatDate = (dateString: string) => {
                           <span class="text-small font-medium">{{ $t('system.files') }}</span>
                       </button>
                       <button v-if="isSuper" @click="router.push('/admin/settings')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
-                          <LucideShieldCheck :size="24" class="text-slate-500"/>
+                          <LucideShieldCheck :size="24" class="text-label-2"/>
                           <span class="text-small font-medium">{{ $t('system.settings') }}</span>
                       </button>
                   </div>

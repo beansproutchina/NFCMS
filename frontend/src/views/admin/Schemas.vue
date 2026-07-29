@@ -47,7 +47,7 @@ onMounted(fetchSchemas);
                 <span class="font-semibold text-label text-title-item tracking-tight">{{ data.modelName }}</span>
             </template>
             <template #routePath="{ data }">
-                <span class="text-gray-500 font-mono text-body">/api/{{ data.routePath }}</span>
+                <span class="text-label-2 font-mono text-body">/api/{{ data.routePath }}</span>
             </template>
             <template #fields="{ data }">
                 <span class="bg-canvas px-3 py-1 rounded-control text-small font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>

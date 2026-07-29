@@ -167,7 +167,7 @@ const performSetup = async () => {
           </button>
         </template>
 
-        <div v-if="error" class="text-red-500 text-body text-center">{{ error }}</div>
+        <div v-if="error" class="text-danger text-body text-center">{{ error }}</div>
 
         <Button :loading="loading" @click="performSetup" unstyled
           class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">

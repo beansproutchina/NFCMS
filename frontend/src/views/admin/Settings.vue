@@ -365,7 +365,7 @@ onMounted(() => {
                 <div v-for="field in currentFields" :key="field.key" class="flex flex-col gap-2 max-w-lg">
                     <label class="text-body text-label font-medium">
                         {{ field.label }}
-                        <span v-if="field.required" class="text-red-400 ml-0.5">*</span>
+                        <span v-if="field.required" class="text-danger ml-0.5">*</span>
                     </label>
 
                     <!-- Select type -->
@@ -391,8 +391,8 @@ onMounted(() => {
                 </Button>
                 <div v-if="testResult" class="flex items-center gap-1.5 text-body">
                     <LucideCheck v-if="testResult.success" :size="16" class="text-emerald-500" />
-                    <LucideX v-else :size="16" class="text-red-500" />
-                    <span :class="testResult.success ? 'text-emerald-600' : 'text-red-600'">
+                    <LucideX v-else :size="16" class="text-danger" />
+                    <span :class="testResult.success ? 'text-emerald-600' : 'text-danger'">
                         {{ testResult.success ? ($t('form.testSuccess') ) : ($t('form.testFailed') ) }}
                     </span>
                     <span v-if="testResult.error" class="text-label-3 ml-1">- {{ testResult.error }}</span>

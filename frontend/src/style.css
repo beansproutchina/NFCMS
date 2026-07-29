@@ -55,7 +55,11 @@
   --color-accent: #0071e3;              /* primary action, focus ring (HIG accentColor) */
   --color-accent-hover: #0077ed;
   --color-link: #0066cc;
-  --color-warn: #c2410c;                /* destructive action text */
+  /* danger vs warn are different jobs and were being conflated: `warn` was doing duty for both
+     "delete this" and "scheduled to publish". Destructive/error is red (HIG systemRed); caution
+     is amber. */
+  --color-danger: #ff3b30;              /* delete, revoke, error messages */
+  --color-warn: #c2410c;                /* caution: scheduled publish, unsaved state */
   --color-warn-fill: #fff7ed;
   --color-info: #b3d4fc;                /* edge of an informational panel */
   --color-info-fill: #e0f2fe;           /* its tint, and the "published" status chip */

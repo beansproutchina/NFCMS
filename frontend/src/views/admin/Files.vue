@@ -159,7 +159,7 @@ onMounted(fetchFiles);
                             <Button unstyled @click.stop="copyLink(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:scale-110 transition-transform cursor-pointer" :title="$t('fileUploader.copyLink')">
                                 <LucideLink :size="18" />
                             </Button>
-                            <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">
+                            <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-danger flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">
                                 <LucideTrash :size="18" />
                             </Button>
                         </div>

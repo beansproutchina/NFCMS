@@ -97,7 +97,7 @@ watch(() => [props.model, props.resourceId], load);
         <ul v-if="grants.length" class="flex flex-col gap-2 mb-3">
             <li v-for="g in grants" :key="g.id" class="flex items-center justify-between text-small bg-surface rounded-control px-3 py-2">
                 <span class="text-label min-w-0 truncate">{{ granteeLabel(g) }} · <span class="font-medium">{{ g.access }}</span></span>
-                <button @click="revoke(g)" class="text-red-500 hover:text-red-600 shrink-0 ml-2 cursor-pointer"><LucideTrash2 :size="15" /></button>
+                <button @click="revoke(g)" class="text-danger hover:text-danger shrink-0 ml-2 cursor-pointer"><LucideTrash2 :size="15" /></button>
             </li>
         </ul>
         <div v-else class="text-small text-label-3 mb-3">{{ $t('acl.none') }}</div>

@@ -127,7 +127,7 @@ watch(() => route.path, () => {
             v-for="item in group.items" :key="item.path"
             @click="navigateTo(item.path)"
             class="flex items-center gap-3 px-3 py-2 rounded-control transition-colors w-full text-left"
-            :class="isCurrentPath(item.path) ? 'bg-fill-strong text-black font-semibold' : 'text-label hover:bg-fill'"
+            :class="isCurrentPath(item.path) ? 'bg-fill-strong text-label font-semibold' : 'text-label hover:bg-fill'"
           >
             <component :is="item.icon" :size="18" :class="{'opacity-70': !isCurrentPath(item.path)}" />
             {{ $t(item.label) }}

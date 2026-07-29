@@ -112,9 +112,100 @@ export const BTN = {
   danger: `${BTN_BASE} bg-surface hover:bg-surface-hover text-warn border border-separator-weak`,
 };
 
+/** Low-emphasis buttons that BTN's three tiers don't cover. */
+export const BTN_SMALL = {
+  /** Pagination step in a picker footer (FilePicker, UserPicker — 4 copies before this). */
+  pager: 'text-small px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer',
+  /** Round icon button floating over a thumbnail (Files.vue — 2 copies). */
+  icon: 'w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:scale-110 transition-transform cursor-pointer',
+  /** Segmented on/off cell for a permission bit (AclEditor, Roles). Pair with the on/off classes. */
+  toggle: 'px-2.5 h-8 rounded-control text-small border cursor-pointer transition-colors',
+  toggleOn: 'bg-accent text-white border-accent',
+  toggleOff: 'bg-white text-label-2 border-separator hover:bg-canvas',
+};
+
 /** The ✕ in a dialog header. Shared so AdminModal and the pickers can't drift apart again. */
 export const DIALOG_CLOSE =
   'text-label-3 hover:text-label focus:outline-none transition-colors cursor-pointer shrink-0';
+
+/**
+ * Page shell. Every list page repeated these three strings — the container 9 times, the title 10,
+ * and the header row in three different spellings.
+ */
+export const PAGE = {
+  container: 'max-w-7xl mx-auto py-10 w-full px-6',
+  title: 'text-title-page font-semibold leading-title tracking-tight mb-2',
+  subtitle: 'text-body text-label-3',
+  /** The responsive spelling won: the two non-responsive variants stacked badly on narrow screens. */
+  header: 'flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4',
+};
+
+/**
+ * Form field labels. This was the single largest duplication in the admin: one label, FIVE
+ * spellings, 33 occurrences — `block … mb-1`, `… mb-2`, no-margin, and a `px-1` variant.
+ */
+export const LABEL = 'block text-body font-medium text-label mb-1';
+/** Same type, no spacing — for when the surrounding layout owns the gap. */
+export const LABEL_BARE = 'block text-body font-medium text-label';
+/** Label + control stacked. 18 copies, half of them with `max-w-lg` bolted on. */
+export const FIELD_GROUP = 'flex flex-col gap-2';
+/** The red asterisk after a required label. */
+export const REQUIRED_MARK = 'text-danger';
+
+/** A white content card. `shadow-card` is the one card shadow this UI has. */
+export const CARD = 'bg-white rounded-card shadow-card border border-separator-weak overflow-hidden';
+/** Section heading inside a card or dialog. */
+export const SECTION_TITLE = 'text-title-section font-semibold';
+
+/** Dashboard quick-link tile (4 copies). A link by nature — put it on a router-link, not a button. */
+export const TILE =
+  'flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover ' +
+  'transition-colors text-label border-0 cursor-pointer';
+
+/**
+ * Status / role chips. `tone` picks the tint; the shape is fixed so chips never drift.
+ * Categorical role colours stay on Tailwind's palette on purpose — see the note on DECORATIVE below.
+ */
+const CHIP_BASE = 'inline-flex items-center px-2 py-0.5 rounded-control text-small font-medium';
+export const CHIP = {
+  neutral: `${CHIP_BASE} bg-canvas text-label-2`,
+  info: `${CHIP_BASE} bg-info-fill text-link`,
+  warn: `${CHIP_BASE} bg-warn-fill text-warn`,
+  accent: `${CHIP_BASE} bg-indigo-fill text-indigo`,
+};
+
+/** Inline row actions in a table. Two tones, 3 copies each before this. */
+export const LINK = {
+  action: 'text-link hover:underline text-body flex items-center cursor-pointer',
+  danger: 'text-danger hover:underline text-body flex items-center cursor-pointer',
+};
+
+/** Search field: the magnifier sits inside the input, so the input needs the left padding. */
+export const SEARCH = {
+  icon: 'absolute left-3 top-1/2 -translate-y-1/2 opacity-40',
+  /** Use as `:class="[INPUT_CLASS, SEARCH.input]"`. */
+  input: 'pl-9',
+};
+
+/** Sidebar navigation row (admin/Layout). Pair with the active/idle classes. */
+export const NAV_ITEM = {
+  base: 'flex items-center gap-3 px-3 py-2 rounded-control transition-colors w-full text-left cursor-pointer',
+  active: 'bg-fill-strong text-label font-semibold',
+  idle: 'text-label hover:bg-fill',
+};
+
+/** "Nothing here yet" placeholder. Was written three different ways. */
+export const EMPTY = 'text-center py-10 text-body text-label-3';
+
+/**
+ * DECORATIVE / CATEGORICAL colours are deliberately NOT tokens.
+ *
+ * A dashboard stat icon's colour identifies which metric it is; a role chip's tint identifies which
+ * role. That is data identity, not design semantics, and naming them `--color-cat-1..5` would be
+ * less readable than `text-blue-500`, not more. So Tailwind's palette is allowed for this one job —
+ * on icons and chip tints — and nowhere else. Keep such colours in ONE place per view (Dashboard
+ * already declares them in its stats array) rather than sprinkled through the template.
+ */
 
 /**
  * Unstyled passthrough for the global `<ConfirmDialog>`.

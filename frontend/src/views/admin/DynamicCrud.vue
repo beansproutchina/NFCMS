@@ -22,13 +22,13 @@
       <!-- Dynamic rendering based on field arrays -->
       <template v-for="f in displayFields" :key="f.name" #[f.name]="{ data }">
           <span class="truncate max-w-[200px] block" v-if="f.type !== 'boolean'">{{ data[f.name] }}</span>
-          <span v-else class="px-2 py-1 rounded text-small uppercase font-medium bg-gray-100">{{ data[f.name] ? 'Yes' : 'No' }}</span>
+          <span v-else class="px-2 py-1 rounded text-small uppercase font-medium bg-canvas">{{ data[f.name] ? 'Yes' : 'No' }}</span>
       </template>
 
       <template #actions="{ data }">
         <div class="flex justify-end gap-3 text-body">
           <Button unstyled @click="openForm(data)" class="text-accent hover:underline">Edit</Button>
-          <Button unstyled @click="deleteRecord(data)" class="text-red-500 hover:underline">Delete</Button>
+          <Button unstyled @click="deleteRecord(data)" class="text-danger hover:underline">Delete</Button>
         </div>
       </template>
     </SmartTable>
@@ -41,7 +41,7 @@
         
         <form @submit.prevent="saveRecord" class="space-y-5">
           <div v-for="field in currentSchema?.fields || []" :key="field.name">
-            <label class="block text-body font-medium text-label mb-2">{{ field.name }} <span v-if="field.type" class="text-small text-gray-400">({{ field.type }})</span></label>
+            <label class="block text-body font-medium text-label mb-2">{{ field.name }} <span v-if="field.type" class="text-small text-label-3">({{ field.type }})</span></label>
             
             <InputText unstyled v-if="field.type === 'string' || field.type === 'date'"
                    v-model="formData[field.name]"
@@ -52,7 +52,7 @@
                    :class="INPUT_CLASS" />
                    
             <label v-else-if="field.type === 'boolean'" class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-accent text-accent border-gray-300 rounded focus:ring-2 focus:ring-accent">
+              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-accent text-accent border-separator rounded focus:ring-2 focus:ring-accent">
               <span class="text-body text-label">Enabled/True</span>
             </label>
 

@@ -7,7 +7,7 @@
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
         <Button unstyled @click="$emit('edit', category)" class="text-link text-body font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
-        <Button unstyled @click="$emit('delete', category.id)" class="text-red-500 text-body font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
+        <Button unstyled @click="$emit('delete', category.id)" class="text-danger text-body font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
       </div>
     </div>
     

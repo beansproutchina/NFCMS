@@ -58,7 +58,7 @@ const statusCls = computed(() => ({
     hidden: 'bg-canvas text-label-2',
     scheduled: 'bg-warn-fill text-warn',
     visible: 'bg-info-fill text-link'
-}[status.value] || 'bg-gray-100'));
+}[status.value] || 'bg-canvas'));
 
 onMounted(async () => {
     try {
@@ -202,7 +202,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
     <div class="h-full flex flex-col pt-6 pb-0 px-6 max-w-screen-2xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-4">
-                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-label-3 hover:bg-white hover:border-2 hover:border-accent hover:text-black transition-all cursor-pointer">
+                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-label-3 hover:bg-white hover:border-2 hover:border-accent hover:text-label transition-all cursor-pointer">
                     <LucideChevronLeft :size="20" />
                 </Button>
                 <div>
@@ -277,14 +277,14 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
 
         <Teleport to="body">
             <Transition name="fade">
-                <div v-if="showMobilePanel && isMobile" class="fixed inset-0 z-50 bg-black/40" @click="showMobilePanel = false"></div>
+                <div v-if="showMobilePanel && isMobile" class="fixed inset-0 z-50 bg-label/40" @click="showMobilePanel = false"></div>
             </Transition>
             <Transition name="slide">
                 <div v-if="showMobilePanel && isMobile"
                     class="fixed right-0 top-0 bottom-0 z-50 w-[85vw] max-w-[380px] bg-white shadow-2xl overflow-y-auto p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-title-section font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
-                        <button @click="showMobilePanel = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer">
+                        <button @click="showMobilePanel = false" class="w-8 h-8 rounded-full bg-canvas flex items-center justify-center text-label-2 hover:bg-surface-hover transition-colors cursor-pointer">
                             <LucideX :size="16" />
                         </button>
                     </div>
