@@ -43,8 +43,6 @@
         <span class="warrow">↗</span>
       </a>
     </section>
-
-    <a class="back-bottom" :href="backHref">← {{ backLabel }}</a>
   </main>
 </template>
 
@@ -94,11 +92,6 @@ const works = computed<any[]>(() => (props.context?.memberWorks || []).filter((w
 }));
 
 const metaOf = (w: any) => [w?.data?.client, w?.data?.year].filter(Boolean).join(' · ');
-
-// Derived, never hardcoded to /a/team — mirrors the back link in MemberLayout.
-const category = computed<any>(() => article.value?.category || null);
-const backHref = computed(() => (category.value?.slug ? `/a/${category.value.slug}` : '/'));
-const backLabel = computed(() => (category.value?.name ? `返回${category.value.name}` : '返回首页'));
 </script>
 
 <style scoped>
@@ -157,12 +150,6 @@ const backLabel = computed(() => (category.value?.name ? `返回${category.value
 .wtitle { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.2rem; }
 .wmeta { font-family: 'Space Mono', monospace; font-size: .75rem; opacity: .7; }
 .warrow { flex: none; font-size: 1.2rem; }
-
-.back-bottom {
-  display: inline-block; margin-top: 3rem; font-family: 'Space Mono', monospace; font-size: .85rem;
-  color: var(--ink); text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 3px;
-}
-.back-bottom:hover { color: var(--accent); }
 
 @media (max-width: 1023px) {
   .m-hero { grid-template-columns: 240px 1fr; gap: 2rem; }
