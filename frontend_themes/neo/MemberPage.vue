@@ -21,8 +21,9 @@
       </div>
     </section>
 
-    <!-- ③ Social matrix — Socials renders nothing when every link is empty -->
-    <section class="m-social">
+    <!-- ③ Social matrix. Gated here too: Socials hides itself when empty, but the heading and the
+         divider are ours, and a lone "FIND ME" over a rule is exactly the empty frame we avoid. -->
+    <section class="m-social" v-if="hasSocial">
       <p class="sec-title">FIND ME</p>
       <Socials :context="context" :source="socialSource" size="lg" />
     </section>
@@ -76,6 +77,8 @@ const socialSource = computed<Record<string, string>>(() => ({
   email: d.value.social_email,
   wechat_qr: d.value.social_wechat_qr,
 }));
+
+const hasSocial = computed(() => Object.values(socialSource.value).some((v) => String(v ?? '').trim()));
 
 /**
  * Works this member is credited on. The prefetch (theme.config.ts) is a LIKE over the whole `data`
