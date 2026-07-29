@@ -147,6 +147,15 @@ export const uploadAPI = {
     getList: (params: ReadQuery = {}) => listAttachment(params),
     // axios sets the multipart boundary itself when the payload is a FormData.
     upload: (formData: FormData) => uploadUploadFile(formData),
+    /**
+     * Build the multipart body for you — the single place that knows the backend's
+     * 'file' field name. Resolves to { code, data: attachmentRow[] }.
+     */
+    uploadFiles: (files: File[] | FileList) => {
+        const fd = new FormData();
+        Array.from(files).forEach((f) => fd.append('file', f));
+        return uploadUploadFile(fd);
+    },
     remove: (id: number) => uploadDeleteFile(id),
     getProviders: () => uploadGetProviders(),
     testStorage: (provider?: string) => uploadTestStorage({ provider }),
