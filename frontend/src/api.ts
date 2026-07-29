@@ -1,4 +1,5 @@
 import axios from 'axios';
+import i18n from './i18n';
 import {
     configureApi, crud,
     schematoolsGetAllSchemas,
@@ -27,7 +28,7 @@ api.interceptors.response.use(
     (error) => {
         const body: any = error.response?.data;
         const status: number | undefined = error.response?.status;
-        const message: string = body?.message || error.message || `请求失败${status ? ' (' + status + ')' : ''}`;
+        const message: string = body?.message || error.message || `${i18n.global.t('system.requestFailed')}${status ? ' (' + status + ')' : ''}`;
         const code = body?.code ?? status;
 
         // Auth-probe endpoints (login attempt, initial loginInfo check) handle their own errors —

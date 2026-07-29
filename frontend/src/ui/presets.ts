@@ -279,6 +279,36 @@ export const NAV_ITEM = {
   idle: 'text-label hover:bg-fill',
 };
 
+/** Unstyled PrimeVue Checkbox — replaces the two hand-rolled native ones. */
+export const CHECKBOX_PT = {
+  root: 'relative inline-flex w-5 h-5 shrink-0 cursor-pointer align-middle',
+  // The real input sits on top, invisible, so the whole box stays clickable and keyboard-reachable.
+  input: 'absolute inset-0 w-full h-full opacity-0 cursor-pointer m-0',
+  /**
+   * Driven by `context.checked`, not by Tailwind's `peer-checked:`. `peer` needs the input to be a
+   * preceding SIBLING of the box, which is a fact about PrimeVue's internal DOM order — the kind of
+   * assumption that silently stops holding on a library upgrade. The context flag is the documented
+   * contract instead.
+   */
+  box: ({ context }: any) => ({
+    class: [
+      'w-5 h-5 rounded-chip border flex items-center justify-center transition-colors',
+      context?.checked ? 'bg-accent border-accent' : 'bg-white border-separator',
+    ],
+  }),
+  icon: 'w-3.5 h-3.5 text-white',
+};
+
+/**
+ * A selectable row in a list or picker. Stays a native `<button>` on purpose — a row IS a button —
+ * so this gives it the look without giving it PrimeVue's semantics.
+ */
+export const ROW = {
+  base: 'w-full flex items-center gap-3 px-3 py-2 rounded-control text-left cursor-pointer transition-colors',
+  active: 'bg-fill-strong font-semibold text-label',
+  idle: 'text-label hover:bg-fill',
+};
+
 /** "Nothing here yet" placeholder. Was written three different ways. */
 export const EMPTY = 'text-center py-10 text-body text-label-3';
 

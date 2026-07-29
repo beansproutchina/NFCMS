@@ -7,7 +7,7 @@ import { listUser, listRole, aclAPI } from '../api';
 import { useToast } from 'primevue/usetoast';
 import { LucideTrash2, LucidePlus } from 'lucide-vue-next';
 import UserPicker from './UserPicker.vue';
-import { BTN, BTN_REMOVE, FIELD_GROUP, LABEL_BARE, SELECT_PT, TEXT } from '../ui/presets';
+import { BTN, BTN_REMOVE, FIELD_GROUP, LABEL_BARE, SELECT_PT, TEXT, TOGGLE } from '../ui/presets';
 const { t } = useI18n();
 
 /**
@@ -118,8 +118,7 @@ watch(() => [props.model, props.resourceId], load);
 
             <div class="flex flex-wrap gap-1.5">
                 <button v-for="a in actions" :key="a" @click="toggleAccess(a)"
-                    class="px-2.5 h-8 rounded-control text-small border cursor-pointer transition-colors"
-                    :class="selectedAccess.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-label-2 border-separator hover:bg-canvas'">
+                    :class="[TOGGLE.base, selectedAccess.includes(a) ? TOGGLE.on : TOGGLE.off]">
                     {{ a }}
                 </button>
                 <Button unstyled @click="addGrant" :class="[BTN.primary, 'ml-auto']"><LucidePlus :size="14" /> {{ $t('acl.add') }}</Button>

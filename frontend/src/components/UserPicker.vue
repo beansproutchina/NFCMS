@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { listUser } from '../api';
 import { LucideSearch, LucideX, LucideUser } from 'lucide-vue-next';
-import { BTN_SM, DIALOG_CLOSE, EMPTY, INPUT_CLASS, SEARCH, SECTION_TITLE, TEXT } from '../ui/presets';
+import { BTN_SM, DIALOG_CLOSE, EMPTY, INPUT_CLASS, ROW, SEARCH, SECTION_TITLE, TEXT } from '../ui/presets';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ (e: 'update:visible', v: boolean): void; (e: 'select', user: any): void }>();
@@ -58,7 +58,7 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; load(
                     <li v-if="loading" :class="EMPTY">{{ $t('system.loading') }}</li>
                     <li v-else-if="!users.length" :class="EMPTY">{{ $t('userPicker.empty') }}</li>
                     <li v-for="u in users" :key="u.id">
-                        <button @click="pick(u)" class="w-full flex items-center gap-3 px-3 py-2 rounded-control text-left hover:bg-canvas transition-colors cursor-pointer">
+                        <button @click="pick(u)" :class="[ROW.base, ROW.idle]">
                             <span class="w-8 h-8 rounded-full bg-indigo-fill text-indigo flex items-center justify-center shrink-0"><LucideUser :size="16" /></span>
                             <span class="min-w-0">
                                 <span class="block text-body font-medium truncate">{{ u.nickname || u.username }}</span>

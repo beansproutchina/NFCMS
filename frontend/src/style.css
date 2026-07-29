@@ -87,6 +87,10 @@
   /* ── Line height used by the page title ──────────────────────────────────────────────── */
   --leading-title: 1.1;
 
+  /* Page-transition fade used by DynamicView. It referenced `animate-fade-in` for a long time
+     without this ever being defined, so the animation simply never ran. */
+  --animate-fade-in: fade-in .18s ease-out;
+
   --font-sans: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   --font-text: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
@@ -95,4 +99,9 @@ body {
   @apply bg-canvas text-label font-sans tracking-tight;
   margin: 0;
   padding: 0;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
 }

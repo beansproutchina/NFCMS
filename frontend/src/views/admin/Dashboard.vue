@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CARD, LABEL_BARE, LINK, PAGE, SECTION_TITLE, TEXT } from '../../ui/presets';
+import { CARD, LABEL_BARE, LINK, PAGE, SECTION_TITLE, TEXT, TILE } from '../../ui/presets';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { schemaAPI, listArticle, listCategory, listUser, uploadAPI, systemAPI } from '../../api';
@@ -152,19 +152,19 @@ const formatDate = (dateString: string) => {
               <div class="p-6 flex-1" :class="CARD">
                   <h2 class="flex items-center gap-2 mb-6 text-label" :class="SECTION_TITLE"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
                   <div class="grid grid-cols-2 gap-3">
-                      <button v-if="isSuper" @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/categories')" :class="TILE">
                           <LucideFolder :size="24" class="text-amber-500"/>
                           <span class="text-small font-medium">{{ $t('system.categories') }}</span>
                       </button>
-                      <button v-if="isSuper" @click="router.push('/admin/menus')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/menus')" :class="TILE">
                           <LucideBox :size="24" class="text-purple-500"/>
                           <span class="text-small font-medium">{{ $t('system.menus') }}</span>
                       </button>
-                      <button v-if="canFiles" @click="router.push('/admin/files')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
+                      <button v-if="canFiles" @click="router.push('/admin/files')" :class="TILE">
                           <LucideImage :size="24" class="text-pink-500"/>
                           <span class="text-small font-medium">{{ $t('system.files') }}</span>
                       </button>
-                      <button v-if="isSuper" @click="router.push('/admin/settings')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
+                      <button v-if="isSuper" @click="router.push('/admin/settings')" :class="TILE">
                           <LucideShieldCheck :size="24" class="text-label-2"/>
                           <span class="text-small font-medium">{{ $t('system.settings') }}</span>
                       </button>

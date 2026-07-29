@@ -2,7 +2,7 @@
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import { FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXTAREA_CLASS } from '../../ui/presets';
+import { CHECKBOX_PT, FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXTAREA_CLASS } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
 
 /**
@@ -38,8 +38,7 @@ defineProps<{
     <div class="mt-4 flex items-center justify-between">
         <label :class="LABEL_BARE">{{ $t('form.is_top') || 'Is Top'
         }}</label>
-        <input v-model="form.is_top" type="checkbox" :true-value="1" :false-value="0"
-            class="h-5 w-5 rounded-chip border-separator" />
+        <Checkbox unstyled v-model="form.is_top" :true-value="1" :false-value="0" binary :pt="CHECKBOX_PT" />
     </div>
 
     <div class="mt-4 flex flex-col gap-6">

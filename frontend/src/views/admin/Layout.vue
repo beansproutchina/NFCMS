@@ -110,14 +110,14 @@ watch(() => route.path, () => {
       :class="{ 'translate-x-0': sidebarVisible }"
     >
       <!-- Sidebar Header (desktop only, mobile has its own header) -->
-      <div class="hidden md:flex px-6 py-6 border-b border-divider border-opacity-60 items-center justify-between">
+      <div class="hidden md:flex px-6 py-6 border-b border-divider/60 items-center justify-between">
         <span class="flex items-center gap-2 cursor-pointer" :class="SECTION_TITLE" @click="router.push('/admin')">
           <LucideSettings :size="20"/> {{ $t('system.title') }}
         </span>
       </div>
       
       <!-- Mobile sidebar header -->
-      <div class="md:hidden px-6 py-5 border-b border-divider border-opacity-60">
+      <div class="md:hidden px-6 py-5 border-b border-divider/60">
         <span class="font-semibold text-title-item flex items-center gap-2 text-label">
           {{ $t('system.title') }}
         </span>
@@ -138,7 +138,7 @@ watch(() => route.path, () => {
         </div>
       </div>
 
-      <div class="p-4 border-t border-divider border-opacity-60 flex flex-col gap-1">
+      <div class="p-4 border-t border-divider/60 flex flex-col gap-1">
         <Button unstyled @click="navigateTo('/')" class="flex items-center gap-3 w-full text-left px-3 py-2 text-label hover:bg-fill rounded-control transition-colors">
             <LucideGlobe :size="18" class="opacity-70" />  {{$t('system.visitSite')}}
         </Button>  

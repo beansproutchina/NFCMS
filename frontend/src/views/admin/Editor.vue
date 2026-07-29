@@ -12,7 +12,7 @@ import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideEyeOff, Lu
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { BTN, BTN_ICON, CARD, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE } from '../../ui/presets';
+import { BTN, BTN_ICON, CARD, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE, LINK } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 import EditorPanel from './EditorPanel.vue';
 
@@ -258,7 +258,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                                 <div class="font-medium text-label">v{{ rev.version_no }} · {{ rev.note }}</div>
                                 <div class="text-label-3 truncate">{{ rev.created_at ? new Date(rev.created_at).toLocaleString() : '' }}</div>
                             </div>
-                            <button @click="rollback(rev.version_no)" class="text-link hover:underline shrink-0 ml-2 cursor-pointer">{{ $t('action.rollback') }}</button>
+                            <button @click="rollback(rev.version_no)" class="shrink-0 ml-2" :class="LINK.small">{{ $t('action.rollback') }}</button>
                         </li>
                     </ul>
                 </div>

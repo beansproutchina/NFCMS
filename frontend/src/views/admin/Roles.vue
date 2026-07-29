@@ -10,7 +10,7 @@ import { listRole, createRole as apiCreateRole, removeRole, listRolePermission, 
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
-import { BTN, FIELD_GROUP, INPUT_CLASS_SM, PAGE, SECTION_TITLE, SELECT_PT, TEXT } from '../../ui/presets';
+import { BTN, FIELD_GROUP, INPUT_CLASS_SM, PAGE, SECTION_TITLE, SELECT_PT, TEXT, TOGGLE } from '../../ui/presets';
 const { t } = useI18n();
 
 const toast = useToast();
@@ -231,8 +231,7 @@ onMounted(async () => {
                             <div class="flex gap-2 items-center bg-surface rounded-control p-3 flex-wrap">
                                 <Select v-model="catForm.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="$t('roles.pickCategory')" unstyled :pt="SELECT_PT" class="w-[200px] shrink-0" />
                                 <button v-for="a in CAT_ACTIONS" :key="a" @click="toggleCatAccess(a)"
-                                    class="px-2.5 h-8 rounded-control text-small border cursor-pointer transition-colors"
-                                    :class="catForm.access.includes(a) ? 'bg-accent text-white border-accent' : 'bg-white text-label-2 border-separator hover:bg-canvas'">
+                                    :class="[TOGGLE.base, catForm.access.includes(a) ? TOGGLE.on : TOGGLE.off]">
                                     {{ a }}
                                 </button>
                                 <Button unstyled @click="addCatGrant" :class="[BTN.primary, 'ml-auto']">

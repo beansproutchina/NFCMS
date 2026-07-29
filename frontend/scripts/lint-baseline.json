@@ -1,0 +1,31 @@
+{
+  "_note": "Accepted violations. Adding a line here is a visible act that goes through review — it is the intended way to grant an exemption. Run lint-admin.mjs --update to re-tighten.",
+  "accepted": [
+    "R2-palette|src/views/admin/Dashboard.vue|bg-emerald-500",
+    "R2-palette|src/views/admin/Dashboard.vue|bg-green-100",
+    "R2-palette|src/views/admin/Dashboard.vue|text-amber-500",
+    "R2-palette|src/views/admin/Dashboard.vue|text-blue-500",
+    "R2-palette|src/views/admin/Dashboard.vue|text-emerald-500",
+    "R2-palette|src/views/admin/Dashboard.vue|text-green-700",
+    "R2-palette|src/views/admin/Dashboard.vue|text-indigo-500",
+    "R2-palette|src/views/admin/Dashboard.vue|text-pink-500",
+    "R2-palette|src/views/admin/Dashboard.vue|text-purple-500",
+    "R2-palette|src/views/admin/Settings.vue|text-emerald-500",
+    "R2-palette|src/views/admin/Settings.vue|text-emerald-600",
+    "R2-palette|src/views/admin/Settings.vue|text-indigo-500",
+    "R2-palette|src/views/admin/Settings.vue|text-rose-500",
+    "R2-palette|src/views/admin/Users.vue|bg-blue-100",
+    "R2-palette|src/views/admin/Users.vue|bg-purple-100",
+    "R2-palette|src/views/admin/Users.vue|text-blue-700",
+    "R2-palette|src/views/admin/Users.vue|text-purple-700",
+    "R2-palette|src/views/front/DynamicView.vue|text-red-500",
+    "R2-palette|src/views/front/Preview.vue|text-red-600",
+    "R4-dead-class|src/views/admin/MenuItemEditor.vue|handle",
+    "R4-dead-class|src/views/front/Preview.vue|prose",
+    "R6-native-el|src/components/AclEditor.vue|<button>",
+    "R6-native-el|src/components/UserPicker.vue|<button>",
+    "R6-native-el|src/views/admin/Editor.vue|<button>",
+    "R6-native-el|src/views/admin/Roles.vue|<button>",
+    "R6-native-el|src/views/setup/SetupWizard.vue|<button>"
+  ]
+}
