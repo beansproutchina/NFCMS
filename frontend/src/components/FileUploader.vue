@@ -131,6 +131,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
                     <img v-if="isImage(u)" :src="u" class="h-10 w-10 object-cover rounded" />
                     <LucideFile v-else :size="18" class="text-[rgba(0,0,0,0.35)] shrink-0" />
                     <a :href="u" target="_blank" class="text-[13px] text-apple-blue hover:underline truncate flex-1">{{ nameOf(u) }}</a>
+                    <span v-if="!disabled && !multiple" @click="openFileDialog" class="text-[12px] text-apple-blue cursor-pointer hover:underline shrink-0">{{ $t('fileUploader.replace') }}</span>
                     <span v-if="!disabled" @click="removeAt(Number(i))" class="text-[12px] text-red-500 cursor-pointer hover:underline shrink-0">{{ $t('action.remove') }}</span>
                 </div>
             </template>
