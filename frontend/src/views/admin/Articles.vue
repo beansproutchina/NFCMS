@@ -10,10 +10,12 @@ import { BTN, INPUT_CLASS, LINK, PAGE, SEARCH, SELECT_PT, TEXT } from '../../ui/
 import { LucidePlus, LucideSearch,  } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
+const confirm = useConfirm();
 const articles = ref([]);
 const categories = ref<any[]>([]);
 const loading = ref(true);
@@ -102,15 +104,18 @@ const editArticle = (id: number) => {
 };
 
 const deleteArticle = async (id: number) => {
-    if(confirm(t('action.confirmDelete'))) {
+    confirm.require({
+        header: t('confirm.title'), message: t('action.confirmDelete'),
+        accept: async () => {
         try {
             await removeArticle(id);
-            toast.add({ severity: 'success', summary: 'Success', detail: '文章删除成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.articleDeleted'), life: 3000 });
             fetchArticles();
         } catch(e) {
             console.error(e);
         }
-    }
+        },
+    });
 };
 
 const STATUS_CLS: Record<string, string> = {
@@ -127,7 +132,7 @@ const toggleVisibility = async (data: any) => {
     try {
         const to = data.status === 'visible' ? 'hidden' : 'visible';
         await lifecycleAPI.transition('articles', data.id, { to });
-        toast.add({ severity: 'success', summary: 'Success', detail: to === 'visible' ? '已发布' : '已隐藏', life: 2500 });
+        toast.add({ severity: 'success', summary: 'Success', detail: to === 'visible' ? t('toast.published') : t('toast.hidden'), life: 2500 });
         fetchArticles();
     } catch(e) { console.error(e); }
 };

@@ -85,11 +85,11 @@ const deleteFile = (id: number) => {
         accept: async () => {
             try {
                 await uploadAPI.remove(id);
-                toast.add({ severity: 'success', summary: 'Success', detail: '文件删除成功', life: 3000 });
+                toast.add({ severity: 'success', summary: 'Success', detail: t('toast.fileDeleted'), life: 3000 });
                 await fetchFiles();
             } catch(e) {
                 console.error(e);
-                toast.add({ severity: 'error', summary: 'Error', detail: '文件删除失败', life: 3000 });
+                toast.add({ severity: 'error', summary: 'Error', detail: t('toast.fileDeleteFailed'), life: 3000 });
             }
         }
     });
@@ -153,13 +153,13 @@ onMounted(fetchFiles);
                         <LucideFile v-else :size="48" class="text-label-4" />
                         
                         <div class="absolute inset-0 bg-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                            <Button unstyled @click.stop="openUrl(file.url)" :class="BTN_ICON.plain" title="新窗口打开">
+                            <Button unstyled @click.stop="openUrl(file.url)" :class="BTN_ICON.plain" :title="$t('action.openInNewWindow')">
                                 <LucideEye :size="18" />
                             </Button>
                             <Button unstyled @click.stop="copyLink(file.url)" :class="BTN_ICON.plain" :title="$t('fileUploader.copyLink')">
                                 <LucideLink :size="18" />
                             </Button>
-                            <Button unstyled @click.stop="deleteFile(file.id)" :class="BTN_ICON.danger" title="删除">
+                            <Button unstyled @click.stop="deleteFile(file.id)" :class="BTN_ICON.danger" :title="$t('action.delete')">
                                 <LucideTrash :size="18" />
                             </Button>
                         </div>

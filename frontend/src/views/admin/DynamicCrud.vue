@@ -73,12 +73,18 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crud } from '../../api';
 import { INPUT_CLASS, LABEL, LINK, PAGE, TEXT, TEXTAREA_CLASS_MONO } from '../../ui/presets';
+const toast = useToast();
+const confirm = useConfirm();
+const { t } = useI18n();
 
 const route = useRoute();
 const schemaName = computed(() => route.params.modelName as string);
@@ -155,18 +161,22 @@ const saveRecord = async () => {
         showModal.value = false;
         fetchSchemaAndData();
     } catch (e) {
-        alert('Save failed');
+        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.saveFailed'), life: 3000 });
         console.error(e);
     }
 };
 
 const deleteRecord = async (id: string|number) => {
-    if (!confirm('Delete this record forever?')) return;
-    try {
-        await crud(currentSchema.value.routePath).remove(id);
-        fetchSchemaAndData();
-    } catch (e) {
-        alert('Delete failed');
-    }
+    confirm.require({
+        header: t('confirm.title'), message: t('confirm.deleteRecord'),
+        accept: async () => {
+            try {
+                await crud(currentSchema.value.routePath).remove(id);
+                fetchSchemaAndData();
+            } catch (e) {
+                toast.add({ severity: 'error', summary: 'Error', detail: t('toast.deleteFailed'), life: 3000 });
+            }
+        },
+    });
 };
 </script>

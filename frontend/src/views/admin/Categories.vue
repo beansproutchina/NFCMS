@@ -43,9 +43,11 @@ import { listCategory, createCategory, updateCategory, removeCategory } from '..
 import CategoryItem from './CategoryItem.vue';
 import CategoryEditor from './CategoryEditor.vue';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 
 const { t } = useI18n();
 const toast = useToast();
+const confirm = useConfirm();
 const categories = ref<any[]>([]);
 const loading = ref(true);
 
@@ -121,10 +123,10 @@ const saveCategory = async (emittedData: any) => {
 
     if (isEditing.value) {
         await updateCategory(payload.id, payload);
-        toast.add({ severity: 'success', summary: 'Success', detail: '分类更新成功', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryUpdated'), life: 3000 });
     } else {
         await createCategory(payload);
-        toast.add({ severity: 'success', summary: 'Success', detail: '分类创建成功', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryCreated'), life: 3000 });
     }
     showModal.value = false;
     fetchCategories();
@@ -132,14 +134,18 @@ const saveCategory = async (emittedData: any) => {
 };
 
 const deleteCategory = async (id: number) => {
-    if (!confirm(t('action.confirmDelete'))) return;
-    try {
-        await removeCategory(id);
-        toast.add({ severity: 'success', summary: 'Success', detail: '分类删除成功', life: 3000 });
-        fetchCategories();
-    } catch (err) {
-        alert("Failed to delete category");
-    }
+    confirm.require({
+        header: t('confirm.title'), message: t('action.confirmDelete'),
+        accept: async () => {
+            try {
+                await removeCategory(id);
+                toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryDeleted'), life: 3000 });
+                fetchCategories();
+            } catch (err) {
+                toast.add({ severity: 'error', summary: 'Error', detail: t('toast.deleteFailed'), life: 3000 });
+            }
+        },
+    });
 };
 
 onMounted(fetchCategories);

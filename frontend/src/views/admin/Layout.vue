@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { SECTION_TITLE, TEXT } from '../../ui/presets';
 
 import { computed, ref, watch } from 'vue';
@@ -8,6 +9,7 @@ import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, Lu
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../stores/auth';
 import { authAPI } from '../../api';
+const { t } = useI18n();
 
 const router = useRouter();
 const route = useRoute();
@@ -56,7 +58,7 @@ const logout = async () => {
     await authAPI.logout();
   } catch {}
   authStore.clearUser();
-  toast.add({ severity: 'success', summary: 'Success', detail: '退出登录成功', life: 3000 });
+  toast.add({ severity: 'success', summary: 'Success', detail: t('toast.loggedOut'), life: 3000 });
   router.push('/login');
 };
 

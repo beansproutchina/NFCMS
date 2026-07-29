@@ -57,10 +57,12 @@ import { listUser, getUser, createUser, updateUser, removeUser,
          listUserRole, createUserRole, removeUserRole } from '../../api';
 import UserEditor from './UserEditor.vue';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '../../stores/auth';
 
 const { t } = useI18n();
 const toast = useToast();
+const confirm = useConfirm();
 const authStore = useAuthStore();
 const isSuperAdmin = authStore.isSuperAdmin;
 const currentUser = computed(() => authStore.user || { username: '' });
@@ -132,15 +134,18 @@ const openEditor = (item?: any) => {
 };
 
 const deleteUser = async (id: number) => {
-    if (confirm(t('action.confirmDelete'))) {
+    confirm.require({
+        header: t('confirm.title'), message: t('action.confirmDelete'),
+        accept: async () => {
         try {
             await removeUser(id);
-            toast.add({ severity: 'success', summary: 'Success', detail: '用户删除成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.userDeleted'), life: 3000 });
             fetchUsers();
         } catch (e) {
             console.error('Delete failed', e);
         }
-    }
+        },
+    });
 };
 
 // Reconcile the user_roles table to match the desired additional-role id set.
@@ -167,7 +172,7 @@ const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
         let userId = formData.id;
         if (formData.id) {
             await updateUser(formData.id, formData);
-            toast.add({ severity: 'success', summary: 'Success', detail: '用户更新成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.userUpdated'), life: 3000 });
             // If they changed their own name, reflect it in the auth store.
             if (formData.id === currentUser.value.id && formData.username) {
                 authStore.setUser({ ...currentUser.value, username: formData.username });
@@ -175,14 +180,14 @@ const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
         } else {
             const res = await createUser(formData);
             userId = res.id;   // HTTPCreate returns { code, id }
-            toast.add({ severity: 'success', summary: 'Success', detail: '用户创建成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.userCreated'), life: 3000 });
         }
         await syncUserRoles(userId, additionalRoleIds);
         showModal.value = false;
         fetchUsers();
     } catch (e) {
         console.error('Save failed', e);
-        alert('Save failed. Check console.');
+        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.saveFailed'), life: 3000 });
     }
 };
 </script>

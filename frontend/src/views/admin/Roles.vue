@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted, computed, watch } from 'vue';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -7,10 +8,13 @@ import { listRole, createRole as apiCreateRole, removeRole, listRolePermission, 
          removeRolePermission, listResourceGrant, listCategory,
          schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
 import { BTN, FIELD_GROUP, INPUT_CLASS_SM, PAGE, SECTION_TITLE, SELECT_PT, TEXT } from '../../ui/presets';
+const { t } = useI18n();
 
 const toast = useToast();
+const confirm = useConfirm();
 
 const roles = ref<any[]>([]);
 const selectedRole = ref<any>(null);
@@ -56,11 +60,11 @@ const toggleCatAccess = (a: string) => {
 };
 
 const addCatGrant = async () => {
-    if (!selectedRole.value || catForm.value.category_id == null) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择分类', life: 2500 }); return; }
-    if (!catForm.value.access.length) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请至少选择一项权限', life: 2500 }); return; }
+    if (!selectedRole.value || catForm.value.category_id == null) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectCategory'), life: 2500 }); return; }
+    if (!catForm.value.access.length) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectPermission'), life: 2500 }); return; }
     const access = CAT_ACTIONS.filter((a) => catForm.value.access.includes(a)).join(',');
     await aclAPI.grant(ARTICLES_CATEGORY, catForm.value.category_id, { grantee_type: 'role', grantee_id: selectedRole.value.id, access });
-    toast.add({ severity: 'success', summary: 'Success', detail: '已授予', life: 2000 });
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.granted'), life: 2000 });
     catForm.value = { category_id: null, access: [] };
     await loadCatGrants();
 };
@@ -89,26 +93,30 @@ const selectRole = async (r: any) => {
 };
 
 const createRole = async () => {
-    if (!newRole.value.name) { toast.add({ severity: 'warn', summary: 'Warning', detail: '角色标识必填', life: 2500 }); return; }
+    if (!newRole.value.name) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.roleNameRequired'), life: 2500 }); return; }
     try {
         await apiCreateRole({ name: newRole.value.name, label: newRole.value.label || newRole.value.name });
         newRole.value = { name: '', label: '' };
-        toast.add({ severity: 'success', summary: 'Success', detail: '角色已创建', life: 2500 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.roleCreated'), life: 2500 });
         await loadRoles();
     } catch (e) { console.error(e); }
 };
 
 const deleteRole = async (r: any) => {
-    if (r.is_system) { toast.add({ severity: 'warn', summary: 'Warning', detail: '内置角色不可删除', life: 2500 }); return; }
-    if (!confirm(`删除角色 "${r.name}"?`)) return;
-    await removeRole(r.id);
-    if (selectedRole.value?.id === r.id) selectedRole.value = null;
-    toast.add({ severity: 'success', summary: 'Success', detail: '角色已删除', life: 2500 });
-    await loadRoles();
+    if (r.is_system) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.systemRoleUndeletable'), life: 2500 }); return; }
+    confirm.require({
+        header: t('confirm.title'), message: t('confirm.deleteRole', { name: r.label || r.name }),
+        accept: async () => {
+            await removeRole(r.id);
+            if (selectedRole.value?.id === r.id) selectedRole.value = null;
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.roleDeleted'), life: 2500 });
+            await loadRoles();
+        },
+    });
 };
 
 const addPerm = async () => {
-    if (!newPerm.value.model) { toast.add({ severity: 'warn', summary: 'Warning', detail: '模型(表名)必填,如 articles', life: 2500 }); return; }
+    if (!newPerm.value.model) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.modelRequired'), life: 2500 }); return; }
     await createRolePermission({
         role_id: selectedRole.value.id,
         model: newPerm.value.model.trim(),
@@ -116,7 +124,7 @@ const addPerm = async () => {
         scope: newPerm.value.scope
     });
     newPerm.value = { model: newPerm.value.model, action: 'R', scope: 'any' };
-    toast.add({ severity: 'success', summary: 'Success', detail: '权限已添加', life: 2000 });
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.permissionAdded'), life: 2000 });
     await loadPerms();
 };
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { BTN_REMOVE, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG, TEXT } from '../../ui/presets';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
@@ -7,6 +8,7 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Password from 'primevue/password';
 import { LucideUpload, LucideFileText, LucideX } from 'lucide-vue-next';
+const { t } = useI18n();
 
 const router = useRouter();
 const siteName = ref('');
@@ -38,14 +40,14 @@ const onFileChange = async (e: Event) => {
     const text = await file.text();
     const data = JSON.parse(text);
     if (!data._meta || data._meta.generator !== 'NFCMS') {
-      error.value = '无效的导入文件格式（非 NFCMS 导出文件）';
+      error.value = t('setup.invalidFile');
       return;
     }
     importFile.value = file;
     importFileData.value = data;
     error.value = '';
   } catch (err: any) {
-    error.value = '文件解析失败：' + (err.message || '未知错误');
+    error.value = t('setup.parseFailed', { err: err.message || t('setup.unknownError') });
   }
 };
 
@@ -58,7 +60,7 @@ const clearImportFile = () => {
 const performSetup = async () => {
   if (importMode.value) {
     if (!importFileData.value) {
-      error.value = '请选择要导入的数据文件。';
+      error.value = t('setup.pickFile');
       return;
     }
     loading.value = true;
@@ -67,7 +69,7 @@ const performSetup = async () => {
       await systemAPI.setup({ importData: importFileData.value });
       router.push('/login');
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || '导入失败';
+      error.value = err.response?.data?.message || err.message || t('setup.importFailed');
     } finally {
       loading.value = false;
     }
@@ -113,7 +115,7 @@ const performSetup = async () => {
               'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
               !importMode ? 'bg-accent text-white' : 'bg-white text-label-2 hover:bg-canvas'
             ]"
-          >新建站点</Button>
+          >{{ $t('setup.tabNew') }}</Button>
           <Button
             @click="importMode = true"
             unstyled
@@ -121,7 +123,7 @@ const performSetup = async () => {
               'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
               importMode ? 'bg-accent text-white' : 'bg-white text-label-2 hover:bg-canvas'
             ]"
-          >导入数据</Button>
+          >{{ $t('setup.tabImport') }}</Button>
         </div>
 
         <!-- New Site Mode -->
@@ -150,7 +152,7 @@ const performSetup = async () => {
 
         <!-- Import Mode -->
         <template v-else>
-          <p :class="TEXT.muted">选择之前导出的 NFCMS 数据文件，系统将从中恢复所有数据。</p>
+          <p :class="TEXT.muted">{{ $t('setup.importHint') }}</p>
 
           <div v-if="importFileName" class="flex items-center gap-3 p-3 bg-info-fill rounded-control border border-info">
             <LucideFileText :size="20" class="text-accent shrink-0" />
@@ -164,7 +166,7 @@ const performSetup = async () => {
           <button @click="handleFileSelect" type="button" unstyled
             class="w-full border-2 border-dashed border-separator rounded-control py-6 flex flex-col items-center justify-center gap-2 text-label-3 hover:border-accent hover:text-accent transition-colors cursor-pointer bg-transparent">
             <LucideUpload :size="24" />
-            <span class="text-body font-medium">选择导出文件 (.json)</span>
+            <span class="text-body font-medium">{{ $t('setup.pickExportFile') }}</span>
           </button>
         </template>
 
@@ -172,7 +174,7 @@ const performSetup = async () => {
 
         <Button :loading="loading" @click="performSetup" unstyled
           class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
-          {{ importMode ? '导入并初始化' : 'Complete Setup' }}
+          {{ importMode ? $t('setup.importAndInit') : $t('auth.completeSetup') }}
         </Button>
       </div>
     </div>

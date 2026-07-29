@@ -100,7 +100,7 @@ const refresh = async () => { await loadArticle(); await loadRevisions(); };
 // Persist content fields (create or update). Returns the article id, or null on validation failure.
 const persist = async (): Promise<string | number | null> => {
     if (Number(form.value.category_id) === 0) {
-        toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择一个分类', life: 3000 });
+        toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectCategory'), life: 3000 });
         return null;
     }
     loading.value = true;
@@ -119,7 +119,7 @@ const persist = async (): Promise<string | number | null> => {
 
 const saveDraft = async () => {
     const id = await persist();
-    if (id) { toast.add({ severity: 'success', summary: 'Success', detail: '已保存', life: 2500 }); await loadRevisions(); }
+    if (id) { toast.add({ severity: 'success', summary: 'Success', detail: t('toast.saved'), life: 2500 }); await loadRevisions(); }
 };
 
 const publish = async () => {
@@ -127,7 +127,7 @@ const publish = async () => {
     if (!id) return;
     await lifecycleAPI.transition('articles', id, { to: 'visible' });
     status.value = 'visible';
-    toast.add({ severity: 'success', summary: 'Success', detail: '已发布', life: 2500 });
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.published'), life: 2500 });
     await refresh();
 };
 
@@ -135,17 +135,17 @@ const unpublish = async () => {
     if (!articleId.value) return;
     await lifecycleAPI.transition('articles', articleId.value, { to: 'hidden' });
     status.value = 'hidden';
-    toast.add({ severity: 'info', summary: 'Info', detail: '已隐藏', life: 2500 });
+    toast.add({ severity: 'info', summary: 'Info', detail: t('toast.hidden'), life: 2500 });
     await refresh();
 };
 
 const schedule = async () => {
-    if (!publishAt.value) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择发布时间', life: 3000 }); return; }
+    if (!publishAt.value) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectPublishTime'), life: 3000 }); return; }
     const id = await persist();
     if (!id) return;
     await lifecycleAPI.transition('articles', id, { to: 'scheduled', publish_at: publishAt.value.toISOString() });
     status.value = 'scheduled';
-    toast.add({ severity: 'success', summary: 'Success', detail: '已设为定时发布', life: 2500 });
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.scheduled'), life: 2500 });
     await refresh();
 };
 
@@ -169,7 +169,7 @@ const rollback = (versionNo: number) => {
         rejectLabel: t('confirm.reject'),
         accept: async () => {
             await lifecycleAPI.rollback('articles', articleId.value, versionNo);
-            toast.add({ severity: 'success', summary: 'Success', detail: `已回滚到 v${versionNo}`, life: 2500 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.rolledBack', { v: versionNo }), life: 2500 });
             await refresh();
         }
     });

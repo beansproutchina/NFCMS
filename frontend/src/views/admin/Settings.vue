@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted, watch } from 'vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
@@ -7,10 +8,12 @@ import Textarea from 'primevue/textarea';
 import { systemAPI, uploadAPI } from '../../api';
 import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader, LucidePalette } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import { BTN, CARD, FIELD_GROUP, INPUT_CLASS, LABEL_BARE, PAGE, SECTION_TITLE, SELECT_PT, TEXT, TEXTAREA_CLASS } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
 import * as activeTheme from '../front/templates/theme.config';
 import type { ThemeConfigField } from '../front/theme-runtime';
+const { t } = useI18n();
 
 // ─── Active theme's own config fields (theme_<name>_* keys) ──────────
 // The active theme declares these via `export const configSchema`; we render an editor for
@@ -44,6 +47,7 @@ const saving = ref(false);
 const restarting = ref(false);
 const exporting = ref(false);
 const toast = useToast();
+const confirm = useConfirm();
 
 // ─── Storage Config ──────────────────────────────────────────────────
 // Stored as a single JSON key "storage_config" in system_config:
@@ -185,27 +189,31 @@ const saveSettings = async () => {
         };
         await systemAPI.saveConfig(payload);
         await fetchSettings();
-        toast.add({ severity: 'success', summary: 'Success', detail: '站点配置已保存', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.savedSettings'), life: 3000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '保存失败', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.saveFailed'), life: 3000 });
     } finally {
         saving.value = false;
     }
 };
 
 const restartBackend = async () => {
-    if (!confirm('确定要重启后端吗？')) return;
+    confirm.require({
+        header: t('confirm.title'), message: t('confirm.restartBackend'),
+        accept: async () => {
     restarting.value = true;
     try {
         await systemAPI.restart();
-        toast.add({ severity: 'success', summary: 'Success', detail: '后端正在重启，请稍后刷新页面', life: 5000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.restarting'), life: 5000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '重启失败', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.restartFailed'), life: 3000 });
     } finally {
         restarting.value = false;
     }
+        },
+    });
 };
 
 const handleExport = async () => {
@@ -224,10 +232,10 @@ const handleExport = async () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        toast.add({ severity: 'success', summary: 'Success', detail: '数据已导出', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.exported'), life: 3000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '导出失败', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.exportFailed'), life: 3000 });
     } finally {
         exporting.value = false;
     }
@@ -241,17 +249,17 @@ const testStorageConnection = async () => {
         const data = res.data;
         // The backend only returns a message on the 500 branch, which rejects into catch below;
         // a 2xx with success:false carries no detail, so fall back to a generic message here.
-        const error = data.success ? undefined : '连接测试未通过';
+        const error = data.success ? undefined : t('toast.connectionNotPassed');
         testResult.value = { success: data.success, error };
         toast.add({
             severity: data.success ? 'success' : 'error',
             summary: data.success ? 'Success' : 'Error',
-            detail: data.success ? '连接测试成功' : `连接失败: ${error}`,
+            detail: data.success ? t('toast.connectionOk') : `连接失败: ${error}`,
             life: 3000
         });
     } catch (e: any) {
         testResult.value = { success: false, error: e.message || 'Test failed' };
-        toast.add({ severity: 'error', summary: 'Error', detail: '连接测试失败', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.connectionFailed'), life: 3000 });
     } finally {
         testing.value = false;
     }
@@ -300,16 +308,16 @@ onMounted(() => {
 
                 <div class="max-w-lg" :class="FIELD_GROUP">
                     <label :class="LABEL_BARE">{{ $t('form.icp_record') }}</label>
-                    <InputText v-model="configsMap.icp_record" unstyled placeholder="e.g. 京ICP备xxxxxxx号" :class="INPUT_CLASS" />
+                    <InputText v-model="configsMap.icp_record" unstyled :placeholder="$t('form.icpPlaceholder')" :class="INPUT_CLASS" />
                 </div>
 
                 <div class="max-w-lg" :class="FIELD_GROUP">
                     <label :class="LABEL_BARE">{{ $t('form.mourning_mode')}}</label>
-                    <Select v-model="configsMap.mourning_mode" :options="[{label: '关闭', value: '0'}, {label: '开启 (全站置灰)', value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
+                    <Select v-model="configsMap.mourning_mode" :options="[{label: $t('form.mourningOff'), value: '0'}, {label: $t('form.mourningOn'), value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
                 </div>
 
                 <div class="max-w-lg" :class="FIELD_GROUP">
-                    <label :class="LABEL_BARE">前台首页渲染模版</label>
+                    <label :class="LABEL_BARE">{{ $t('form.home_template') }}</label>
                     <InputText v-model="configsMap.home_template" unstyled placeholder="DefaultHome" :class="INPUT_CLASS" />
                 </div>
 

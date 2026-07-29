@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch, onMounted } from 'vue';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
@@ -7,6 +8,7 @@ import { useToast } from 'primevue/usetoast';
 import { LucideTrash2, LucidePlus } from 'lucide-vue-next';
 import UserPicker from './UserPicker.vue';
 import { BTN, BTN_REMOVE, FIELD_GROUP, LABEL_BARE, SELECT_PT, TEXT } from '../ui/presets';
+const { t } = useI18n();
 
 /**
  * Reusable resource-ACL editor. Lists grants for (model, resourceId) and lets the user
@@ -32,15 +34,15 @@ const form = ref<{ grantee_type: 'user' | 'role'; grantee_id: any; user_label: s
 const selectedAccess = ref<string[]>([]);
 
 const granteeTypeOptions = computed(() => [
-    { label: '用户', value: 'user' },
-    { label: '角色', value: 'role' },
+    { label: t('acl.granteeUser'), value: 'user' },
+    { label: t('acl.granteeRole'), value: 'role' },
 ]);
 const roleOptions = computed(() => roles.value.map((r: any) => ({ label: r.label || r.name, value: r.id })));
 
 const roleName = (id: number) => { const r = roles.value.find((x: any) => x.id == id); return r ? (r.label || r.name) : `#${id}`; };
 const granteeLabel = (g: any) => g.grantee_type === 'user'
-    ? `用户 ${userNames.value[g.grantee_id] || '#' + g.grantee_id}`
-    : `角色 ${roleName(g.grantee_id)}`;
+    ? `${t('acl.granteeUser')} ${userNames.value[g.grantee_id] || '#' + g.grantee_id}`
+    : `${t('acl.granteeRole')} ${roleName(g.grantee_id)}`;
 
 const load = async () => {
     if (props.resourceId == null) { grants.value = []; return; }
@@ -65,13 +67,13 @@ const onUserSelected = (u: any) => { form.value.grantee_id = u.id; form.value.us
 
 const addGrant = async () => {
     if (props.resourceId == null) return;
-    if (form.value.grantee_id == null) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择被授权对象', life: 2500 }); return; }
-    if (!selectedAccess.value.length) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请至少选择一项权限', life: 2500 }); return; }
+    if (form.value.grantee_id == null) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectGrantee'), life: 2500 }); return; }
+    if (!selectedAccess.value.length) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectPermission'), life: 2500 }); return; }
     // Preserve the natural C,R,U,D,publish order.
     const access = props.actions.filter((a) => selectedAccess.value.includes(a)).join(',');
     try {
         await aclAPI.grant(props.model, props.resourceId, { grantee_type: form.value.grantee_type, grantee_id: Number(form.value.grantee_id), access });
-        toast.add({ severity: 'success', summary: 'Success', detail: '已授予', life: 2000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.granted'), life: 2000 });
         form.value = { grantee_type: form.value.grantee_type, grantee_id: null, user_label: '' };
         selectedAccess.value = [];
         await load();
