@@ -75,8 +75,18 @@ const tabs = computed(() => {
 });
 
 const activeId = ref<number>(tabs.value[0]?.id ?? category?.id);
-const items = ref<any[]>([]);
-const total = ref<number>(0);
+
+/**
+ * Seed the first tab straight from the prefetched page 0 instead of filling it in `onMounted`.
+ * `fetchTab` already knew how to reuse that data, but running it after mount meant the first painted
+ * frame showed the empty state and then swapped — a visible flash of "暂无内容" for no reason.
+ * Only applies when the first tab IS the parent category; when the parent has no articles of its own
+ * the first tab is a child, whose page still has to be fetched (its id isn't known until `children`
+ * is read, and a prefetch list is static, so it can't be declared per-category).
+ */
+const seeded = tabs.value[0]?.id === category?.id && Array.isArray(props.context?.articles);
+const items = ref<any[]>(seeded ? props.context.articles : []);
+const total = ref<number>(seeded ? parentTotal : 0);
 const page = ref(0);
 const loading = ref(false);
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / PAGE_SIZE)));
@@ -102,7 +112,7 @@ const fetchTab = async (catId: number, p: number) => {
 const selectTab = (id: number) => { activeId.value = id; page.value = 0; fetchTab(id, 0); };
 const goPage = (p: number) => { page.value = p; fetchTab(activeId.value, p); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
-onMounted(() => fetchTab(activeId.value, 0));
+onMounted(() => { if (!seeded) fetchTab(activeId.value, 0); });
 </script>
 
 <style scoped>

@@ -93,7 +93,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps<{ context: any }>();
-const { categories, featured, articles, menus, api } = props.context || {};
+const ctx = props.context || {};
+const { categories, featured, articles, menus, api } = ctx;
 
 /* ---------- links & dates ---------- */
 const articleUrl = (a: any) => (a?.category?.slug ? `/a/${a.category.slug}/${a.slug}` : `/a/${a?.slug}`);
@@ -118,17 +119,44 @@ const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
 onMounted(start);
 onUnmounted(stop);
 
-/* ---------- root categories drive the sections ---------- */
-const rootCats = computed(() =>
-  (categories || [])
-    .filter((c: any) => !c.parent_id)
-    .sort((a: any, b: any) => (a.weight ?? 50) - (b.weight ?? 50))
-);
-const newsCat = computed(() => rootCats.value[0] || null);
-const noticeCat = computed(() => rootCats.value[1] || null);
-const moreCats = computed(() => rootCats.value.slice(2, 6));
+/* ---------- the two main panels: fixed slugs, prefetched ---------- */
+/**
+ * 新闻 and 通知 are addressed by slug (`HOME_NEWS_SLUG` / `HOME_NOTICE_SLUG` in theme.config.ts),
+ * not by position in the root-category list. Position was silently wrong in an obvious way: adding
+ * a category with a smaller `weight`, or reordering in the admin, would move a different section
+ * into the 新闻 panel. Slugs also let both panels be PREFETCHED, so the main grid paints filled
+ * instead of empty-then-populated.
+ */
+const newsCat = computed(() => ctx.newsCat || null);
+const noticeCat = computed(() => ctx.noticeCat || null);
 
-// Per-category article lists, fetched client-side (context.api).
+/**
+ * Rows for a prefetched panel, re-checked against the category id.
+ *
+ * Not paranoia: if the slug doesn't exist, `getCategory` fails, `$data.<key>.id` never resolves and
+ * `JSON.stringify` drops the undefined key — leaving a filter with no `category_id`, i.e. every
+ * article on the site. This makes that degrade to an empty panel instead.
+ */
+const panel = (cat: any, rows: any): any[] =>
+  cat?.id ? (rows || []).filter((a: any) => a.category_id === cat.id) : [];
+
+const newsArticles = computed(() => panel(newsCat.value, ctx.newsList));
+const lead = computed(() => newsArticles.value[0] || null);
+const newsRest = computed(() => newsArticles.value.slice(1, 6));
+const noticeArticles = computed(() => panel(noticeCat.value, ctx.noticeList));
+
+/* ---------- the "more" strip: whatever other root categories exist ---------- */
+// Deliberately still client-side. How many of these there are, and which, is a property of the
+// site's data rather than of the theme, and a prefetch list has to be written out statically —
+// so pinning them down would mean hardcoding four more slugs. They sit below the fold.
+const moreCats = computed(() => {
+  const skip = new Set([newsCat.value?.slug, noticeCat.value?.slug].filter(Boolean));
+  return (categories || [])
+    .filter((c: any) => !c.parent_id && !skip.has(c.slug))
+    .sort((a: any, b: any) => (a.weight ?? 50) - (b.weight ?? 50))
+    .slice(0, 4);
+});
+
 const byCat = ref<Record<number, any[]>>({});
 const fetchCat = async (cat: any, limit: number) => {
   if (!cat || !api?.contentAPI) return;
@@ -138,10 +166,6 @@ const fetchCat = async (cat: any, limit: number) => {
   } catch { byCat.value = { ...byCat.value, [cat.id]: [] }; }
 };
 
-const newsArticles = computed(() => (newsCat.value ? byCat.value[newsCat.value.id] || [] : []));
-const lead = computed(() => newsArticles.value[0] || null);
-const newsRest = computed(() => newsArticles.value.slice(1, 6));
-const noticeArticles = computed(() => (noticeCat.value ? byCat.value[noticeCat.value.id] || [] : []));
 const moreSections = computed(() => moreCats.value.map((c: any) => ({ cat: c, articles: byCat.value[c.id] || [] })));
 
 const quickLinks = computed(() => {
@@ -150,8 +174,6 @@ const quickLinks = computed(() => {
 });
 
 onMounted(() => {
-  if (newsCat.value) fetchCat(newsCat.value, 7);
-  if (noticeCat.value) fetchCat(noticeCat.value, 8);
   moreCats.value.forEach((c: any) => fetchCat(c, 6));
 });
 </script>
