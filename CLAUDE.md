@@ -62,7 +62,8 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 - **数据/常量按归属就近落到对应模块**:i18n 文案与 locale 数据(含 PrimeVue calendar 的 `primevueLocale`)集中在 `frontend/src/i18n.ts`;RBAC/生命周期常量在对应 service/model。同一类东西**单一出处**,不要在多处各写一份。
 - **超过几行的常量对象**别内联进使用点,提成命名常量或独立模块导出;判断标准:它是「配置/数据」而非「此处的控制流」,就抽出去。
 - 复用现有模式而非另起一套:新组件的 Tailwind/`:pt` 写法、api 调用、toast/confirm 用法,先看邻近文件怎么写,保持一致。
-- **管理后台表单控件走设计系统预设** `frontend/src/ui/presets.ts`:文本框 `:class="INPUT_CLASS"`(紧凑版 `INPUT_CLASS_SM`)、下拉框用 unstyled PrimeVue `Select` + `:pt="SELECT_PT"`(**别用原生 `<select>`**)、日期选择器 `DatePicker` + `:pt="DATEPICKER_PT"`、按钮 `:class="BTN.primary|ghost|danger"`。单实例宽度/flex 写到组件自己的 `class`(会并入 root)。确认框用全局 `ConfirmDialog`(`useConfirm`),不要用原生 `confirm()`。
+- **管理后台 UI 走设计系统**:令牌在 `frontend/src/style.css` 的 `@theme`,预设在 `frontend/src/ui/presets.ts`。外观(颜色/字号/圆角/阴影/边框)一律取令牌或 preset,布局按需内联。常用:`:class="INPUT_CLASS"`、`TEXTAREA_CLASS`、`:pt="SELECT_PT"`、`:class="BTN.primary|secondary|danger"`(行内密集用 `BTN_SM.*`)、`LABEL`、`PAGE.*`、`CARD`、`CHIP.*`、`LINK.*`。单实例宽度/flex 写到组件自己的 `class`(会并入 root),尺寸与内边距由 preset 决定。确认框 `useConfirm()`、提示 `useToast()`。**完整清单与规则见 [docs/frontend.md](docs/frontend.md) 的「设计系统」一节。**
+- **提交门槛**:`pre-commit` 自动跑 `npm run lint`(设计系统规则)+ `vue-tsc` + `vite build`,约 5 秒。拦下时按提示修;确实合理的例外加进 `frontend/scripts/lint-baseline.json`(进 review),不要 `--no-verify`。
 
 ## 已知待硬化(非阻塞)
 - 前端主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面);SSG 侧只做了基础 strip。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。
