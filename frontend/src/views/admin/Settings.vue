@@ -7,6 +7,7 @@ import { systemAPI, uploadAPI } from '../../api';
 import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader, LucidePalette } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import FileUploader from '../../components/FileUploader.vue';
 import * as activeTheme from '../front/templates/theme.config';
 import type { ThemeConfigField } from '../front/theme-runtime';
 
@@ -331,8 +332,9 @@ onMounted(() => {
                     <div v-for="f in grp.fields" :key="f.key" class="flex flex-col gap-2 max-w-lg">
                         <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ f.label }}</label>
                         <textarea v-if="f.type === 'textarea'" v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="INPUT_CLASS" rows="3"></textarea>
+                        <!-- `image` gets a real uploader + library picker (it carries its own preview). -->
+                        <FileUploader v-else-if="f.type === 'image'" v-model="themeConfig[f.key]" accept="image/*" size="md" />
                         <InputText v-else v-model="themeConfig[f.key]" :type="f.type === 'number' ? 'number' : 'text'" unstyled :placeholder="f.placeholder" :class="INPUT_CLASS" />
-                        <img v-if="f.type === 'image' && themeConfig[f.key]" :src="themeConfig[f.key]" alt="preview" class="mt-1 max-h-16 w-auto rounded border border-[rgba(0,0,0,0.08)] bg-[#fafafa] object-contain" />
                         <span v-if="f.hint" class="text-[12px] text-[rgba(0,0,0,0.45)]">{{ f.hint }}</span>
                     </div>
                 </div>
