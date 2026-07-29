@@ -29,6 +29,7 @@ import { TEXT } from '../../ui/presets';
 
 
 import { computed } from 'vue';
+import Button from 'primevue/button';
 
 const props = defineProps<{
   category: any;

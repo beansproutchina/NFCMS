@@ -44,6 +44,7 @@ import CategoryItem from './CategoryItem.vue';
 import CategoryEditor from './CategoryEditor.vue';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import Button from 'primevue/button';
 
 const { t } = useI18n();
 const toast = useToast();

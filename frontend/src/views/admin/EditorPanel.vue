@@ -4,6 +4,7 @@ import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import { CHECKBOX_PT, FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXTAREA_CLASS } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
+import Checkbox from 'primevue/checkbox';
 
 /**
  * Article property panel — the single definition of the article's content fields, mounted

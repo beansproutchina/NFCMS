@@ -85,6 +85,9 @@ const MARKER_CLASSES = new Set(['group', 'peer', 'dark', 'contents']);
 /** A class defined in the file's own <style> block is a real class, just not a Tailwind one. */
 const locallyDefined = (text) => new Set([...text.matchAll(/\.([a-zA-Z][\w-]*)\s*[,{:.]/g)].map((m) => m[1]));
 
+/** Components Vue resolves on its own — no import needed. */
+const VUE_BUILTINS = new Set(['RouterView', 'RouterLink', 'Transition', 'TransitionGroup', 'Teleport', 'KeepAlive', 'Suspense', 'Component', 'Slot']);
+
 const findings = [];
 const add = (rule, file, detail, line, hint) =>
   findings.push({ rule, file: path.relative(ROOT, file), detail, line, hint });
@@ -203,6 +206,28 @@ for (const file of files) {
   for (const m of text.matchAll(NATIVE_DIALOG)) {
     if (text.slice(Math.max(0, m.index - 14), m.index).includes('useConfirm')) continue;
     add('R7-native-dialog', file, m[1], text.slice(0, m.index).split('\n').length, '改用 useConfirm() / toast');
+  }
+
+  /**
+   * R12 — a PascalCase tag with nothing importing it.
+   *
+   * Vue renders an unknown component as a literal custom element: zero size, and every binding falls
+   * through as a plain attribute, so `:pt="OBJ"` lands in the DOM as `pt="[object Object]"`. Neither
+   * `vue-tsc` nor `vite build` says a word — the admin's "置顶" checkbox shipped as a 0×0 nothing
+   * exactly this way. Cheap to check, and it catches a whole class of silent breakage.
+   */
+  if (rel.endsWith('.vue')) {
+    const template = text.slice(text.indexOf('<template'), text.indexOf('</template>'));
+    for (const m of template.matchAll(/<([A-Z][A-Za-z0-9]*)[\s/>]/g)) {
+      const tag = m[1];
+      if (VUE_BUILTINS.has(tag)) continue;
+      // Imported, destructured from an import, declared locally (`const X = defineComponent(…)`),
+      // or the component referring to itself — Vue resolves a self-reference by filename.
+      const script = text.slice(text.indexOf('<script'));
+      const selfRef = path.basename(file, '.vue') === tag;
+      const declared = selfRef || new RegExp(`\\b(?:import\\s+${tag}\\b|${tag}\\s*[,}]|(?:const|let|var|function)\\s+${tag}\\b)`).test(script);
+      if (!declared) add('R12-unimported', file, `<${tag}>`, template.slice(0, m.index).split('\n').length + text.slice(0, text.indexOf('<template')).split('\n').length - 1, '组件未导入 —— 会渲染成 0×0 的未知元素,绑定退化为普通属性');
+    }
   }
 
   // R8 — hardcoded copy.
