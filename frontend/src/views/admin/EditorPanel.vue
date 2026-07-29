@@ -39,7 +39,7 @@ defineProps<{
         <label :class="LABEL_BARE">{{ $t('form.is_top') || 'Is Top'
         }}</label>
         <input v-model="form.is_top" type="checkbox" :true-value="1" :false-value="0"
-            class="h-5 w-5 rounded border-separator" />
+            class="h-5 w-5 rounded-chip border-separator" />
     </div>
 
     <div class="mt-4 flex flex-col gap-6">

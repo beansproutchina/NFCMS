@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FIELD_GROUP, INPUT_CLASS_LG, PASSWORD_LG } from '../../ui/presets';
+import { FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG } from '../../ui/presets';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authAPI } from '../../api';
@@ -56,14 +56,14 @@ const performLogin = async () => {
         <p class="text-title-section leading-[1.19] opacity-60 font-normal tracking-[0.231px]" v-if="0">{{ $t('auth.useId') }}</p>
       </div>
 
-      <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
+      <div class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-6">
         <div :class="FIELD_GROUP">
-          <label class="text-body text-label px-1 font-medium">{{ $t('auth.username') }}</label>
+          <label class="px-1" :class="LABEL_BARE">{{ $t('auth.username') }}</label>
           <InputText v-model="username" unstyled :class="INPUT_CLASS_LG" placeholder="admin" autocomplete="username" />
         </div>
 
         <div :class="FIELD_GROUP">
-          <label class="text-body text-label px-1 font-medium">{{ $t('auth.password') }}</label>
+          <label class="px-1" :class="LABEL_BARE">{{ $t('auth.password') }}</label>
           <Password v-model="password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: PASSWORD_LG.inputClass, placeholder: '••••••••', autocomplete: 'current-password' }" :pt="PASSWORD_LG.pt" />
         </div>
 

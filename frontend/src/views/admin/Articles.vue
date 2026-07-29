@@ -6,7 +6,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import { listArticle, removeArticle, listCategory, lifecycleAPI } from '../../api';
-import { BTN, INPUT_CLASS, LINK, PAGE, SEARCH, SELECT_PT } from '../../ui/presets';
+import { BTN, INPUT_CLASS, LINK, PAGE, SEARCH, SELECT_PT, TEXT } from '../../ui/presets';
 import { LucidePlus, LucideSearch,  } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
@@ -189,7 +189,7 @@ const toggleVisibility = async (data: any) => {
                 <span class="text-body text-label">{{ getCategoryName(data.category_id) }}</span>
             </template>
             <template #is_top="{ data }">
-                <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">TOP</span>
+                <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded-chip text-small">TOP</span>
             </template>
             <template #status="{ data }">
                 <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-control text-small font-medium uppercase tracking-wider">
@@ -204,7 +204,7 @@ const toggleVisibility = async (data: any) => {
                     <Button unstyled @click="editArticle(data.id)" :class="LINK.action">
                         {{ $t('action.edit') }}
                     </Button>
-                    <Button unstyled @click="toggleVisibility(data)" class="text-label-2 hover:underline text-body flex items-center cursor-pointer">
+                    <Button unstyled @click="toggleVisibility(data)" class="hover:underline flex items-center cursor-pointer" :class="TEXT.muted">
                         {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
                     <Button unstyled @click="deleteArticle(data.id)" :class="LINK.danger">

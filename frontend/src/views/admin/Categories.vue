@@ -12,7 +12,7 @@
         </div>
 
         <div
-            class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex-1 overflow-auto">
+            class="p-6 flex-1 overflow-auto" :class="CARD">
             <div v-if="loading" :class="EMPTY">{{ $t('system.loading') || 'Loading...'
             }}</div>
             <div v-else>
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { EMPTY, PAGE } from '../../ui/presets';
+import { CARD, EMPTY, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 

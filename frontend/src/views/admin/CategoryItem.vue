@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between p-3 bg-canvas rounded-control hover:bg-surface-hover transition-colors group">
       <div class="flex items-center gap-3">
         <span class="font-medium text-label">{{ category.name }}</span>
-        <span class="text-small text-label-3 font-mono">/{{ category.slug }}</span>
+        <span class="font-mono" :class="TEXT.caption">/{{ category.slug }}</span>
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
         <Button unstyled @click="$emit('edit', category)" class="text-link text-body font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import { TEXT } from '../../ui/presets';
 
 
 import { computed } from 'vue';

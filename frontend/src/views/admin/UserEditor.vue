@@ -14,19 +14,19 @@
       </div>
 
       <div>
-        <label :class="LABEL">{{ $t('form.role') }} <span class="text-small text-label-3">({{ $t('roles.primaryRole') }})</span></label>
+        <label :class="LABEL">{{ $t('form.role') }} <span :class="TEXT.caption">({{ $t('roles.primaryRole') }})</span></label>
         <Select v-model="formData.role" :options="roleOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
       </div>
 
       <div>
-        <label :class="LABEL">{{ $t('roles.additionalRoles') }} <span class="text-small text-label-3">({{ $t('roles.additionalHint') }})</span></label>
+        <label :class="LABEL">{{ $t('roles.additionalRoles') }} <span :class="TEXT.caption">({{ $t('roles.additionalHint') }})</span></label>
         <div class="flex flex-wrap gap-2">
           <label v-for="r in roles.filter(x => x.name !== formData.role)" :key="r.id" class="flex items-center gap-1.5 px-2.5 py-1.5 border rounded-control text-small cursor-pointer transition-colors"
             :class="additionalRoleIds.includes(r.id) ? 'bg-accent text-white border-accent' : 'border-separator hover:bg-canvas'">
             <input type="checkbox" :value="r.id" v-model="additionalRoleIds" class="hidden" />
             {{ r.label || r.name }}
           </label>
-          <span v-if="!roles.filter(x => x.name !== formData.role).length" class="text-small text-label-3">{{ $t('roles.noOtherRoles') }}</span>
+          <span v-if="!roles.filter(x => x.name !== formData.role).length" :class="TEXT.caption">{{ $t('roles.noOtherRoles') }}</span>
         </div>
       </div>
       <button type="submit" class="hidden"></button>
@@ -42,7 +42,7 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Select from 'primevue/select';
 import { listRole, listUserRole } from '../../api';
-import { INPUT_CLASS, LABEL, SELECT_PT } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, SELECT_PT, TEXT } from '../../ui/presets';
 
 const { t } = useI18n();
 

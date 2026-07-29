@@ -1,5 +1,5 @@
 <template>
-  <nav class="flex items-center gap-2 text-body text-label-3">
+  <nav class="flex items-center gap-2" :class="TEXT.hint">
     <router-link to="/" class="hover:text-link transition-colors">{{ $t('front.home') }}</router-link>
     <template v-for="crumb in items" :key="crumb.id || crumb.slug">
       <span class="text-label-4">/</span>
@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import { TEXT } from '../ui/presets';
 
 defineProps<{
   items: any[];

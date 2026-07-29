@@ -59,6 +59,7 @@
      "delete this" and "scheduled to publish". Destructive/error is red (HIG systemRed); caution
      is amber. */
   --color-danger: #ff3b30;              /* delete, revoke, error messages */
+  --color-danger-hover: #d70015;        /* its hover — without this, `hover:text-danger` is a no-op */
   --color-warn: #c2410c;                /* caution: scheduled publish, unsaved state */
   --color-warn-fill: #fff7ed;
   --color-info: #b3d4fc;                /* edge of an informational panel */
@@ -73,8 +74,11 @@
   --text-body: 14px;                    /* body copy and every form control */
   --text-small: 12px;                   /* captions, chips, dense toolbars */
 
-  /* ── Radius, 2 steps (+ rounded-full for pills) ───────────────────────────────────────── */
-  --radius-control: 8px;                /* inputs, buttons, chips */
+  /* ── Radius, 3 steps 4 / 8 / 12 (+ rounded-full for pills) ───────────────────────────────
+        Started as 2 steps; `rounded-chip` earned its place — 15 call sites on genuinely small
+        controls (h-8 inputs, checkboxes, dense chips) look over-rounded at 8px. */
+  --radius-chip: 4px;                   /* checkboxes, dense chips, compact inputs */
+  --radius-control: 8px;                /* inputs, buttons */
   --radius-card: 12px;                  /* cards, dialogs, panels */
 
   /* ── The one card shadow this UI has. It was written out 14 times. ─────────────────────── */

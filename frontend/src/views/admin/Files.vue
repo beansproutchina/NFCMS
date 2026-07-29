@@ -10,7 +10,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
 import CustomPaginator from '../../components/CustomPaginator.vue';
 import FileUploader from '../../components/FileUploader.vue';
-import { BTN_SMALL, CARD, INPUT_CLASS, LABEL_BARE, PAGE, SEARCH } from '../../ui/presets';
+import { BTN_ICON, BTN_SM, CARD, INPUT_CLASS, LABEL_BARE, PAGE, SEARCH, TEXT } from '../../ui/presets';
 
 const files = ref<any[]>([]);
 const totalRecords = ref(0);
@@ -140,7 +140,7 @@ onMounted(fetchFiles);
 
         <div v-if="loading && files.length === 0" class="text-body opacity-60">Loading...</div>
         
-        <div v-else-if="files.length === 0" class="text-center py-20 text-label-3 bg-white rounded-card border border-separator-weak shadow-card">
+        <div v-else-if="files.length === 0" class="text-center py-20 text-label-3" :class="CARD">
             {{ $t('system.noEntries', 'No entries found.') }}
         </div>
 
@@ -153,13 +153,13 @@ onMounted(fetchFiles);
                         <LucideFile v-else :size="48" class="text-label-4" />
                         
                         <div class="absolute inset-0 bg-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                            <Button unstyled @click.stop="openUrl(file.url)" :class="BTN_SMALL.icon" title="新窗口打开">
+                            <Button unstyled @click.stop="openUrl(file.url)" :class="BTN_ICON.plain" title="新窗口打开">
                                 <LucideEye :size="18" />
                             </Button>
-                            <Button unstyled @click.stop="copyLink(file.url)" :class="BTN_SMALL.icon" :title="$t('fileUploader.copyLink')">
+                            <Button unstyled @click.stop="copyLink(file.url)" :class="BTN_ICON.plain" :title="$t('fileUploader.copyLink')">
                                 <LucideLink :size="18" />
                             </Button>
-                            <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-danger flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">
+                            <Button unstyled @click.stop="deleteFile(file.id)" :class="BTN_ICON.danger" title="删除">
                                 <LucideTrash :size="18" />
                             </Button>
                         </div>
@@ -167,7 +167,7 @@ onMounted(fetchFiles);
                     
                     <div class="p-4 border-t border-separator-weak">
                         <div class="truncate" :class="LABEL_BARE" :title="file.filename">{{ file.filename }}</div>
-                        <div class="text-small text-label-3 mt-1">{{ (file.size / 1024).toFixed(2) }} KB</div>
+                        <div class="mt-1" :class="TEXT.caption">{{ (file.size / 1024).toFixed(2) }} KB</div>
                     </div>
                 </div>
             </div>

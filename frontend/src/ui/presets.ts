@@ -127,26 +127,51 @@ export const DATEPICKER_PT = {
  * needs to read as destructive. Size lives in BTN_BASE — do not re-specify padding at the call site,
  * that is how two dialogs ended up with different button heights.
  */
-const BTN_BASE = 'inline-flex items-center justify-center gap-2 h-9 px-4 rounded-control text-body font-medium cursor-pointer transition-colors focus:outline-none disabled:opacity-50';
-export const BTN = {
-  /** The action being confirmed. One per view. */
-  primary: `${BTN_BASE} bg-accent hover:bg-accent-hover text-white border border-transparent`,
-  /** Every neutral action: cancel, preview, save-draft, test-connection. */
-  secondary: `${BTN_BASE} bg-surface hover:bg-surface-hover text-label border border-separator-weak`,
-  /** `secondary` re-tinted for a destructive action; same weight, different colour. */
-  danger: `${BTN_BASE} bg-surface hover:bg-surface-hover text-warn border border-separator-weak`,
+const BTN_SHAPE = 'inline-flex items-center justify-center gap-2 rounded-control font-medium cursor-pointer transition-colors focus:outline-none disabled:opacity-50';
+/**
+ * Colour is a separate axis from size, so a dense inline button can't become a new colour by
+ * accident. That is how a blue-text-on-pale-blue button appeared in MenuEditor and MenuItemEditor:
+ * the system had no small size, so those two call sites invented a whole fourth style — and its
+ * `bg-info-fill hover:bg-info-fill` didn't even hover.
+ */
+const BTN_TONE = {
+  primary: 'bg-accent hover:bg-accent-hover text-white border border-transparent',
+  secondary: 'bg-surface hover:bg-surface-hover text-label border border-separator-weak',
+  danger: 'bg-surface hover:bg-surface-hover text-danger border border-separator-weak',
 };
 
-/** Low-emphasis buttons that BTN's three tiers don't cover. */
-export const BTN_SMALL = {
-  /** Pagination step in a picker footer (FilePicker, UserPicker — 4 copies before this). */
-  pager: 'text-small px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer',
-  /** Round icon button floating over a thumbnail (Files.vue — 2 copies). */
-  icon: 'w-10 h-10 rounded-full bg-white flex items-center justify-center text-accent hover:scale-110 transition-transform cursor-pointer',
-  /** Segmented on/off cell for a permission bit (AclEditor, Roles). Pair with the on/off classes. */
-  toggle: 'px-2.5 h-8 rounded-control text-small border cursor-pointer transition-colors',
-  toggleOn: 'bg-accent text-white border-accent',
-  toggleOff: 'bg-white text-label-2 border-separator hover:bg-canvas',
+/** Standard size. */
+export const BTN = {
+  /** The action being confirmed. One per view. */
+  primary: `${BTN_SHAPE} h-9 px-4 text-body ${BTN_TONE.primary}`,
+  /** Every neutral action: cancel, preview, save-draft, test-connection. */
+  secondary: `${BTN_SHAPE} h-9 px-4 text-body ${BTN_TONE.secondary}`,
+  /** `secondary` re-tinted for a destructive action; same weight, different colour. */
+  danger: `${BTN_SHAPE} h-9 px-4 text-body ${BTN_TONE.danger}`,
+};
+
+/** Dense size, for buttons living inside a row: `+ add`, pagination steps, inline actions. */
+export const BTN_SM = {
+  primary: `${BTN_SHAPE} h-8 px-3 text-small ${BTN_TONE.primary}`,
+  secondary: `${BTN_SHAPE} h-8 px-3 text-small ${BTN_TONE.secondary}`,
+  danger: `${BTN_SHAPE} h-8 px-3 text-small ${BTN_TONE.danger}`,
+};
+
+/**
+ * Round icon button floating over a thumbnail (Files.vue). Two tones, because the delete one had to
+ * be hand-written while this preset hardcoded a white face — that is how a preset grows a bypass.
+ */
+const BTN_ICON_SHAPE = 'w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform cursor-pointer';
+export const BTN_ICON = {
+  plain: `${BTN_ICON_SHAPE} bg-white text-accent`,
+  danger: `${BTN_ICON_SHAPE} bg-danger text-white hover:bg-danger-hover`,
+};
+
+/** Segmented on/off cell for a permission bit (AclEditor, Roles). */
+export const TOGGLE = {
+  base: 'px-2.5 h-8 rounded-control text-small border cursor-pointer transition-colors',
+  on: 'bg-accent text-white border-accent',
+  off: 'bg-white text-label-2 border-separator hover:bg-canvas',
 };
 
 /** The ✕ in a dialog header. Shared so AdminModal and the pickers can't drift apart again. */
@@ -200,9 +225,15 @@ export const CHIP = {
 };
 
 /** Inline row actions in a table. Two tones, 3 copies each before this. */
+/**
+ * Clickable text. Apple's split: text links take the LINK colour, filled controls take accent — so
+ * `text-accent hover:underline` (10 call sites) was the wrong token for a link, and left the admin
+ * with two spellings of the same thing. `inline-flex` rather than `flex` so these also work mid-sentence.
+ */
 export const LINK = {
-  action: 'text-link hover:underline text-body flex items-center cursor-pointer',
-  danger: 'text-danger hover:underline text-body flex items-center cursor-pointer',
+  action: 'text-link hover:underline text-body cursor-pointer inline-flex items-center gap-1',
+  danger: 'text-danger hover:text-danger-hover hover:underline text-body cursor-pointer inline-flex items-center gap-1',
+  small: 'text-link hover:underline text-small cursor-pointer inline-flex items-center gap-1',
 };
 
 /** Search field: the magnifier sits inside the input, so the input needs the left padding. */
@@ -221,6 +252,32 @@ export const NAV_ITEM = {
 
 /** "Nothing here yet" placeholder. Was written three different ways. */
 export const EMPTY = 'text-center py-10 text-body text-label-3';
+
+/**
+ * Named text roles. Only combinations that mean something get one — bare `text-body` stays inline,
+ * since "use the body size" is not a role. These four each appeared 5–22 times.
+ */
+export const TEXT = {
+  /** Small print under a field, next to a filename, inside a chip. 22 sites. */
+  caption: 'text-small text-label-3',
+  /** Small print that still needs to be read: counts, timestamps in a list. */
+  meta: 'text-small text-label-2',
+  /** A hint at body size, under a section heading. */
+  hint: 'text-body text-label-3',
+  /** Secondary body copy. */
+  muted: 'text-body text-label-2',
+};
+
+/** Full-screen dim behind a dialog or drawer. Six views had their own copy. */
+export const SCRIM = 'fixed inset-0 bg-scrim backdrop-blur-sm';
+
+/**
+ * The 32px-tall field used in dense tree editors (CategoryEditor's inline rows).
+ * A third field size, earned: five sites, and INPUT_CLASS_SM at h-9 is still too tall for them.
+ */
+export const INPUT_CLASS_XS =
+  'w-full h-8 px-2 bg-white text-small text-label border border-separator rounded-chip ' +
+  'focus:outline-none focus:ring-1 focus:ring-accent';
 
 /**
  * DECORATIVE / CATEGORICAL colours are deliberately NOT tokens.

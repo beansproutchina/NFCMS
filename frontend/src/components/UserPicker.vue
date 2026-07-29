@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { listUser } from '../api';
 import { LucideSearch, LucideX, LucideUser } from 'lucide-vue-next';
-import { BTN_SMALL, DIALOG_CLOSE, EMPTY, INPUT_CLASS, SEARCH, SECTION_TITLE } from '../ui/presets';
+import { BTN_SM, DIALOG_CLOSE, EMPTY, INPUT_CLASS, SEARCH, SECTION_TITLE, TEXT } from '../ui/presets';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ (e: 'update:visible', v: boolean): void; (e: 'select', user: any): void }>();
@@ -62,16 +62,16 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; load(
                             <span class="w-8 h-8 rounded-full bg-indigo-fill text-indigo flex items-center justify-center shrink-0"><LucideUser :size="16" /></span>
                             <span class="min-w-0">
                                 <span class="block text-body font-medium truncate">{{ u.nickname || u.username }}</span>
-                                <span class="block text-small text-label-3 truncate">{{ u.username }} · #{{ u.id }}</span>
+                                <span class="block truncate" :class="TEXT.caption">{{ u.username }} · #{{ u.id }}</span>
                             </span>
                         </button>
                     </li>
                 </ul>
 
                 <div class="flex items-center justify-between pt-1">
-                    <Button unstyled @click="prev" :disabled="page === 0" :class="BTN_SMALL.pager">{{ $t('common.prev') }}</Button>
-                    <span class="text-small text-label-3">{{ page + 1 }} / {{ pages() }}</span>
-                    <Button unstyled @click="next" :disabled="page >= pages() - 1" :class="BTN_SMALL.pager">{{ $t('common.next') }}</Button>
+                    <Button unstyled @click="prev" :disabled="page === 0" :class="BTN_SM.secondary">{{ $t('common.prev') }}</Button>
+                    <span :class="TEXT.caption">{{ page + 1 }} / {{ pages() }}</span>
+                    <Button unstyled @click="next" :disabled="page >= pages() - 1" :class="BTN_SM.secondary">{{ $t('common.next') }}</Button>
                 </div>
             </div>
         </div>

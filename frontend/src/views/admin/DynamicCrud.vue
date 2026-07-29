@@ -22,12 +22,12 @@
       <!-- Dynamic rendering based on field arrays -->
       <template v-for="f in displayFields" :key="f.name" #[f.name]="{ data }">
           <span class="truncate max-w-[200px] block" v-if="f.type !== 'boolean'">{{ data[f.name] }}</span>
-          <span v-else class="px-2 py-1 rounded text-small uppercase font-medium bg-canvas">{{ data[f.name] ? 'Yes' : 'No' }}</span>
+          <span v-else class="px-2 py-1 rounded-chip text-small uppercase font-medium bg-canvas">{{ data[f.name] ? 'Yes' : 'No' }}</span>
       </template>
 
       <template #actions="{ data }">
         <div class="flex justify-end gap-3 text-body">
-          <Button unstyled @click="openForm(data)" class="text-accent hover:underline">Edit</Button>
+          <Button unstyled @click="openForm(data)" :class="LINK.action">Edit</Button>
           <Button unstyled @click="deleteRecord(data)" class="text-danger hover:underline">Delete</Button>
         </div>
       </template>
@@ -41,7 +41,7 @@
         
         <form @submit.prevent="saveRecord" class="space-y-5">
           <div v-for="field in currentSchema?.fields || []" :key="field.name">
-            <label :class="LABEL">{{ field.name }} <span v-if="field.type" class="text-small text-label-3">({{ field.type }})</span></label>
+            <label :class="LABEL">{{ field.name }} <span v-if="field.type" :class="TEXT.caption">({{ field.type }})</span></label>
             
             <InputText unstyled v-if="field.type === 'string' || field.type === 'date'"
                    v-model="formData[field.name]"
@@ -52,7 +52,7 @@
                    :class="INPUT_CLASS" />
                    
             <label v-else-if="field.type === 'boolean'" class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-accent text-accent border-separator rounded focus:ring-2 focus:ring-accent">
+              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-accent text-accent border-separator rounded-chip focus:ring-2 focus:ring-accent">
               <span class="text-body text-label">Enabled/True</span>
             </label>
 
@@ -78,7 +78,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crud } from '../../api';
-import { INPUT_CLASS, LABEL, PAGE } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, LINK, PAGE, TEXT } from '../../ui/presets';
 
 const route = useRoute();
 const schemaName = computed(() => route.params.modelName as string);

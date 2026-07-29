@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { uploadAPI } from '../api';
 import { LucideSearch, LucideX, LucideFile, LucideCheck } from 'lucide-vue-next';
-import { BTN, BTN_SMALL, DIALOG_CLOSE, EMPTY, INPUT_CLASS, SEARCH, SECTION_TITLE } from '../ui/presets';
+import { BTN, BTN_SM, DIALOG_CLOSE, EMPTY, INPUT_CLASS, SEARCH, SECTION_TITLE, TEXT } from '../ui/presets';
 
 /**
  * File-library picker overlay. Same shape as UserPicker.vue (paged search + `visible`/`select`
@@ -106,7 +106,7 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
                                 <img v-if="f.mime_type?.startsWith('image/') || IMAGE_RE.test(f.url || '')" :src="f.url" class="object-cover w-full h-full" />
                                 <LucideFile v-else :size="28" class="text-label-4" />
                             </span>
-                            <span class="block px-2 py-1.5 text-small truncate text-label-2" :title="f.filename">{{ f.filename }}</span>
+                            <span class="block px-2 py-1.5 truncate" :class="TEXT.meta" :title="f.filename">{{ f.filename }}</span>
                             <span v-if="isPicked(f)" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-accent text-white flex items-center justify-center">
                                 <LucideCheck :size="12" />
                             </span>
@@ -115,13 +115,13 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
                 </div>
 
                 <div class="flex items-center justify-between pt-1">
-                    <Button unstyled @click="prev" :disabled="page === 0" :class="BTN_SMALL.pager">{{ $t('common.prev') }}</Button>
-                    <span class="text-small text-label-3">{{ page + 1 }} / {{ pages() }}</span>
-                    <Button unstyled @click="next" :disabled="page >= pages() - 1" :class="BTN_SMALL.pager">{{ $t('common.next') }}</Button>
+                    <Button unstyled @click="prev" :disabled="page === 0" :class="BTN_SM.secondary">{{ $t('common.prev') }}</Button>
+                    <span :class="TEXT.caption">{{ page + 1 }} / {{ pages() }}</span>
+                    <Button unstyled @click="next" :disabled="page >= pages() - 1" :class="BTN_SM.secondary">{{ $t('common.next') }}</Button>
                 </div>
 
                 <div v-if="multiple" class="flex items-center justify-end gap-3 pt-2 border-t border-separator-weak">
-                    <span class="text-small text-label-3">{{ $t('fileUploader.selectedN', { n: picked.length }) }}</span>
+                    <span :class="TEXT.caption">{{ $t('fileUploader.selectedN', { n: picked.length }) }}</span>
                     <Button unstyled @click="confirmMulti" :disabled="!picked.length" :class="BTN.primary">{{ $t('confirm.accept') }}</Button>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LABEL_BARE, PAGE, SECTION_TITLE } from '../../ui/presets';
+import { CARD, LABEL_BARE, LINK, PAGE, SECTION_TITLE, TEXT } from '../../ui/presets';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { schemaAPI, listArticle, listCategory, listUser, uploadAPI, systemAPI } from '../../api';
@@ -87,55 +87,55 @@ const formatDate = (dateString: string) => {
       <div v-if="loading" class="opacity-50 flex items-center gap-2 mb-10"><LucideActivity class="animate-spin" :size="20" /> {{ $t('system.loading') }}</div>
       
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
-        <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-card p-6 shadow-card border border-separator-weak flex flex-col hover:-translate-y-1 transition-transform duration-300">
+        <div v-for="stat in stats" :key="stat.label" class="p-6 flex flex-col hover:-translate-y-1 transition-transform duration-300" :class="CARD">
           <div class="flex items-center justify-between mb-4">
               <div :class="['w-10 h-10 rounded-full flex items-center justify-center', stat.bg, stat.color]">
                   <component :is="stat.icon" :size="20" />
               </div>
           </div>
           <p class="text-[32px] font-semibold leading-title tracking-[-0.01em] mb-1">{{ stat.value }}</p>
-          <h3 class="text-body font-medium text-label-3">{{ $t(stat.label) }}</h3>
+          <h3 class="font-medium" :class="TEXT.hint">{{ $t(stat.label) }}</h3>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          <div class="lg:col-span-2 bg-white rounded-card shadow-card border border-separator-weak overflow-hidden flex flex-col">
+          <div class="lg:col-span-2 overflow-hidden flex flex-col" :class="CARD">
               <div class="p-6 border-b border-separator-weak flex justify-between items-center bg-surface">
                   <h2 class="flex items-center gap-2 text-label" :class="SECTION_TITLE"><LucideFileText :size="20" class="text-accent" /> {{ $t('dashboard.recentArticles') }}</h2>
-                  <button @click="router.push('/admin/articles/new')" class="text-body text-accent hover:underline flex items-center gap-1 bg-transparent border-0 cursor-pointer"><LucidePlusCircle :size="16"/> {{ $t('action.new') }}</button>
+                  <button @click="router.push('/admin/articles/new')" :class="LINK.action"><LucidePlusCircle :size="16"/> {{ $t('action.new') }}</button>
               </div>
               <div class="flex-1 p-0">
-                  <div v-if="!recentArticles.length" class="p-8 text-center text-body text-label-3">
+                  <div v-if="!recentArticles.length" class="p-8 text-center" :class="TEXT.hint">
                       {{ $t('system.noEntries') }}
                   </div>
                   <div v-for="article in recentArticles" :key="article.id" class="px-6 py-4 flex items-center justify-between hover:bg-canvas transition-colors cursor-pointer border-b border-separator-weak last:border-0" @click="router.push('/admin/articles/edit/'+article.id)">
                       <div class="flex-1 min-w-0 pr-4">
                           <h4 class="truncate mb-1" :class="LABEL_BARE">{{ article.title }}</h4>
-                          <div class="text-small text-label-3 truncate max-w-full">
-                              <span v-if="article.is_top" class="text-danger font-semibold mr-2 border border-danger/20 bg-danger/10 px-1 rounded">{{ $t('form.is_top') }}</span>
+                          <div class="truncate max-w-full" :class="TEXT.caption">
+                              <span v-if="article.is_top" class="text-danger font-semibold mr-2 border border-danger/20 bg-danger/10 px-1 rounded-chip">{{ $t('form.is_top') }}</span>
                               {{ article.description || article.slug }}
                           </div>
                       </div>
                       <div class="flex flex-col items-end gap-1 shrink-0">
-                           <span class="text-small text-label-3">{{ formatDate(article.created_at) }}</span>
+                           <span :class="TEXT.caption">{{ formatDate(article.created_at) }}</span>
                            <span :class="['text-small px-2 py-0.5 rounded-full font-medium', article.status === 'visible' ? 'bg-green-100 text-green-700' : 'bg-canvas text-label-2']">{{ $t('contentStatus.' + (article.status || 'hidden')) }}</span>
                       </div>
                   </div>
               </div>
               <div class="p-3 bg-surface border-t border-separator-weak text-center">
-                  <button @click="router.push('/admin/articles')" class="text-body text-accent hover:underline flex items-center justify-center gap-1 w-full py-1 bg-transparent border-0 cursor-pointer">View All <LucideChevronRight :size="16"/></button>
+                  <button @click="router.push('/admin/articles')" class="w-full justify-center py-1" :class="LINK.action">View All <LucideChevronRight :size="16"/></button>
               </div>
           </div>
 
           <div class="flex flex-col gap-6">
               <!-- System Status -->
-              <div class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex flex-col gap-5">
+              <div class="p-6 flex flex-col gap-5" :class="CARD">
                   <h2 class="flex items-center gap-2 text-label" :class="SECTION_TITLE"><LucideShieldCheck :size="20" class="text-emerald-500" /> {{ $t('dashboard.systemStatus') }}</h2>
                   <div class="flex flex-col gap-4 mt-2">
                       <div class="flex justify-between items-center text-body">
                           <span class="text-label-2">Platform Core</span>
-                          <span class="font-medium text-label bg-canvas px-2 py-0.5 rounded">NFCMS Engine</span>
+                          <span class="font-medium text-label bg-canvas px-2 py-0.5 rounded-chip">NFCMS Engine</span>
                       </div>
                       <div class="flex justify-between items-center text-body">
                           <span class="text-label-2">Active DB Node</span>
@@ -149,7 +149,7 @@ const formatDate = (dateString: string) => {
               </div>
 
               <!-- Quick Actions -->
-              <div class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex-1">
+              <div class="p-6 flex-1" :class="CARD">
                   <h2 class="flex items-center gap-2 mb-6 text-label" :class="SECTION_TITLE"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
                   <div class="grid grid-cols-2 gap-3">
                       <button v-if="isSuper" @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">

@@ -15,7 +15,7 @@
       <div class="bg-surface border border-separator-weak rounded-control p-4 flex items-center justify-between">
           <div>
               <h3 class="text-body font-semibold text-label mb-1">{{ $t('form.generateRecursively') || 'Generate from Category' }}</h3>
-              <p class="text-small text-label-3">{{ $t('form.generateDesc') || 'Automatically fetch subcategories to build nested menu.' }}</p>
+              <p :class="TEXT.caption">{{ $t('form.generateDesc') || 'Automatically fetch subcategories to build nested menu.' }}</p>
           </div>
           <div class="flex gap-2 items-center">
               <Select v-model="selectedCategoryForGenerate" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[220px] shrink-0" />
@@ -26,11 +26,11 @@
       <div>
           <div class="flex justify-between items-center mb-3">
             <label :class="LABEL_BARE">{{ $t('form.menuItems') || 'Menu Items (Tree)' }}</label>
-            <Button unstyled @click="addItem(formData.items)" type="button" class="text-small font-medium text-accent whitespace-nowrap px-3 py-2 bg-info-fill hover:bg-info-fill rounded-control focus:outline-none transition-colors">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
+            <Button unstyled @click="addItem(formData.items)" type="button" :class="BTN_SM.secondary">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
           </div>
           <div class="bg-canvas border border-separator-weak rounded-card p-4 min-h-[200px]">
             <MenuItemEditor v-if="formData.items && formData.items.length" :items="formData.items" :categories="categories" :articles="articles" @update="formData.items = $event" />
-            <div v-else class="text-center text-label-3 py-12 text-body">{{ $t('system.noEntries') || 'No items added.' }}</div>
+            <div v-else class="text-center py-12" :class="TEXT.hint">{{ $t('system.noEntries') || 'No items added.' }}</div>
           </div>
       </div>
     </div>
@@ -44,7 +44,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import { BTN, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT } from '../../ui/presets';
+import { BTN, BTN_SM, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXT } from '../../ui/presets';
 import { listCategory, listArticle } from '../../api';
 import MenuItemEditor from './MenuItemEditor.vue';
 

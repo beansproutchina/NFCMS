@@ -8,7 +8,7 @@ import { listRole, createRole as apiCreateRole, removeRole, listRolePermission, 
          schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
 import { useToast } from 'primevue/usetoast';
 import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
-import { BTN, FIELD_GROUP, INPUT_CLASS_SM, PAGE, SECTION_TITLE, SELECT_PT } from '../../ui/presets';
+import { BTN, FIELD_GROUP, INPUT_CLASS_SM, PAGE, SECTION_TITLE, SELECT_PT, TEXT } from '../../ui/presets';
 
 const toast = useToast();
 
@@ -146,7 +146,7 @@ onMounted(async () => {
     <div :class="PAGE.container">
         <div class="mb-8">
             <h1 :class="PAGE.title">{{ $t('system.roles') }}</h1>
-            <p class="text-body text-label-2">{{ $t('roles.desc') }}</p>
+            <p :class="TEXT.muted">{{ $t('roles.desc') }}</p>
         </div>
 
         <div class="flex gap-6">
@@ -156,7 +156,7 @@ onMounted(async () => {
                     <button v-for="r in roles" :key="r.id" @click="selectRole(r)"
                         class="flex items-center justify-between px-3 py-2 rounded-control text-left transition-colors cursor-pointer"
                         :class="selectedRole?.id === r.id ? 'bg-fill-strong font-semibold' : 'hover:bg-fill'">
-                        <span>{{ r.label || r.name }} <span class="text-small text-label-3">{{ r.name }}</span></span>
+                        <span>{{ r.label || r.name }} <span :class="TEXT.caption">{{ r.name }}</span></span>
                         <LucideTrash2 v-if="!r.is_system" :size="14" class="opacity-40 hover:opacity-100 hover:text-danger" @click.stop="deleteRole(r)" />
                     </button>
                 </div>
@@ -174,22 +174,22 @@ onMounted(async () => {
                 <div v-if="!selectedRole" class="text-label-3">{{ $t('roles.selectPane') }}</div>
                 <template v-else>
                     <h2 class="mb-1" :class="SECTION_TITLE">{{ selectedRole.label || selectedRole.name }}</h2>
-                    <div class="text-small text-label-3 mb-5">{{ selectedRole.name }}<span v-if="isSystem"> · {{ $t('roles.builtin') }}</span></div>
+                    <div class="mb-5" :class="TEXT.caption">{{ selectedRole.name }}<span v-if="isSystem"> · {{ $t('roles.builtin') }}</span></div>
 
-                    <div v-if="selectedRole.name === 'super_admin'" class="text-body text-label-2 bg-canvas rounded-control px-4 py-3">
+                    <div v-if="selectedRole.name === 'super_admin'" class="bg-canvas rounded-control px-4 py-3" :class="TEXT.muted">
                         {{ $t('roles.superAll') }}
                     </div>
                     <template v-else>
                         <table class="w-full text-body mb-4">
                             <thead>
-                                <tr class="text-left text-small uppercase tracking-wider text-label-3 border-b border-separator-weak">
+                                <tr class="text-left uppercase tracking-wider border-b border-separator-weak" :class="TEXT.caption">
                                     <th class="py-2">{{ $t('roles.model') }}</th><th class="py-2">{{ $t('roles.act') }}</th><th class="py-2">{{ $t('roles.scope') }}</th><th class="py-2 w-10"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="p in perms" :key="p.id" class="border-b border-separator-weak">
                                     <td class="py-2 font-medium">{{ p.model }}</td>
-                                    <td class="py-2"><span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ p.action }}</span></td>
+                                    <td class="py-2"><span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded-chip text-small">{{ p.action }}</span></td>
                                     <td class="py-2"><span :class="p.scope === 'own' ? 'text-warn' : 'text-link'">{{ p.scope }}</span></td>
                                     <td class="py-2 text-right"><LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-danger cursor-pointer inline" @click="removePerm(p)" /></td>
                                 </tr>
@@ -210,15 +210,15 @@ onMounted(async () => {
                         <!-- Category-scoped article grants: manage articles within a category subtree -->
                         <div class="mt-8 pt-5 border-t border-separator-weak">
                             <h3 class="text-body font-semibold mb-1">{{ $t('roles.categoryGrants') }}</h3>
-                            <p class="text-small text-label-3 mb-4">{{ $t('roles.categoryGrantsHint') }}</p>
+                            <p class="mb-4" :class="TEXT.caption">{{ $t('roles.categoryGrantsHint') }}</p>
 
                             <ul v-if="catGrants.length" class="mb-3" :class="FIELD_GROUP">
                                 <li v-for="g in catGrants" :key="g.id" class="flex items-center justify-between text-body bg-surface rounded-control px-3 py-2">
-                                    <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ g.access }}</span></span>
+                                    <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded-chip text-small">{{ g.access }}</span></span>
                                     <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-danger cursor-pointer" @click="revokeCatGrant(g)" />
                                 </li>
                             </ul>
-                            <div v-else class="text-small text-label-3 mb-3">{{ $t('roles.noCategoryGrants') }}</div>
+                            <div v-else class="mb-3" :class="TEXT.caption">{{ $t('roles.noCategoryGrants') }}</div>
 
                             <div class="flex gap-2 items-center bg-surface rounded-control p-3 flex-wrap">
                                 <Select v-model="catForm.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="$t('roles.pickCategory')" unstyled :pt="SELECT_PT" class="w-[200px] shrink-0" />

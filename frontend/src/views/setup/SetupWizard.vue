@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FIELD_GROUP, INPUT_CLASS_LG, PASSWORD_LG } from '../../ui/presets';
+import { FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG, TEXT } from '../../ui/presets';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { systemAPI } from '../../api';
@@ -103,7 +103,7 @@ const performSetup = async () => {
         <p class="text-title-section leading-[1.19] opacity-60 font-normal tracking-[0.231px]">Configure your new site.</p>
       </div>
 
-      <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
+      <div class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-6">
         <!-- Mode Toggle -->
         <div class="flex rounded-control overflow-hidden border border-separator">
           <Button
@@ -127,21 +127,21 @@ const performSetup = async () => {
         <!-- New Site Mode -->
         <template v-if="!importMode">
           <div :class="FIELD_GROUP">
-            <label class="text-body text-label px-1 font-medium">Site Name</label>
+            <label class="px-1" :class="LABEL_BARE">Site Name</label>
             <InputText v-model="siteName" unstyled
               :class="INPUT_CLASS_LG"
               placeholder="My Awesome Website" />
           </div>
 
           <div :class="FIELD_GROUP">
-            <label class="text-body text-label px-1 font-medium">Admin Username</label>
+            <label class="px-1" :class="LABEL_BARE">Admin Username</label>
             <InputText v-model="adminUsername" unstyled
               :class="INPUT_CLASS_LG"
               placeholder="admin" autocomplete="username" />
           </div>
 
           <div :class="FIELD_GROUP">
-            <label class="text-body text-label px-1 font-medium">Admin Password</label>
+            <label class="px-1" :class="LABEL_BARE">Admin Password</label>
             <Password v-model="adminPassword" unstyled :feedback="false" toggleMask fluid
               :inputProps="{ class: PASSWORD_LG.inputClass, placeholder: '••••••••', autocomplete: 'new-password' }"
               :pt="PASSWORD_LG.pt" />
@@ -150,7 +150,7 @@ const performSetup = async () => {
 
         <!-- Import Mode -->
         <template v-else>
-          <p class="text-body text-label-2">选择之前导出的 NFCMS 数据文件，系统将从中恢复所有数据。</p>
+          <p :class="TEXT.muted">选择之前导出的 NFCMS 数据文件，系统将从中恢复所有数据。</p>
 
           <div v-if="importFileName" class="flex items-center gap-3 p-3 bg-info-fill rounded-control border border-info">
             <LucideFileText :size="20" class="text-accent shrink-0" />

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SECTION_TITLE, TEXT } from '../../ui/presets';
 
 import { computed, ref, watch } from 'vue';
 import Button from 'primevue/button';
@@ -108,7 +109,7 @@ watch(() => route.path, () => {
     >
       <!-- Sidebar Header (desktop only, mobile has its own header) -->
       <div class="hidden md:flex px-6 py-6 border-b border-divider border-opacity-60 items-center justify-between">
-        <span class="font-semibold text-title-section flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
+        <span class="flex items-center gap-2 cursor-pointer" :class="SECTION_TITLE" @click="router.push('/admin')">
           <LucideSettings :size="20"/> {{ $t('system.title') }}
         </span>
       </div>
@@ -122,7 +123,7 @@ watch(() => route.path, () => {
 
       <div class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-6">
         <div v-for="(group, idx) in menuGroups" :key="idx" class="flex flex-col gap-1">
-          <div class="text-small font-semibold text-label-3 uppercase tracking-wider mb-2 px-2">{{ $t(group.title) }}</div>
+          <div class="font-semibold uppercase tracking-wider mb-2 px-2" :class="TEXT.caption">{{ $t(group.title) }}</div>
           <Button unstyled 
             v-for="item in group.items" :key="item.path"
             @click="navigateTo(item.path)"

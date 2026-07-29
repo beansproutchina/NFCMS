@@ -6,7 +6,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
 import { LucideUpload, LucideImage, LucideFile, LucideFolderOpen } from 'lucide-vue-next';
 import { uploadAPI } from '../api';
-import { BTN, FIELD_GROUP } from '../ui/presets';
+import { BTN, FIELD_GROUP, LINK } from '../ui/presets';
 import FilePicker from './FilePicker.vue';
 
 /**
@@ -128,10 +128,10 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
             <!-- one-line rows (size='sm') -->
             <template v-if="size === 'sm'">
                 <div v-for="(u, i) in urls" :key="u + i" class="flex items-center gap-2 bg-canvas rounded-control px-3 py-2">
-                    <img v-if="isImage(u)" :src="u" class="h-10 w-10 object-cover rounded" />
+                    <img v-if="isImage(u)" :src="u" class="h-10 w-10 object-cover rounded-chip" />
                     <LucideFile v-else :size="18" class="text-label-3 shrink-0" />
-                    <a :href="u" target="_blank" class="text-small text-accent hover:underline truncate flex-1">{{ nameOf(u) }}</a>
-                    <span v-if="!disabled && !multiple" @click="openFileDialog" class="text-small text-accent cursor-pointer hover:underline shrink-0">{{ $t('fileUploader.replace') }}</span>
+                    <a :href="u" target="_blank" class="truncate flex-1" :class="LINK.small">{{ nameOf(u) }}</a>
+                    <span v-if="!disabled && !multiple" @click="openFileDialog" class="shrink-0" :class="LINK.small">{{ $t('fileUploader.replace') }}</span>
                     <span v-if="!disabled" @click="removeAt(Number(i))" class="text-small text-danger cursor-pointer hover:underline shrink-0">{{ $t('action.remove') }}</span>
                 </div>
             </template>
@@ -147,7 +147,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
                         </a>
                     </div>
                     <div v-if="!disabled" class="flex gap-3 justify-end">
-                        <span @click="openFileDialog" class="text-small text-accent cursor-pointer hover:underline">{{ $t('fileUploader.replace') }}</span>
+                        <span @click="openFileDialog" :class="LINK.small">{{ $t('fileUploader.replace') }}</span>
                         <span @click="removeAt(Number(i))" class="text-small text-danger cursor-pointer hover:underline">{{ $t('action.remove') }}</span>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
             </div>
 
             <div v-if="library && !disabled" class="flex justify-start">
-                <span @click.stop="openLibrary" class="text-small text-accent cursor-pointer hover:underline inline-flex items-center gap-1">
+                <span @click.stop="openLibrary" :class="LINK.small">
                     <LucideFolderOpen :size="13" /> {{ $t('fileUploader.chooseFromLibrary') }}
                 </span>
             </div>

@@ -37,27 +37,27 @@
       <!-- Article Data Fields Editor -->
       <div>
         <label :class="LABEL">{{ $t('form.articleDataFields') }}</label>
-        <p class="text-small text-label-3 mb-2">{{ $t('form.articleDataFieldsDesc') }}</p>
+        <p class="mb-2" :class="TEXT.caption">{{ $t('form.articleDataFieldsDesc') }}</p>
         <div class="border rounded-control border-separator p-3 bg-white max-h-60 overflow-y-auto space-y-2">
           <div v-for="(field, idx) in formData.articleFieldDefs" :key="idx" class="flex gap-2 items-start">
             <div class="w-1/4">
               <InputText v-model="field.key" unstyled placeholder="Key"
-                class="w-full h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+                class="w-full h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent" />
             </div>
             <div class="w-1/4">
               <InputText v-model="field.title" unstyled :placeholder="$t('form.fieldTitle')"
-                class="w-full h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+                class="w-full h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent" />
             </div>
             <div class="w-1/4">
               <Select v-model="field.type" :options="fieldTypeOptions" optionLabel="label" optionValue="value" unstyled
-                :pt="{ root: 'w-full h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent flex items-center justify-between cursor-pointer relative bg-white', label: 'text-xs truncate', dropdown: 'w-3 h-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-separator rounded shadow-lg mt-1 py-1 z-9999', option: ({ context }: any) => ({ class: ['px-2 py-1 text-xs cursor-pointer hover:bg-canvas', context.selected ? 'bg-accent text-white hover:bg-accent' : 'text-label'] }) }" />
+                :pt="{ root: 'w-full h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent flex items-center justify-between cursor-pointer relative bg-white', label: 'text-small truncate', dropdown: 'w-3 h-3 opacity-50 absolute right-1 top-1/2 -translate-y-1/2', overlay: 'bg-white border border-separator rounded-chip shadow-lg mt-1 py-1 z-9999', option: ({ context }: any) => ({ class: ['px-2 py-1 text-small cursor-pointer hover:bg-canvas', context.selected ? 'bg-accent text-white hover:bg-accent' : 'text-label'] }) }" />
             </div>
             <Button type="button" @click="formData.articleFieldDefs.splice(idx, 1)" unstyled
-              class="text-danger hover:text-danger text-xs px-2 focus:outline-none mt-1">X</Button>
+              class="text-danger hover:text-danger text-small px-2 focus:outline-none mt-1">X</Button>
           </div>
           <Button type="button"
             @click="formData.articleFieldDefs.push({ key: '', title: '', type: 'text' })"
-            unstyled class="text-accent text-small hover:underline mt-1 focus:outline-none">+ {{ $t('action.new') }}</Button>
+            unstyled class="mt-1" :class="LINK.small">+ {{ $t('action.new') }}</Button>
         </div>
       </div>
 
@@ -66,15 +66,15 @@
         <div class="border rounded-control border-separator p-2 bg-white  max-h-40 overflow-y-auto ">
           <div v-for="(item, idx) in formData.metaPairs" :key="idx" class="flex gap-2 mb-2">
             <InputText v-model="item.key" unstyled placeholder="Key"
-              class="w-1/3 h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+              class="w-1/3 h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent" />
             <InputText v-model="item.value" unstyled placeholder="Value"
-              class="flex-1 h-8 px-2 border border-separator rounded text-xs focus:outline-none focus:ring-1 focus:ring-accent" />
+              class="flex-1 h-8 px-2 border border-separator rounded-chip text-small focus:outline-none focus:ring-1 focus:ring-accent" />
             <Button type="button" @click="formData.metaPairs.splice(idx, 1)" unstyled
-              class="text-danger hover:text-danger text-xs px-2 focus:outline-none">X</Button>
+              class="text-danger hover:text-danger text-small px-2 focus:outline-none">X</Button>
           </div>
           <Button type="button"
             @click="formData.metaPairs = formData.metaPairs || []; formData.metaPairs.push({ key: '', value: '' })"
-            unstyled class="text-accent text-small hover:underline mt-1 focus:outline-none">+ {{ $t('action.new') }}</Button>
+            unstyled class="mt-1" :class="LINK.small">+ {{ $t('action.new') }}</Button>
         </div>
       </div>
       <button type="submit" class="hidden"></button>
@@ -82,7 +82,7 @@
 
     <div v-if="isEditing && formData.id" class="mt-6 pt-5 border-t border-separator-weak">
       <AclEditor model="articles_category" :resource-id="formData.id" :actions="['C', 'R', 'U', 'D', 'publish']" :title="$t('acl.categoryArticles')" />
-      <p class="text-small text-label-3 mt-2">{{ $t('acl.categoryArticlesHint') }}</p>
+      <p class="mt-2" :class="TEXT.caption">{{ $t('acl.categoryArticlesHint') }}</p>
     </div>
   </AdminModal>
 </template>
@@ -94,7 +94,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
-import { INPUT_CLASS, LABEL, SELECT_PT } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, LINK, SELECT_PT, TEXT } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 
 const { t } = useI18n();

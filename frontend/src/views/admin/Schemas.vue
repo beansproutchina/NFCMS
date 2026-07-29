@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PAGE } from '../../ui/presets';
+import { LINK, PAGE, TEXT } from '../../ui/presets';
 import { ref, onMounted } from 'vue';
 import SmartTable from '../../components/SmartTable.vue';
 import { schemaAPI } from '../../api';
@@ -48,13 +48,13 @@ onMounted(fetchSchemas);
                 <span class="font-semibold text-label text-title-item tracking-tight">{{ data.modelName }}</span>
             </template>
             <template #routePath="{ data }">
-                <span class="text-label-2 font-mono text-body">/api/{{ data.routePath }}</span>
+                <span class="font-mono" :class="TEXT.muted">/api/{{ data.routePath }}</span>
             </template>
             <template #fields="{ data }">
                 <span class="bg-canvas px-3 py-1 rounded-control text-small font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
             </template>
             <template #actions="{ data }">
-                <router-link :to="`/admin/crud/${data.routePath}`" class="text-accent hover:underline font-medium text-body">
+                <router-link :to="`/admin/crud/${data.routePath}`" class="font-medium" :class="LINK.action">
                     Manage Data
                 </router-link>
             </template>

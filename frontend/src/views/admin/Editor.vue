@@ -12,7 +12,7 @@ import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideEyeOff, Lu
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { BTN, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE } from '../../ui/presets';
+import { BTN, CARD, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 import EditorPanel from './EditorPanel.vue';
 
@@ -211,7 +211,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
             </div>
 
             <div class="flex gap-2 items-center">
-                <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-lg text-small font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
+                <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-control text-small font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
                 <Button unstyled @click="doPreview" :disabled="loading" :class="BTN.secondary">
                     <LucideEye :size="16" /> {{ $t('action.preview') }}
                 </Button>
@@ -228,7 +228,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
         </div>
 
         <div class="flex-1 flex gap-6 pb-6 h-[calc(100vh-140px)]">
-            <div class="flex-1 flex flex-col bg-white rounded-card shadow-card overflow-hidden border border-separator-weak">
+            <div class="flex-1 flex flex-col overflow-hidden" :class="CARD">
                 <div class="px-6 py-4 border-b border-separator-weak flex flex-col gap-2">
                     <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-semibold outline-none placeholder:opacity-30" />
                 </div>
@@ -237,7 +237,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 </div>
             </div>
 
-            <div class="w-[320px] shrink-0 bg-white rounded-card shadow-card overflow-y-auto p-6 hidden lg:block border border-separator-weak">
+            <div class="w-[320px] shrink-0 overflow-y-auto p-6 hidden lg:block" :class="CARD">
                 <h3 class="text-title-section font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
                 <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
