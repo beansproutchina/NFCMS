@@ -19,7 +19,7 @@
           </div>
           <div class="flex gap-2 items-center">
               <Select v-model="selectedCategoryForGenerate" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[220px] shrink-0" />
-              <Button unstyled type="button" @click="generateFromCategory" :disabled="!selectedCategoryForGenerate" :class="BTN.primary">{{ $t('action.generate') || 'Generate' }}</Button>
+              <Button unstyled type="button" @click="generateFromCategory" :disabled="selectedCategoryForGenerate === null" :class="BTN.primary">{{ $t('action.generate') || 'Generate' }}</Button>
           </div>
       </div>
 
@@ -58,8 +58,17 @@ const categories = ref<any[]>([]);
 const articles = ref<any[]>([]);
 const selectedCategoryForGenerate = ref<number | null>(null);
 
+/** Root categories carry `parent_id = 0`; some rows may hold null instead, so both normalise. */
+const ROOT_PARENT = 0;
+
 const categoryOptions = computed(() => {
-    const opts = [{ label: t('form.selectCategory') || 'Select Category', value: null }];
+    const opts: { label: string; value: number | null }[] = [
+        { label: t('form.selectCategory') || 'Select Category', value: null },
+        // Root: generates one top-level item per root category. `0` is the parent_id roots carry,
+        // so it needs no special case in buildMenuTree — but it IS falsy, hence the explicit
+        // `=== null` guards below rather than a truthiness check.
+        { label: t('form.generateFromRoot') || 'All root categories', value: ROOT_PARENT },
+    ];
     categories.value.forEach((c: any) => opts.push({ label: c.name, value: c.id }));
     return opts;
 });
@@ -82,9 +91,9 @@ const addItem = (arr: any[]) => {
     arr.push({ label: 'New Item', url: '/', type: 'custom', refId: null, children: [] });
 };
 
-const buildMenuTree = (parentId: number | null): any[] => {
+const buildMenuTree = (parentId: number): any[] => {
     return categories.value
-        .filter(c => c.parent_id === parentId)
+        .filter(c => (c.parent_id ?? ROOT_PARENT) === parentId)
         .sort((a, b) => (a.weight) - (b.weight))
         .map(c => {
             return {
@@ -98,7 +107,8 @@ const buildMenuTree = (parentId: number | null): any[] => {
 };
 
 const generateFromCategory = () => {
-    if (!selectedCategoryForGenerate.value) return;
+    // `=== null` and not `!value`: the root option is `0`, which a truthiness check would reject.
+    if (selectedCategoryForGenerate.value === null) return;
     const newItems = buildMenuTree(selectedCategoryForGenerate.value);
     if (!formData.value.items) formData.value.items = [];
     formData.value.items.push(...newItems);
