@@ -439,7 +439,7 @@
       "status": "visible",
       "publish_at": null,
       "rev_version": 0,
-      "is_top": 0,
+      "is_top": 1,
       "category_id": 1,
       "published_at": "2025-11-15T01:00:00.000Z",
       "created_at": "2025-11-15T01:00:00.000Z",

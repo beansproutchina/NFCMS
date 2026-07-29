@@ -65,9 +65,30 @@ export const pages: ThemePages = {
   DefaultHome: {
     layout: 'Layout',
     title: '$data.config.site_name',
+    /**
+     * Fully prefetched — nothing is fetched on mount, so the home page paints once, complete.
+     *
+     * Two parallel waves: the three `getCategory` calls go out together, and the three
+     * `listArticles` calls poll until their category lands (`resolveArgAsync` waits up to 5s,
+     * router/index.ts:160-176), forming the second wave. Six requests in two round trips, all
+     * before first paint — versus the four serialised round trips an `onMounted` chain costs.
+     *
+     * Why a category must be fetched by slug first: `listArticles` filters on `category_id`, and
+     * that id can only be found by SEARCHING the category list — `$data.x.y` is a plain key-path
+     * walk with no predicate, so "the category whose list_template is WorkGrid" is inexpressible.
+     * Config can't supply it either: `config` is absent from the prefetch scope (router/index.ts:163
+     * merges only entityData + extraData; it is injected for `title` alone). Hence the slug
+     * contract below — this theme expects its categories slugged works / services / journal, which
+     * is what neo-demo-data.json creates. A missing slug degrades to an empty section, not a leak
+     * (see the `section()` guard in DefaultHome.vue).
+     */
     prefetch: [
-      { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
-      { key: 'articles', api: 'contentAPI.listArticles', args: [{ orderBy: 'published_at', orderDesc: true, limit: 12 }] },
+      { key: 'worksCat', api: 'contentAPI.getCategory', args: ['works'] },
+      { key: 'works', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.worksCat.id', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, limit: 4 }] },
+      { key: 'servicesCat', api: 'contentAPI.getCategory', args: ['services'] },
+      { key: 'services', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.servicesCat.id' }, orderBy: 'published_at', orderDesc: true, limit: 6 }] },
+      { key: 'journalCat', api: 'contentAPI.getCategory', args: ['journal'] },
+      { key: 'journal', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.journalCat.id' }, orderBy: 'published_at', orderDesc: true, limit: 5 }] },
     ],
   },
   // Blog / journal

@@ -65,51 +65,52 @@
     <!-- CONTACT CTA -->
     <section class="cta">
       <h2>有项目想聊聊?</h2>
-      <a class="btn primary big" href="/contact">开始合作 →</a>
+      <!-- Not `.primary`: this panel is already `--accent`, so the emphatic button here is the
+           inverted one — and `.btn`'s own white-on-ink default is exactly that. -->
+      <a class="btn big" href="/contact">开始合作 →</a>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { articleUrl, formatDate, LISTED_WORK_FILTER } from './lib';
+import { computed } from 'vue';
+import { articleUrl, formatDate } from './lib';
 
 const props = defineProps<{ context: any }>();
-const { config, categories, articles, api } = props.context || {};
+// Everything here is prefetched (see theme.config.ts) — no fetching on mount, so the page paints
+// once, fully populated, instead of filling three sections in and shifting layout.
+const ctx = props.context || {};
+const { config, worksCat, servicesCat, journalCat } = ctx;
 
 const siteName = computed(() => config?.site_name || 'NEO STUDIO');
 // Tagline = the generic `subtitle` config key (single source of truth; see theme.config.ts).
 const tagline = computed(() => config?.subtitle || '');
 const ctaText = computed(() => config?.theme_neo_hero_cta_text || '查看作品');
-const worksCat = computed(() => (categories || []).find((c: any) => c.list_template === 'WorkGrid'));
-const servicesCat = computed(() => (categories || []).find((c: any) => c.list_template === 'ServiceList'));
-const ctaLink = computed(() => config?.theme_neo_hero_cta_link || (worksCat.value ? `/a/${worksCat.value.slug}` : '/a/works'));
+const ctaLink = computed(() => config?.theme_neo_hero_cta_link || (worksCat ? `/a/${worksCat.slug}` : '/a/works'));
 
-const works = ref<any[]>([]);
-const services = ref<any[]>([]);
-// "Latest" = newest articles overall (prefetched), minus works/services/team entries.
-const latest = computed(() => {
-  const skip = new Set((categories || []).filter((c: any) => ['WorkGrid', 'ServiceList', 'TeamGrid'].includes(c.list_template)).map((c: any) => c.id));
-  return (articles || []).filter((a: any) => !skip.has(a.category_id)).slice(0, 5);
-});
+/**
+ * Rows for one section, guarded against a missing category.
+ *
+ * The guard is not paranoia. If a slug in the prefetch contract doesn't exist, `getCategory` fails,
+ * `$data.<cat>.id` never resolves, and `JSON.stringify` drops the undefined key — leaving a filter
+ * with no `category_id` at all, i.e. every article on the site. Re-checking `category_id` here makes
+ * that degrade to an empty section instead of a leak.
+ */
+const section = (cat: any, rows: any): any[] =>
+  cat?.id ? (rows || []).filter((a: any) => a.category_id === cat.id) : [];
 
-const fetchCat = async (cat: any, limit: number, extraFilter: Record<string, any> = {}) => {
-  if (!cat || !api?.contentAPI) return [];
-  try {
-    const res = await api.contentAPI.listArticles({
-      filter: { category_id: cat.id, ...extraFilter }, orderBy: 'published_at', orderDesc: true, limit,
-    });
-    return res.data || [];
-  } catch { return []; }
-};
-
-onMounted(async () => {
-  // Deliberately NO "nothing pinned → fall back to latest" here: unpinned projects are unlisted on
-  // purpose (see LISTED_WORK_FILTER), so a fallback would leak them onto the home page. With nothing
-  // pinned the section simply doesn't render (`v-if="works.length"`).
-  works.value = await fetchCat(worksCat.value, 4, LISTED_WORK_FILTER);
-  services.value = await fetchCat(servicesCat.value, 6);
-});
+// Only pinned projects reach the home page — see LISTED_WORK_FILTER. Deliberately no
+// "nothing pinned → show the latest instead" fallback: that would surface projects that were
+// intentionally left unlisted. With nothing pinned the section just doesn't render.
+const works = computed(() => section(worksCat, ctx.works));
+const services = computed(() => section(servicesCat, ctx.services));
+/**
+ * "最新动态" comes from the 动态 category only. The previous rule — every article except those in
+ * WorkGrid/ServiceList/TeamGrid categories — also let 关于 through, since it shares
+ * `list_template: 'DefaultCategory'` with 动态. It merely looked right because 动态 happened to own
+ * the 5 newest posts; a newer 关于 article, or fewer than 5 posts, and it would have shown up here.
+ */
+const latest = computed(() => section(journalCat, ctx.journal));
 </script>
 
 <style scoped>
@@ -167,7 +168,9 @@ onMounted(async () => {
 /* cta */
 .cta { margin-top: 5rem; border: 3px solid var(--ink); background: var(--accent); color: var(--surface); box-shadow: var(--shadow-hard); padding: 4rem 2rem; text-align: center; }
 .cta h2 { font-family: 'Bricolage Grotesque', sans-serif; font-size: clamp(2rem, 6vw, 4rem); text-transform: uppercase; margin-bottom: 2rem; }
-.cta .btn { background: var(--surface); }
+/* No `.cta .btn` override: it used to reset only `background` to --surface while `.btn.primary`
+   kept `color: --surface`, i.e. white text on a white button. Dropping `.primary` in the markup
+   lets `.btn`'s base (white bg + --ink text) apply, which is what the design wanted. */
 
 @media (max-width: 800px) {
   .works, .svcs { grid-template-columns: 1fr; }
