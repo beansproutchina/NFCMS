@@ -1,30 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import { LucideImage } from 'lucide-vue-next';
 import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import FileUploader from '../../components/FileUploader.vue';
 
 /**
  * Article property panel — the single definition of the article's content fields, mounted
  * twice by Editor.vue (desktop sidebar + mobile drawer). `form` is the parent's reactive
  * object, so field edits land straight on it.
  * Lifecycle (status / publish_at) is NOT here: it goes through ContentLifecycleController.
+ * File fields are self-contained (FileUploader owns its input + upload), so this component
+ * emits nothing.
  */
 defineProps<{
     form: any;
     categoryOptions: { label: string; value: any }[];
     articleDataFields: { key: string; title: string; type: string }[];
 }>();
-
-const emit = defineEmits<{
-    (e: 'upload-thumbnail', event: Event): void;
-    (e: 'upload-attachment', fieldKey: string, event: Event): void;
-}>();
-
-// The input lives in this component's template, so the ref belongs here too.
-const thumbnailInput = ref<HTMLInputElement | null>(null);
 </script>
 
 <template>
@@ -53,23 +46,7 @@ const thumbnailInput = ref<HTMLInputElement | null>(null);
         <div class="flex flex-col gap-2">
             <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.thumbnail') ||
                 'Thumbnail' }}</label>
-            <div class="relative w-full aspect-video border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[12px] flex items-center justify-center overflow-hidden hover:border-apple-blue transition-colors cursor-pointer group"
-                @click="thumbnailInput?.click()">
-                <input type="file" ref="thumbnailInput" class="hidden" accept="image/*"
-                    @change="emit('upload-thumbnail', $event)" />
-                <img v-if="form.thumbnail" :src="form.thumbnail" class="w-full h-full object-cover" />
-                <div v-else
-                    class="text-center text-[rgba(0,0,0,0.4)] group-hover:text-apple-blue transition-colors flex flex-col items-center">
-                    <LucideImage :size="24" class="mb-2 opacity-50 group-hover:opacity-100" />
-                    <span class="text-[13px] font-medium">{{ $t('action.upload') || 'Click to Upload'
-                    }}</span>
-                </div>
-            </div>
-            <div v-if="form.thumbnail" class="text-right">
-                <span @click.stop="form.thumbnail = ''"
-                    class="text-[12px] text-red-500 cursor-pointer hover:underline">{{ $t('action.remove')
-                        || 'Remove' }}</span>
-            </div>
+            <FileUploader v-model="form.thumbnail" accept="image/*" size="lg" />
         </div>
 
         <div class="flex flex-col gap-2">
@@ -103,23 +80,8 @@ const thumbnailInput = ref<HTMLInputElement | null>(null);
                 <InputText v-else-if="field.type === 'number'" unstyled v-model="form.data[field.key]"
                     type="number" :placeholder="field.title" :class="INPUT_CLASS" />
 
-                <!-- attachment -->
-                <div v-else-if="field.type === 'attachment'" class="flex flex-col gap-2">
-                    <div v-if="form.data[field.key]"
-                        class="flex items-center gap-2 bg-[#f5f5f7] rounded-[8px] px-3 py-2">
-                        <img v-if="/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(form.data[field.key])"
-                            :src="form.data[field.key]" class="h-10 w-10 object-cover rounded" />
-                        <a :href="form.data[field.key]" target="_blank"
-                            class="text-[13px] text-apple-blue hover:underline truncate flex-1">{{ form.data[field.key].split('/').pop() }}</a>
-                        <span @click="form.data[field.key] = ''"
-                            class="text-[12px] text-red-500 cursor-pointer hover:underline">{{ $t('action.remove') || 'Remove' }}</span>
-                    </div>
-                    <label v-else
-                        class="relative w-full h-10 border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[8px] flex items-center justify-center hover:border-apple-blue transition-colors cursor-pointer text-[13px] text-[rgba(0,0,0,0.5)]">
-                        <input type="file" class="hidden" @change="emit('upload-attachment', field.key, $event)" />
-                        {{ $t('action.upload') || 'Upload' }}
-                    </label>
-                </div>
+                <!-- attachment (any file type) -->
+                <FileUploader v-else-if="field.type === 'attachment'" v-model="form.data[field.key]" size="sm" />
             </div>
         </template>
     </div>

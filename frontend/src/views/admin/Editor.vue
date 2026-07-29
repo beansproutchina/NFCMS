@@ -182,42 +182,11 @@ const autoSlug = () => {
     }
 };
 
+// md-editor-v3's upload contract (a callback, not a UI control) — kept, but sharing the
+// same multipart helper as everything else. All other file inputs live in FileUploader.
 const onUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
-    const formData = new FormData();
-    files.forEach((file) => {
-        formData.append('file', file);
-    });
-    
-    const res = await uploadAPI.upload(formData);
-    
-    if (res?.data) {
-        callback(res.data.map((item: any) => item.url));
-    }
-};
-
-const onThumbnailSelected = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-    try {
-        const res = await uploadAPI.uploadFiles(target.files);
-        if (res?.data?.length > 0) {
-            form.value.thumbnail = res.data[0].url;
-            toast.add({ severity: 'success', summary: 'Success', detail: '缩略图上传成功', life: 3000 });
-        }
-    } finally {
-        target.value = '';   // let the same file be re-picked
-    }
-};
-
-const onAttachmentSelected = async (fieldKey: string, event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-    try {
-        const res = await uploadAPI.uploadFiles(target.files);
-        if (res?.data?.length > 0) form.value.data[fieldKey] = res.data[0].url;
-    } finally {
-        target.value = '';
-    }
+    const res = await uploadAPI.uploadFiles(files);
+    if (res?.data) callback(res.data.map((item: any) => item.url));
 };
 
 // The property panel is a `hidden lg:block` sidebar on wide screens; below lg it is the only
@@ -271,8 +240,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
             <div class="w-[320px] shrink-0 bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
                 <h3 class="text-[21px] font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
-                <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields"
-                    @upload-thumbnail="onThumbnailSelected" @upload-attachment="onAttachmentSelected" />
+                <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
 
                 <div class="mt-4">
                     <label class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
@@ -320,8 +288,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                             <LucideX :size="16" />
                         </button>
                     </div>
-                    <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields"
-                        @upload-thumbnail="onThumbnailSelected" @upload-attachment="onAttachmentSelected" />
+                    <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
                 </div>
             </Transition>
         </Teleport>
