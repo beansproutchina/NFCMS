@@ -283,7 +283,15 @@ const routes: RouteRecordRaw[] = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  // Without this, Vue Router keeps the previous page's scroll position on every navigation.
+  // New navigations start at the top; back/forward restore the saved position (delayed a little
+  // so the async-rendered content has height before we scroll to it); #hash jumps to the anchor.
+  scrollBehavior(to, _from, savedPosition) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth' };
+    if (savedPosition) return new Promise((resolve) => setTimeout(() => resolve(savedPosition), 300));
+    return { top: 0 };
+  },
 });
 
 router.beforeEach(async (to, from, next) => {

@@ -1,29 +1,27 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { marked } from 'marked';
 
 const props = defineProps<{ context: any }>();
-const { config, article, breadcrumbs } = props.context || {};
-const router = useRouter();
+const { article, breadcrumbs } = props.context || {};
 
 const renderedContent = computed(() => {
   if (!article?.content) return '';
-  return marked.parse(article.content);
+  return marked.parse(article.content) as string;
 });
 </script>
 
 <template>
   <main class="article-main">
-    <div class="breadcrumbs">
-      <span @click="router.push('/')">首页</span>
+    <nav class="breadcrumbs">
+      <a href="/">首页</a>
       <template v-for="crumb in breadcrumbs" :key="crumb.id">
         <span class="sep">/</span>
-        <span @click="router.push(`/a/${crumb.slug}`)">{{ crumb.name }}</span>
+        <a :href="`/a/${crumb.slug}`">{{ crumb.name }}</a>
       </template>
       <span class="sep">/</span>
       <span class="current">{{ article?.title }}</span>
-    </div>
+    </nav>
 
     <article class="article-body">
       <header class="article-header">
@@ -51,6 +49,11 @@ const renderedContent = computed(() => {
   padding: 3rem 2rem;
   width: 100%;
 }
+.breadcrumbs { font-family: 'Space Mono', monospace; font-size: 0.85rem; }
+.breadcrumbs a { color: var(--ink); text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 3px; }
+.breadcrumbs a:hover { color: var(--accent); }
+.breadcrumbs .sep { margin: 0 8px; color: var(--border-light); }
+.breadcrumbs .current { color: rgba(28,28,28,.6); }
 .article-header h1 {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 4.5rem;
