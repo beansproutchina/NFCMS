@@ -2,7 +2,7 @@
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import { FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
 
 /**
@@ -22,50 +22,50 @@ defineProps<{
 
 <template>
     <div class="mt-4">
-        <label class="block text-body font-medium text-label mb-2">{{ $t('form.category_id')
+        <label :class="LABEL">{{ $t('form.category_id')
             || 'Category ID' }} <span class="text-danger">*</span></label>
         <Select v-model.number="form.category_id" :options="categoryOptions" optionLabel="label"
             optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
     </div>
 
     <div class="mt-4">
-        <label class="block text-body font-medium text-label mb-2">{{
+        <label :class="LABEL">{{
             $t('form.content_template') || 'Local Template' }}</label>
         <InputText unstyled v-model="form.content_template" placeholder="e.g. DefaultArticle"
             :class="INPUT_CLASS" />
     </div>
 
     <div class="mt-4 flex items-center justify-between">
-        <label class="block text-body font-medium text-label">{{ $t('form.is_top') || 'Is Top'
+        <label :class="LABEL_BARE">{{ $t('form.is_top') || 'Is Top'
         }}</label>
         <input v-model="form.is_top" type="checkbox" :true-value="1" :false-value="0"
             class="h-5 w-5 rounded border-separator" />
     </div>
 
     <div class="mt-4 flex flex-col gap-6">
-        <div class="flex flex-col gap-2">
-            <label class="text-body text-label font-medium">{{ $t('form.thumbnail') ||
+        <div :class="FIELD_GROUP">
+            <label :class="LABEL_BARE">{{ $t('form.thumbnail') ||
                 'Thumbnail' }}</label>
             <FileUploader v-model="form.thumbnail" accept="image/*" size="lg" />
         </div>
 
-        <div class="flex flex-col gap-2">
-            <label class="text-body text-label font-medium">{{ $t('form.urlSlug') }}</label>
+        <div :class="FIELD_GROUP">
+            <label :class="LABEL_BARE">{{ $t('form.urlSlug') }}</label>
             <InputText unstyled v-model="form.slug" placeholder="my-awesome-post"
                 :class="INPUT_CLASS" />
         </div>
 
-        <div class="flex flex-col gap-2">
-            <label class="text-body text-label font-medium">{{ $t('form.description') ||
+        <div :class="FIELD_GROUP">
+            <label :class="LABEL_BARE">{{ $t('form.description') ||
                 'Description' }}</label>
             <Textarea unstyled v-model="form.description" rows="4" placeholder="..."
-                class="w-full border border-fill py-2 px-3 rounded-card text-body focus:outline-none focus:border-accent transition-colors resize-none"></Textarea>
+                class="resize-none" :class="INPUT_CLASS"></Textarea>
         </div>
 
         <!-- Dynamic article data fields from category definition -->
         <template v-if="articleDataFields.length > 0">
-            <div v-for="field in articleDataFields" :key="field.key" class="flex flex-col gap-2">
-                <label class="text-body text-label font-medium">{{ field.title }}</label>
+            <div v-for="field in articleDataFields" :key="field.key" :class="FIELD_GROUP">
+                <label :class="LABEL_BARE">{{ field.title }}</label>
 
                 <!-- text -->
                 <InputText v-if="field.type === 'text'" unstyled v-model="form.data[field.key]"
@@ -74,7 +74,7 @@ defineProps<{
                 <!-- textarea -->
                 <Textarea v-else-if="field.type === 'textarea'" unstyled v-model="form.data[field.key]"
                     :placeholder="field.title" rows="3"
-                    class="w-full border border-fill py-2 px-3 rounded-card text-body focus:outline-none focus:border-accent transition-colors resize-none" />
+                    class="resize-none" :class="INPUT_CLASS" />
 
                 <!-- number -->
                 <InputText v-else-if="field.type === 'number'" unstyled v-model="form.data[field.key]"

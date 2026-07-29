@@ -2,7 +2,7 @@
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm p-4">
     <div class="bg-white rounded-card w-full shadow-2xl flex flex-col max-h-[90vh] relative" :class="widthClass">
       <div class="p-6 border-b border-separator-weak flex justify-between items-center">
-        <h2 class="text-title-section font-semibold">{{ title }}</h2>
+        <h2 :class="SECTION_TITLE">{{ title }}</h2>
         <Button unstyled @click="$emit('close')" :class="DIALOG_CLOSE">✕</Button>
       </div>
 
@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import Button from 'primevue/button';
-import { BTN, DIALOG_CLOSE } from '../ui/presets';
+import { BTN, DIALOG_CLOSE, SECTION_TITLE } from '../ui/presets';
 
 defineProps({
   title: {

@@ -12,7 +12,7 @@ import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideEyeOff, Lu
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { DATEPICKER_PT, BTN } from '../../ui/presets';
+import { BTN, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 import EditorPanel from './EditorPanel.vue';
 
@@ -243,7 +243,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
 
                 <div class="mt-4">
-                    <label class="text-body font-medium text-label mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
+                    <label class="mb-2 flex items-center gap-1" :class="LABEL_BARE"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
                     <div class="flex gap-2">
                         <DatePicker v-model="publishAt" showTime hourFormat="24" dateFormat="yy-mm-dd" unstyled :pt="DATEPICKER_PT" class="flex-1" />
                         <Button unstyled @click="schedule" :disabled="loading" :class="BTN.secondary">{{ $t('action.schedule') }}</Button>
@@ -251,8 +251,8 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 </div>
 
                 <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-separator-weak">
-                    <label class="text-body font-medium text-label mb-3 flex items-center gap-1"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
-                    <ul class="flex flex-col gap-2 max-h-[220px] overflow-y-auto">
+                    <label class="mb-3 flex items-center gap-1" :class="LABEL_BARE"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
+                    <ul class="max-h-[220px] overflow-y-auto" :class="FIELD_GROUP">
                         <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-small bg-surface rounded-control px-3 py-2">
                             <div class="min-w-0">
                                 <div class="font-medium text-label">v{{ rev.version_no }} · {{ rev.note }}</div>

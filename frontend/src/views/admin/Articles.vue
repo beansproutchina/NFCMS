@@ -6,7 +6,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import { listArticle, removeArticle, listCategory, lifecycleAPI } from '../../api';
-import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import { BTN, INPUT_CLASS, LINK, PAGE, SEARCH, SELECT_PT } from '../../ui/presets';
 import { LucidePlus, LucideSearch,  } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
@@ -135,10 +135,10 @@ const toggleVisibility = async (data: any) => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.articles') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.articles') }}</h1>
             </div>
             <div class="flex flex-wrap gap-4 items-center">
                 <Select 
@@ -153,8 +153,8 @@ const toggleVisibility = async (data: any) => {
                     @change="onFilterChange"
                 />
                 <span class="relative">
-                    <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
-                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, 'pl-9']" />
+                    <LucideSearch :class="SEARCH.icon" :size="16" />
+                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, SEARCH.input]" />
                 </span>
                 <Button unstyled @click="router.push('/admin/articles/new')" :class="BTN.primary">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
@@ -201,13 +201,13 @@ const toggleVisibility = async (data: any) => {
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
-                    <Button unstyled @click="editArticle(data.id)" class="text-link hover:underline text-body flex items-center cursor-pointer">
+                    <Button unstyled @click="editArticle(data.id)" :class="LINK.action">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled @click="toggleVisibility(data)" class="text-label-2 hover:underline text-body flex items-center cursor-pointer">
                         {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
-                    <Button unstyled @click="deleteArticle(data.id)" class="text-danger hover:underline text-body flex items-center cursor-pointer">
+                    <Button unstyled @click="deleteArticle(data.id)" :class="LINK.danger">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>

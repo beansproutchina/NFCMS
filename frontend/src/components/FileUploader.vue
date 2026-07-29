@@ -6,7 +6,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
 import { LucideUpload, LucideImage, LucideFile, LucideFolderOpen } from 'lucide-vue-next';
 import { uploadAPI } from '../api';
-import { BTN } from '../ui/presets';
+import { BTN, FIELD_GROUP } from '../ui/presets';
 import FilePicker from './FilePicker.vue';
 
 /**
@@ -110,7 +110,7 @@ const BOX_CLASS = computed(() => (props.size === 'lg' ? 'w-full aspect-video' : 
 </script>
 
 <template>
-    <div class="flex flex-col gap-2">
+    <div :class="FIELD_GROUP">
         <!-- The one and only file input: owned here, never exposed to callers. -->
         <input ref="fileInput" type="file" class="hidden" :accept="accept || undefined" :multiple="multiple" @change="onFilesSelected" />
 

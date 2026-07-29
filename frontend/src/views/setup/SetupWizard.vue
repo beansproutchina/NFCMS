@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FIELD_GROUP, INPUT_CLASS_LG, PASSWORD_LG } from '../../ui/presets';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { systemAPI } from '../../api';
@@ -125,25 +126,25 @@ const performSetup = async () => {
 
         <!-- New Site Mode -->
         <template v-if="!importMode">
-          <div class="flex flex-col gap-2">
+          <div :class="FIELD_GROUP">
             <label class="text-body text-label px-1 font-medium">Site Name</label>
             <InputText v-model="siteName" unstyled
-              class="w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all"
+              :class="INPUT_CLASS_LG"
               placeholder="My Awesome Website" />
           </div>
 
-          <div class="flex flex-col gap-2">
+          <div :class="FIELD_GROUP">
             <label class="text-body text-label px-1 font-medium">Admin Username</label>
             <InputText v-model="adminUsername" unstyled
-              class="w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all"
+              :class="INPUT_CLASS_LG"
               placeholder="admin" autocomplete="username" />
           </div>
 
-          <div class="flex flex-col gap-2">
+          <div :class="FIELD_GROUP">
             <label class="text-body text-label px-1 font-medium">Admin Password</label>
             <Password v-model="adminPassword" unstyled :feedback="false" toggleMask fluid
-              :inputProps="{ class: 'w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all relative', placeholder: '••••••••', autocomplete: 'new-password' }"
-              :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
+              :inputProps="{ class: PASSWORD_LG.inputClass, placeholder: '••••••••', autocomplete: 'new-password' }"
+              :pt="PASSWORD_LG.pt" />
           </div>
         </template>
 

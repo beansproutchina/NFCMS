@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { uploadAPI } from '../api';
 import { LucideSearch, LucideX, LucideFile, LucideCheck } from 'lucide-vue-next';
-import { INPUT_CLASS, BTN, DIALOG_CLOSE } from '../ui/presets';
+import { BTN, BTN_SMALL, DIALOG_CLOSE, EMPTY, INPUT_CLASS, SEARCH, SECTION_TITLE } from '../ui/presets';
 
 /**
  * File-library picker overlay. Same shape as UserPicker.vue (paged search + `visible`/`select`
@@ -85,19 +85,19 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
     <div v-if="visible" class="fixed inset-0 z-60 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" @click.self="close">
         <div class="bg-white rounded-card w-full max-w-2xl shadow-2xl flex flex-col max-h-[80vh]">
             <div class="p-5 border-b border-separator-weak flex items-center justify-between">
-                <h2 class="text-title-section font-semibold">{{ $t('fileUploader.pickTitle') }}</h2>
+                <h2 :class="SECTION_TITLE">{{ $t('fileUploader.pickTitle') }}</h2>
                 <Button unstyled @click="close" :class="DIALOG_CLOSE"><LucideX :size="18" /></Button>
             </div>
 
             <div class="p-5 flex flex-col gap-3 overflow-y-auto">
                 <div class="relative">
-                    <LucideSearch :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-                    <InputText v-model="q" unstyled :placeholder="$t('fileUploader.search')" :class="[INPUT_CLASS, 'pl-9']" @keyup.enter="search" @input="search" />
+                    <LucideSearch :size="16" :class="SEARCH.icon" />
+                    <InputText v-model="q" unstyled :placeholder="$t('fileUploader.search')" :class="[INPUT_CLASS, SEARCH.input]" @keyup.enter="search" @input="search" />
                 </div>
 
                 <div class="min-h-[260px]">
-                    <div v-if="loading" class="text-body text-label-3 py-8 text-center">{{ $t('system.loading') }}</div>
-                    <div v-else-if="!files.length" class="text-body text-label-3 py-8 text-center">{{ $t('fileUploader.empty') }}</div>
+                    <div v-if="loading" :class="EMPTY">{{ $t('system.loading') }}</div>
+                    <div v-else-if="!files.length" :class="EMPTY">{{ $t('fileUploader.empty') }}</div>
                     <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         <button v-for="f in files" :key="f.id" @click="pick(f)" type="button"
                             class="relative text-left border rounded-control overflow-hidden hover:border-accent transition-colors cursor-pointer"
@@ -115,9 +115,9 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; picke
                 </div>
 
                 <div class="flex items-center justify-between pt-1">
-                    <Button unstyled @click="prev" :disabled="page === 0" class="text-small px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer">{{ $t('common.prev') }}</Button>
+                    <Button unstyled @click="prev" :disabled="page === 0" :class="BTN_SMALL.pager">{{ $t('common.prev') }}</Button>
                     <span class="text-small text-label-3">{{ page + 1 }} / {{ pages() }}</span>
-                    <Button unstyled @click="next" :disabled="page >= pages() - 1" class="text-small px-3 h-8 rounded-control border border-separator hover:bg-canvas disabled:opacity-40 cursor-pointer">{{ $t('common.next') }}</Button>
+                    <Button unstyled @click="next" :disabled="page >= pages() - 1" :class="BTN_SMALL.pager">{{ $t('common.next') }}</Button>
                 </div>
 
                 <div v-if="multiple" class="flex items-center justify-end gap-3 pt-2 border-t border-separator-weak">

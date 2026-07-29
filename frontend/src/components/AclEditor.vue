@@ -6,7 +6,7 @@ import { listUser, listRole, aclAPI } from '../api';
 import { useToast } from 'primevue/usetoast';
 import { LucideTrash2, LucidePlus } from 'lucide-vue-next';
 import UserPicker from './UserPicker.vue';
-import { SELECT_PT, BTN } from '../ui/presets';
+import { BTN, FIELD_GROUP, LABEL_BARE, SELECT_PT } from '../ui/presets';
 
 /**
  * Reusable resource-ACL editor. Lists grants for (model, resourceId) and lets the user
@@ -92,9 +92,9 @@ watch(() => [props.model, props.resourceId], load);
 
 <template>
     <div>
-        <label v-if="title" class="text-body font-medium text-label mb-3 block">{{ title }}</label>
+        <label v-if="title" class="mb-3 block" :class="LABEL_BARE">{{ title }}</label>
 
-        <ul v-if="grants.length" class="flex flex-col gap-2 mb-3">
+        <ul v-if="grants.length" class="mb-3" :class="FIELD_GROUP">
             <li v-for="g in grants" :key="g.id" class="flex items-center justify-between text-small bg-surface rounded-control px-3 py-2">
                 <span class="text-label min-w-0 truncate">{{ granteeLabel(g) }} · <span class="font-medium">{{ g.access }}</span></span>
                 <button @click="revoke(g)" class="text-danger hover:text-danger shrink-0 ml-2 cursor-pointer"><LucideTrash2 :size="15" /></button>
@@ -102,7 +102,7 @@ watch(() => [props.model, props.resourceId], load);
         </ul>
         <div v-else class="text-small text-label-3 mb-3">{{ $t('acl.none') }}</div>
 
-        <div class="flex flex-col gap-2 bg-surface rounded-control p-3">
+        <div class="bg-surface rounded-control p-3" :class="FIELD_GROUP">
             <div class="flex gap-2">
                 <Select v-model="form.grantee_type" :options="granteeTypeOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-[96px] shrink-0" @change="form.grantee_id = null; form.user_label = ''" />
                 <template v-if="form.grantee_type === 'user'">

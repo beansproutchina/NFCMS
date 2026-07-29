@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-card shadow-card overflow-hidden border border-separator-weak relative">
+  <div class="relative" :class="CARD">
     <DataTable 
       v-bind="$attrs"
       :value="data" 
@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { CARD } from '../ui/presets';
 import type { PropType } from 'vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';

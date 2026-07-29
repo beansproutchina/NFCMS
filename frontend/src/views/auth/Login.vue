@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FIELD_GROUP, INPUT_CLASS_LG, PASSWORD_LG } from '../../ui/presets';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authAPI } from '../../api';
@@ -56,14 +57,14 @@ const performLogin = async () => {
       </div>
 
       <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col gap-6">
-        <div class="flex flex-col gap-2">
+        <div :class="FIELD_GROUP">
           <label class="text-body text-label px-1 font-medium">{{ $t('auth.username') }}</label>
-          <InputText v-model="username" unstyled class="w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all" placeholder="admin" autocomplete="username" />
+          <InputText v-model="username" unstyled :class="INPUT_CLASS_LG" placeholder="admin" autocomplete="username" />
         </div>
 
-        <div class="flex flex-col gap-2">
+        <div :class="FIELD_GROUP">
           <label class="text-body text-label px-1 font-medium">{{ $t('auth.password') }}</label>
-          <Password v-model="password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: 'w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all relative', placeholder: '••••••••', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5', unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5' }" />
+          <Password v-model="password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: PASSWORD_LG.inputClass, placeholder: '••••••••', autocomplete: 'current-password' }" :pt="PASSWORD_LG.pt" />
         </div>
 
         <div v-if="error" class="text-danger text-body text-center">{{ error }}</div>

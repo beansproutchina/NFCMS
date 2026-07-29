@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LABEL_BARE, PAGE, SECTION_TITLE } from '../../ui/presets';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { schemaAPI, listArticle, listCategory, listUser, uploadAPI, systemAPI } from '../../api';
@@ -79,14 +80,14 @@ const formatDate = (dateString: string) => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-      <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('dashboard.welcome') }}, {{ user?.username || 'Admin' }}</h1>
+    <div :class="PAGE.container">
+      <h1 :class="PAGE.title">{{ $t('dashboard.welcome') }}, {{ user?.username || 'Admin' }}</h1>
       <p class="text-title-section text-label font-normal leading-[1.19] mb-12">{{ $t('dashboard.overviewPrefix') }}</p>
       
       <div v-if="loading" class="opacity-50 flex items-center gap-2 mb-10"><LucideActivity class="animate-spin" :size="20" /> {{ $t('system.loading') }}</div>
       
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
-        <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-card p-6 shadow-card border border-fill flex flex-col hover:-translate-y-1 transition-transform duration-300">
+        <div v-for="stat in stats" :key="stat.label" class="bg-white rounded-card p-6 shadow-card border border-separator-weak flex flex-col hover:-translate-y-1 transition-transform duration-300">
           <div class="flex items-center justify-between mb-4">
               <div :class="['w-10 h-10 rounded-full flex items-center justify-center', stat.bg, stat.color]">
                   <component :is="stat.icon" :size="20" />
@@ -99,9 +100,9 @@ const formatDate = (dateString: string) => {
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          <div class="lg:col-span-2 bg-white rounded-card shadow-card border border-fill overflow-hidden flex flex-col">
+          <div class="lg:col-span-2 bg-white rounded-card shadow-card border border-separator-weak overflow-hidden flex flex-col">
               <div class="p-6 border-b border-separator-weak flex justify-between items-center bg-surface">
-                  <h2 class="text-title-section font-semibold flex items-center gap-2 text-label"><LucideFileText :size="20" class="text-accent" /> {{ $t('dashboard.recentArticles') }}</h2>
+                  <h2 class="flex items-center gap-2 text-label" :class="SECTION_TITLE"><LucideFileText :size="20" class="text-accent" /> {{ $t('dashboard.recentArticles') }}</h2>
                   <button @click="router.push('/admin/articles/new')" class="text-body text-accent hover:underline flex items-center gap-1 bg-transparent border-0 cursor-pointer"><LucidePlusCircle :size="16"/> {{ $t('action.new') }}</button>
               </div>
               <div class="flex-1 p-0">
@@ -110,7 +111,7 @@ const formatDate = (dateString: string) => {
                   </div>
                   <div v-for="article in recentArticles" :key="article.id" class="px-6 py-4 flex items-center justify-between hover:bg-canvas transition-colors cursor-pointer border-b border-separator-weak last:border-0" @click="router.push('/admin/articles/edit/'+article.id)">
                       <div class="flex-1 min-w-0 pr-4">
-                          <h4 class="text-body font-medium text-label truncate mb-1">{{ article.title }}</h4>
+                          <h4 class="truncate mb-1" :class="LABEL_BARE">{{ article.title }}</h4>
                           <div class="text-small text-label-3 truncate max-w-full">
                               <span v-if="article.is_top" class="text-danger font-semibold mr-2 border border-danger/20 bg-danger/10 px-1 rounded">{{ $t('form.is_top') }}</span>
                               {{ article.description || article.slug }}
@@ -129,8 +130,8 @@ const formatDate = (dateString: string) => {
 
           <div class="flex flex-col gap-6">
               <!-- System Status -->
-              <div class="bg-white rounded-card shadow-card border border-fill p-6 flex flex-col gap-5">
-                  <h2 class="text-title-section font-semibold flex items-center gap-2 text-label"><LucideShieldCheck :size="20" class="text-emerald-500" /> {{ $t('dashboard.systemStatus') }}</h2>
+              <div class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex flex-col gap-5">
+                  <h2 class="flex items-center gap-2 text-label" :class="SECTION_TITLE"><LucideShieldCheck :size="20" class="text-emerald-500" /> {{ $t('dashboard.systemStatus') }}</h2>
                   <div class="flex flex-col gap-4 mt-2">
                       <div class="flex justify-between items-center text-body">
                           <span class="text-label-2">Platform Core</span>
@@ -148,8 +149,8 @@ const formatDate = (dateString: string) => {
               </div>
 
               <!-- Quick Actions -->
-              <div class="bg-white rounded-card shadow-card border border-fill p-6 flex-1">
-                  <h2 class="text-title-section font-semibold flex items-center gap-2 mb-6 text-label"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
+              <div class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex-1">
+                  <h2 class="flex items-center gap-2 mb-6 text-label" :class="SECTION_TITLE"><LucideActivity :size="20" class="text-indigo-500" /> {{ $t('dashboard.quickActions') }}</h2>
                   <div class="grid grid-cols-2 gap-3">
                       <button v-if="isSuper" @click="router.push('/admin/categories')" class="flex flex-col items-center justify-center gap-2 p-4 rounded-card bg-canvas hover:bg-surface-hover transition-colors text-label border-0 cursor-pointer">
                           <LucideFolder :size="24" class="text-amber-500"/>

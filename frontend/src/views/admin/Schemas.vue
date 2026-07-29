@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PAGE } from '../../ui/presets';
 import { ref, onMounted } from 'vue';
 import SmartTable from '../../components/SmartTable.vue';
 import { schemaAPI } from '../../api';
@@ -25,10 +26,10 @@ onMounted(fetchSchemas);
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex justify-between items-end mb-8">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.schemas') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.schemas') }}</h1>
             </div>
         </div>
 

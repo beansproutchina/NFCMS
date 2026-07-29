@@ -1,8 +1,8 @@
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="mb-8 flex justify-between items-end">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.users') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.users') }}</h1>
             </div>
             <div>
                 <Button unstyled v-if="isSuperAdmin" @click="openEditor()"
@@ -28,12 +28,12 @@
             <template #actions="{ data }">
                 <div class="flex gap-2">
                     <Button unstyled @click="openEditor(data)"
-                        class="text-link hover:underline text-body flex items-center cursor-pointer">
+                        :class="LINK.action">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled v-if="isSuperAdmin && data.username !== currentUser.username"
                         @click="deleteUser(data.id)"
-                        class="text-danger hover:underline text-body flex items-center cursor-pointer">
+                        :class="LINK.danger">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>
@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { LINK, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 import { ref, computed, onMounted } from 'vue';

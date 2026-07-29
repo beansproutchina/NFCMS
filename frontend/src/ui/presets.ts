@@ -28,6 +28,31 @@ export const INPUT_CLASS_SM =
   'transition-shadow focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent';
 
 /**
+ * The onboarding field: Login and the setup wizard, full-screen and one question at a time.
+ *
+ * Not a copy of INPUT_CLASS with tweaks — a different control. Grey filled, borderless, 17px, and it
+ * turns white on focus, which is Apple's own sign-in treatment. Forcing these onto the admin's
+ * white-bordered 14px field would shrink those pages into a settings form. Five hand-written copies
+ * before this.
+ */
+export const INPUT_CLASS_LG =
+  'w-full bg-canvas text-label border border-transparent rounded-control py-4 px-4 text-title-item ' +
+  'focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all';
+
+/**
+ * Password field on the onboarding pages: the large field plus the show/hide eye.
+ * Login and the setup wizard had identical copies of both the class and the icon passthrough.
+ */
+export const PASSWORD_LG = {
+  inputClass: `${INPUT_CLASS_LG} relative`,
+  pt: {
+    root: 'relative w-full',
+    maskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5',
+    unmaskIcon: 'absolute right-4 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-5 h-5',
+  },
+};
+
+/**
  * Unstyled PrimeVue Select passthrough.
  * Width is intentionally NOT set here — give the component its own width via `class`
  * (e.g. `class="w-full"` for a form field, `class="flex-1 min-w-0"` or `class="w-[130px]"`

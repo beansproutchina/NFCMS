@@ -2,41 +2,41 @@
   <AdminModal :title="isEditing ? $t('action.edit') : $t('action.new')" widthClass="max-w-lg" @close="emit('close')" @save="save">
     <form @submit.prevent="save" class="space-y-4" id="category-form">
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.name') }}</label>
+        <label :class="LABEL">{{ $t('form.name') }}</label>
         <InputText v-model="formData.name" unstyled :class="INPUT_CLASS" />
       </div>
 
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.slug') }}</label>
+        <label :class="LABEL">{{ $t('form.slug') }}</label>
         <InputText v-model="formData.slug" unstyled :class="INPUT_CLASS" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.list_template') || 'List Template' }}</label>
+          <label :class="LABEL">{{ $t('form.list_template') || 'List Template' }}</label>
           <InputText v-model="formData.list_template" unstyled placeholder="e.g. ListTemplate1" :class="INPUT_CLASS" />
         </div>
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.content_template') }}</label>
+          <label :class="LABEL">{{ $t('form.content_template') }}</label>
           <InputText v-model="formData.content_template" unstyled placeholder="e.g. ContentTemplate1" :class="INPUT_CLASS" />
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.parent_id') }}</label>
+          <label :class="LABEL">{{ $t('form.parent_id') }}</label>
           <Select v-model="formData.parent_id" :options="categoryOptions" optionLabel="label" optionValue="value"
             unstyled :pt="SELECT_PT" class="w-full" />
         </div>
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.weight') }}</label>
+          <label :class="LABEL">{{ $t('form.weight') }}</label>
           <InputText v-model.number="formData.weight" unstyled :class="INPUT_CLASS" />
         </div>
       </div>
 
       <!-- Article Data Fields Editor -->
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.articleDataFields') }}</label>
+        <label :class="LABEL">{{ $t('form.articleDataFields') }}</label>
         <p class="text-small text-label-3 mb-2">{{ $t('form.articleDataFieldsDesc') }}</p>
         <div class="border rounded-control border-separator p-3 bg-white max-h-60 overflow-y-auto space-y-2">
           <div v-for="(field, idx) in formData.articleFieldDefs" :key="idx" class="flex gap-2 items-start">
@@ -62,7 +62,7 @@
       </div>
 
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.extraData')}}</label>
+        <label :class="LABEL">{{ $t('form.extraData')}}</label>
         <div class="border rounded-control border-separator p-2 bg-white  max-h-40 overflow-y-auto ">
           <div v-for="(item, idx) in formData.metaPairs" :key="idx" class="flex gap-2 mb-2">
             <InputText v-model="item.key" unstyled placeholder="Key"
@@ -94,7 +94,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
-import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, SELECT_PT } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 
 const { t } = useI18n();

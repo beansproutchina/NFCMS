@@ -1,8 +1,8 @@
 <template>
-  <div class="max-w-7xl mx-auto py-10 w-full px-6">
-    <div class="flex justify-between items-end mb-8">
+  <div :class="PAGE.container">
+    <div :class="PAGE.header">
       <div>
-        <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ schemaName }} Management</h1>
+        <h1 :class="PAGE.title">{{ schemaName }} Management</h1>
         <p class="text-label-3">Managing records dynamically.</p>
       </div>
       <Button unstyled @click="openForm()" class="bg-accent hover:bg-link text-white px-5 py-2.5 rounded-full font-medium transition-colors">
@@ -41,7 +41,7 @@
         
         <form @submit.prevent="saveRecord" class="space-y-5">
           <div v-for="field in currentSchema?.fields || []" :key="field.name">
-            <label class="block text-body font-medium text-label mb-2">{{ field.name }} <span v-if="field.type" class="text-small text-label-3">({{ field.type }})</span></label>
+            <label :class="LABEL">{{ field.name }} <span v-if="field.type" class="text-small text-label-3">({{ field.type }})</span></label>
             
             <InputText unstyled v-if="field.type === 'string' || field.type === 'date'"
                    v-model="formData[field.name]"
@@ -58,7 +58,7 @@
 
             <Textarea unstyled v-else-if="field.type === 'object'" 
                       v-model="formData[field.name]" 
-                      class="w-full min-h-[120px] p-4 border border-divider rounded-control focus:border-accent focus:ring-1 font-mono text-small"
+                      class="min-h-[120px] font-mono" :class="INPUT_CLASS"
                       placeholder="{}"></Textarea>
           </div>
           
@@ -78,7 +78,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crud } from '../../api';
-import { INPUT_CLASS } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, PAGE } from '../../ui/presets';
 
 const route = useRoute();
 const schemaName = computed(() => route.params.modelName as string);

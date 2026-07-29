@@ -3,11 +3,11 @@
     <div class="space-y-6">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.name') }} <span class="text-danger">*</span></label>
+          <label :class="LABEL">{{ $t('form.name') }} <span class="text-danger">*</span></label>
           <InputText unstyled v-model="formData.name" :class="INPUT_CLASS"/>
         </div>
         <div>
-          <label class="block text-body font-medium text-label mb-1">{{ $t('form.locationKey') || 'Key Location (e.g. "header")' }}</label>
+          <label :class="LABEL">{{ $t('form.locationKey') || 'Key Location (e.g. "header")' }}</label>
           <InputText unstyled v-model="formData.location" :class="INPUT_CLASS"/>
         </div>
       </div>
@@ -25,7 +25,7 @@
 
       <div>
           <div class="flex justify-between items-center mb-3">
-            <label class="block text-body font-medium text-label">{{ $t('form.menuItems') || 'Menu Items (Tree)' }}</label>
+            <label :class="LABEL_BARE">{{ $t('form.menuItems') || 'Menu Items (Tree)' }}</label>
             <Button unstyled @click="addItem(formData.items)" type="button" class="text-small font-medium text-accent whitespace-nowrap px-3 py-2 bg-info-fill hover:bg-info-fill rounded-control focus:outline-none transition-colors">+ {{ $t('action.addRootItem') || 'Add Root Item' }}</Button>
           </div>
           <div class="bg-canvas border border-separator-weak rounded-card p-4 min-h-[200px]">
@@ -44,7 +44,7 @@ import AdminModal from '../../components/AdminModal.vue';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import { BTN, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT } from '../../ui/presets';
 import { listCategory, listArticle } from '../../api';
 import MenuItemEditor from './MenuItemEditor.vue';
 

@@ -2,24 +2,24 @@
   <AdminModal :title="isEditing ? $t('action.edit') : $t('user.new')" widthClass="max-w-lg" @close="emit('close')" @save="save" :disableSave="!formData.username || (!isEditing && !formData.password)">
     <form @submit.prevent="save" class="space-y-5" id="user-form">
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.username') }} <span class="text-danger">*</span></label>
+        <label :class="LABEL">{{ $t('form.username') }} <span class="text-danger">*</span></label>
         <InputText v-model="formData.username" unstyled :class="INPUT_CLASS" required/>
       </div>
       
       <div>
-        <label class="block text-body font-medium text-label mb-1">
+        <label :class="LABEL">
             {{ $t('form.password') }} <span v-if="!isEditing" class="text-danger">*</span>
         </label>
         <Password v-model="formData.password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: INPUT_CLASS, placeholder: isEditing ? $t('form.leaveBlankToKeep') : '', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4', unmaskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4' }" />
       </div>
 
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('form.role') }} <span class="text-small text-label-3">({{ $t('roles.primaryRole') }})</span></label>
+        <label :class="LABEL">{{ $t('form.role') }} <span class="text-small text-label-3">({{ $t('roles.primaryRole') }})</span></label>
         <Select v-model="formData.role" :options="roleOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
       </div>
 
       <div>
-        <label class="block text-body font-medium text-label mb-1">{{ $t('roles.additionalRoles') }} <span class="text-small text-label-3">({{ $t('roles.additionalHint') }})</span></label>
+        <label :class="LABEL">{{ $t('roles.additionalRoles') }} <span class="text-small text-label-3">({{ $t('roles.additionalHint') }})</span></label>
         <div class="flex flex-wrap gap-2">
           <label v-for="r in roles.filter(x => x.name !== formData.role)" :key="r.id" class="flex items-center gap-1.5 px-2.5 py-1.5 border rounded-control text-small cursor-pointer transition-colors"
             :class="additionalRoleIds.includes(r.id) ? 'bg-accent text-white border-accent' : 'border-separator hover:bg-canvas'">
@@ -42,7 +42,7 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Select from 'primevue/select';
 import { listRole, listUserRole } from '../../api';
-import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, SELECT_PT } from '../../ui/presets';
 
 const { t } = useI18n();
 

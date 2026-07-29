@@ -1,8 +1,8 @@
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex justify-between items-end mb-8">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.categories') }}
+                <h1 :class="PAGE.title">{{ $t('system.categories') }}
                 </h1>
             </div>
             <Button unstyled @click="openForm()"
@@ -13,7 +13,7 @@
 
         <div
             class="bg-white rounded-card shadow-card border border-separator-weak p-6 flex-1 overflow-auto">
-            <div v-if="loading" class="text-center py-10 text-label-3">{{ $t('system.loading') || 'Loading...'
+            <div v-if="loading" :class="EMPTY">{{ $t('system.loading') || 'Loading...'
             }}</div>
             <div v-else>
                 <!-- Simple custom tree implementation since PrimeVue TreeTable can be complex to setup perfectly -->
@@ -21,7 +21,7 @@
                     <CategoryItem v-for="cat in rootCategories" :key="cat.id" :category="cat"
                         :allCategories="categories" @edit="openForm" @delete="deleteCategory" />
                 </ul>
-                <div v-if="rootCategories.length === 0" class="text-center py-10 text-label-3">{{
+                <div v-if="rootCategories.length === 0" :class="EMPTY">{{
                     $t('system.noEntries') || 'No entries found.' }}</div>
             </div>
         </div>
@@ -33,6 +33,7 @@
 </template>
 
 <script setup lang="ts">
+import { EMPTY, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 

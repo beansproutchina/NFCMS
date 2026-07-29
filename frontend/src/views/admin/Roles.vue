@@ -8,7 +8,7 @@ import { listRole, createRole as apiCreateRole, removeRole, listRolePermission, 
          schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
 import { useToast } from 'primevue/usetoast';
 import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
-import { SELECT_PT, INPUT_CLASS_SM, BTN } from '../../ui/presets';
+import { BTN, FIELD_GROUP, INPUT_CLASS_SM, PAGE, SECTION_TITLE, SELECT_PT } from '../../ui/presets';
 
 const toast = useToast();
 
@@ -143,9 +143,9 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
+    <div :class="PAGE.container">
         <div class="mb-8">
-            <h1 class="text-title-page font-semibold leading-title tracking-tight mb-2">{{ $t('system.roles') }}</h1>
+            <h1 :class="PAGE.title">{{ $t('system.roles') }}</h1>
             <p class="text-body text-label-2">{{ $t('roles.desc') }}</p>
         </div>
 
@@ -173,7 +173,7 @@ onMounted(async () => {
             <div class="flex-1 bg-white rounded-card border border-separator-weak p-6">
                 <div v-if="!selectedRole" class="text-label-3">{{ $t('roles.selectPane') }}</div>
                 <template v-else>
-                    <h2 class="text-title-section font-semibold mb-1">{{ selectedRole.label || selectedRole.name }}</h2>
+                    <h2 class="mb-1" :class="SECTION_TITLE">{{ selectedRole.label || selectedRole.name }}</h2>
                     <div class="text-small text-label-3 mb-5">{{ selectedRole.name }}<span v-if="isSystem"> · {{ $t('roles.builtin') }}</span></div>
 
                     <div v-if="selectedRole.name === 'super_admin'" class="text-body text-label-2 bg-canvas rounded-control px-4 py-3">
@@ -212,7 +212,7 @@ onMounted(async () => {
                             <h3 class="text-body font-semibold mb-1">{{ $t('roles.categoryGrants') }}</h3>
                             <p class="text-small text-label-3 mb-4">{{ $t('roles.categoryGrantsHint') }}</p>
 
-                            <ul v-if="catGrants.length" class="flex flex-col gap-2 mb-3">
+                            <ul v-if="catGrants.length" class="mb-3" :class="FIELD_GROUP">
                                 <li v-for="g in catGrants" :key="g.id" class="flex items-center justify-between text-body bg-surface rounded-control px-3 py-2">
                                     <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded text-small">{{ g.access }}</span></span>
                                     <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-danger cursor-pointer" @click="revokeCatGrant(g)" />
