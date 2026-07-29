@@ -1,21 +1,30 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import { LucideImage } from 'lucide-vue-next';
 import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
 
+/**
+ * Article property panel — the single definition of the article's content fields, mounted
+ * twice by Editor.vue (desktop sidebar + mobile drawer). `form` is the parent's reactive
+ * object, so field edits land straight on it.
+ * Lifecycle (status / publish_at) is NOT here: it goes through ContentLifecycleController.
+ */
 defineProps<{
     form: any;
     categoryOptions: { label: string; value: any }[];
     articleDataFields: { key: string; title: string; type: string }[];
-    thumbnailInput: HTMLInputElement | null;
 }>();
 
 const emit = defineEmits<{
     (e: 'upload-thumbnail', event: Event): void;
     (e: 'upload-attachment', fieldKey: string, event: Event): void;
 }>();
+
+// The input lives in this component's template, so the ref belongs here too.
+const thumbnailInput = ref<HTMLInputElement | null>(null);
 </script>
 
 <template>
@@ -31,13 +40,6 @@ const emit = defineEmits<{
             $t('form.content_template') || 'Local Template' }}</label>
         <InputText unstyled v-model="form.content_template" placeholder="e.g. DefaultArticle"
             :class="INPUT_CLASS" />
-    </div>
-
-    <div class="mt-4 flex items-center justify-between">
-        <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)]">{{ $t('form.visible') ||
-            'Visible' }}</label>
-        <input v-model="form.visible" type="checkbox" :true-value="1" :false-value="0"
-            class="h-5 w-5 rounded border-[rgba(0,0,0,0.15)]" />
     </div>
 
     <div class="mt-4 flex items-center justify-between">

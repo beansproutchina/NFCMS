@@ -1,21 +1,20 @@
 <script setup lang="ts">
 
-import { ref, onMounted, computed } from 'vue';
-import Textarea from 'primevue/textarea';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { getArticle, createArticle, updateArticle, lifecycleAPI, contentAPI, uploadAPI } from '../../api';
 import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
-import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideImage, LucideEyeOff, LucideClock, LucideRotateCcw } from 'lucide-vue-next';
+import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideEyeOff, LucideClock, LucideRotateCcw, LucideSettings, LucideX } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { SELECT_PT, DATEPICKER_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import { DATEPICKER_PT, BTN } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
+import EditorPanel from './EditorPanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -29,7 +28,8 @@ const articleId = ref<string | number | null>(route.params.id ? (route.params.id
 // Content fields only. status/publish_at are lifecycle-managed on the backend (not sent here).
 const form = ref({
     category_id: 0, content_template: "", is_top: 0,
-    title: '', slug: '', description: '', thumbnail: '', content: ''
+    title: '', slug: '', description: '', thumbnail: '', content: '',
+    data: {} as Record<string, any>   // custom fields declared by the category (article_data_fields)
 });
 const status = ref<string>('hidden');       // hidden | scheduled | visible
 const publishAt = ref<Date | null>(null);    // scheduled publish time
@@ -38,6 +38,21 @@ const revisions = ref<any[]>([]);
 const loading = ref(false);
 const categories = ref<any[]>([]);
 const categoryOptions = computed(() => { const opts = [{ label: '-', value: 0 }]; categories.value.forEach(c => opts.push({ label: c.name, value: c.id })); return opts; });
+
+// Custom field definitions for the selected category, derived from the categories we already
+// loaded — `manageableCategories` returns whole rows, so no extra request is needed.
+// article_data_fields arrives normalised by DYAPI as object | null | '' — collapse all three.
+// Being a computed, it also re-derives when the user switches category, without touching form.data.
+const articleDataFields = computed(() => {
+    const cat = categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id));
+    const raw = cat?.article_data_fields;
+    const obj = (raw && typeof raw === 'object') ? raw as Record<string, any> : {};
+    return Object.entries(obj).map(([key, def]: [string, any]) => ({
+        key,
+        title: def?.title || key,
+        type: def?.type || 'text',
+    }));
+});
 
 const statusCls = computed(() => ({
     hidden: 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]',
@@ -61,7 +76,9 @@ const loadArticle = async () => {
     form.value = {
         title: item.title || '', slug: item.slug || '', description: item.description || '',
         thumbnail: item.thumbnail || '', content: item.content || '',
-        category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0
+        category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0,
+        // `data` comes back as object | null | '' (DYAPI JSON.parse with a swallowed error) — normalise.
+        data: (item.data && typeof item.data === 'object') ? item.data : {}
     };
     status.value = item.status || 'hidden';
 };
@@ -178,28 +195,38 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
     }
 };
 
-const thumbnailInput = ref<HTMLInputElement | null>(null);
 const onThumbnailSelected = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     if (!target.files || target.files.length === 0) return;
-    const file = target.files[0];
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
     try {
-        const res = await uploadAPI.upload(formData);
-        
+        const res = await uploadAPI.uploadFiles(target.files);
         if (res?.data?.length > 0) {
             form.value.thumbnail = res.data[0].url;
             toast.add({ severity: 'success', summary: 'Success', detail: '缩略图上传成功', life: 3000 });
         }
     } finally {
-        if (thumbnailInput.value) {
-            thumbnailInput.value.value = '';
-        }
+        target.value = '';   // let the same file be re-picked
     }
 };
+
+const onAttachmentSelected = async (fieldKey: string, event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (!target.files || target.files.length === 0) return;
+    try {
+        const res = await uploadAPI.uploadFiles(target.files);
+        if (res?.data?.length > 0) form.value.data[fieldKey] = res.data[0].url;
+    } finally {
+        target.value = '';
+    }
+};
+
+// The property panel is a `hidden lg:block` sidebar on wide screens; below lg it is the only
+// way to reach category_id (a save-blocking required field), so it also mounts in a drawer.
+const isMobile = ref(false);
+const showMobilePanel = ref(false);
+const checkMobile = () => { isMobile.value = window.innerWidth < 1024; };
+onMounted(() => { checkMobile(); window.addEventListener('resize', checkMobile); });
+onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
 </script>
 
 <template>
@@ -241,17 +268,11 @@ const onThumbnailSelected = async (event: Event) => {
                 </div>
             </div>
 
-            <div class="w-[320px] bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
+            <div class="w-[320px] shrink-0 bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
                 <h3 class="text-[21px] font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
-                <div class="mt-4">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ $t('form.category_id') || 'Category ID' }} <span class="text-red-500">*</span></label>
-                    <Select v-model.number="form.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
-                </div>
-                
-                <div class="mt-4">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ $t('form.content_template') || 'Local Template' }}</label>
-                    <InputText unstyled v-model="form.content_template" placeholder="e.g. DefaultArticle" :class="INPUT_CLASS" />
-                </div>
+
+                <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields"
+                    @upload-thumbnail="onThumbnailSelected" @upload-attachment="onAttachmentSelected" />
 
                 <div class="mt-4">
                     <label class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
@@ -277,42 +298,44 @@ const onThumbnailSelected = async (event: Event) => {
                 <div v-if="isEdit" class="mt-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
                     <AclEditor model="articles" :resource-id="articleId" :actions="['R', 'U', 'D', 'publish']" :title="$t('article.sharing')" />
                 </div>
-
-                <div class="mt-4 flex items-center justify-between">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)]">{{ $t('form.is_top') || 'Is Top' }}</label>
-                    <input v-model="form.is_top" type="checkbox" :true-value="1" :false-value="0" class="h-5 w-5 rounded border-[rgba(0,0,0,0.15)]" />
-                </div>
-
-                <div class="mt-4 flex flex-col gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.thumbnail') || 'Thumbnail' }}</label>
-                        <div 
-                            class="relative w-full aspect-video border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[12px] flex items-center justify-center overflow-hidden hover:border-apple-blue transition-colors cursor-pointer group" 
-                            @click="thumbnailInput?.click()"
-                        >
-                            <input type="file" ref="thumbnailInput" class="hidden" accept="image/*" @change="onThumbnailSelected" />
-                            <img v-if="form.thumbnail" :src="form.thumbnail" class="w-full h-full object-cover" />
-                            <div v-else class="text-center text-[rgba(0,0,0,0.4)] group-hover:text-apple-blue transition-colors flex flex-col items-center">
-                                <LucideImage :size="24" class="mb-2 opacity-50 group-hover:opacity-100" />
-                                <span class="text-[13px] font-medium">{{ $t('action.upload') || 'Click to Upload' }}</span>
-                            </div>
-                        </div>
-                        <div v-if="form.thumbnail" class="text-right">
-                             <span @click.stop="form.thumbnail = ''" class="text-[12px] text-red-500 cursor-pointer hover:underline">{{ $t('action.remove') || 'Remove' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.urlSlug') }}</label>
-                        <InputText unstyled v-model="form.slug" placeholder="my-awesome-post" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
-                    </div>
-                    
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.description') || 'Description' }}</label>
-                        <Textarea unstyled v-model="form.description" rows="4" placeholder="..." class="w-full border border-[rgba(0,0,0,0.04)] py-2 px-3 rounded-[11px] text-[14px] focus:outline-none focus:border-apple-blue transition-colors resize-none"></Textarea>
-                    </div>
-                </div>
             </div>
         </div>
+
+        <!-- Below lg the sidebar is hidden, so the same panel opens as a drawer. -->
+        <button v-if="isMobile" @click="showMobilePanel = true"
+            class="fixed right-4 bottom-6 z-40 w-14 h-14 rounded-full bg-apple-blue text-white shadow-lg flex items-center justify-center hover:bg-[#0077ED] transition-colors cursor-pointer">
+            <LucideSettings :size="22" />
+        </button>
+
+        <Teleport to="body">
+            <Transition name="fade">
+                <div v-if="showMobilePanel && isMobile" class="fixed inset-0 z-50 bg-black/40" @click="showMobilePanel = false"></div>
+            </Transition>
+            <Transition name="slide">
+                <div v-if="showMobilePanel && isMobile"
+                    class="fixed right-0 top-0 bottom-0 z-50 w-[85vw] max-w-[380px] bg-white shadow-2xl overflow-y-auto p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-[21px] font-display font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
+                        <button @click="showMobilePanel = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer">
+                            <LucideX :size="16" />
+                        </button>
+                    </div>
+                    <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields"
+                        @upload-thumbnail="onThumbnailSelected" @upload-attachment="onAttachmentSelected" />
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from,
+.fade-leave-to { opacity: 0; }
+
+.slide-enter-active,
+.slide-leave-active { transition: transform 0.25s ease; }
+.slide-enter-from,
+.slide-leave-to { transform: translateX(100%); }
+</style>
