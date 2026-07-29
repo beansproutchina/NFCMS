@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { articleUrl, formatDate } from './lib';
+import { articleUrl, formatDate, LISTED_WORK_FILTER } from './lib';
 
 const props = defineProps<{ context: any }>();
 const { config, categories, articles, api } = props.context || {};
@@ -93,23 +93,21 @@ const latest = computed(() => {
   return (articles || []).filter((a: any) => !skip.has(a.category_id)).slice(0, 5);
 });
 
-const fetchCat = async (cat: any, limit: number, top = false) => {
+const fetchCat = async (cat: any, limit: number, extraFilter: Record<string, any> = {}) => {
   if (!cat || !api?.contentAPI) return [];
   try {
-    const filter: any = { category_id: cat.id };
-    if (top) filter.is_top = 1;
-    let res = await api.contentAPI.listArticles({ filter, orderBy: 'published_at', orderDesc: true, limit });
-    let data = res.data || [];
-    if (top && !data.length) { // fall back to latest when nothing is pinned
-      res = await api.contentAPI.listArticles({ filter: { category_id: cat.id }, orderBy: 'published_at', orderDesc: true, limit });
-      data = res.data || [];
-    }
-    return data;
+    const res = await api.contentAPI.listArticles({
+      filter: { category_id: cat.id, ...extraFilter }, orderBy: 'published_at', orderDesc: true, limit,
+    });
+    return res.data || [];
   } catch { return []; }
 };
 
 onMounted(async () => {
-  works.value = await fetchCat(worksCat.value, 4, true);
+  // Deliberately NO "nothing pinned → fall back to latest" here: unpinned projects are unlisted on
+  // purpose (see LISTED_WORK_FILTER), so a fallback would leak them onto the home page. With nothing
+  // pinned the section simply doesn't render (`v-if="works.length"`).
+  works.value = await fetchCat(worksCat.value, 4, LISTED_WORK_FILTER);
   services.value = await fetchCat(servicesCat.value, 6);
 });
 </script>

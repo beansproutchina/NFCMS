@@ -36,10 +36,11 @@
 </template>
 
 <script setup lang="ts">
-import { articleUrl, useArticleList } from './lib';
+import { articleUrl, useArticleList, LISTED_WORK_FILTER } from './lib';
 const props = defineProps<{ context: any }>();
 const { category, breadcrumbs } = props.context || {};
-const { items, total, page, loading, totalPages, goPage } = useArticleList(props.context, 12);
+// Pinned-only, matching worksPrefetch in theme.config.ts — see LISTED_WORK_FILTER for why.
+const { items, total, page, loading, totalPages, goPage } = useArticleList(props.context, 12, LISTED_WORK_FILTER);
 </script>
 
 <style scoped>

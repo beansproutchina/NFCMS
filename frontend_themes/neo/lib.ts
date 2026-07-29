@@ -4,6 +4,19 @@ import { useRoute, useRouter } from 'vue-router';
 /** Article permalink (enriched articles carry `.category`). */
 export const articleUrl = (a: any) => (a?.category?.slug ? `/a/${a.category.slug}/${a.slug}` : `/a/${a?.slug}`);
 
+/**
+ * Which projects the studio lists publicly: pinned ones only.
+ *
+ * `is_top` therefore carries two meanings in this theme — "featured" and "publicly listed". That is
+ * deliberate: a studio shows a curated set, while members' own side projects stay off the studio
+ * listings. Unpinned projects are NOT hidden — they keep a working permalink and still appear on
+ * their author's member page (MemberPage does not apply this filter), they are merely unlisted.
+ *
+ * Single source of truth for both the `theme.config.ts` prefetch (page 0) and `useArticleList`
+ * (pages 2+). Keep it that way: two copies would list one set on page 1 and another from page 2 on.
+ */
+export const LISTED_WORK_FILTER = { is_top: 1 };
+
 const pad = (n: number) => String(n).padStart(2, '0');
 export const formatDate = (s: string) => { if (!s) return ''; const d = new Date(s); return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`; };
 
@@ -20,8 +33,13 @@ export const formatDate = (s: string) => { if (!s) return ''; const d = new Date
  * take the same path, which is why the page number survives history navigation.
  * Cost, stated plainly: a page change is 3 requests instead of 1, because the whole navigation
  * re-runs. Fixing that means teaching the framework's prefetch about `$query.x` — out of scope.
+ *
+ * `extraFilter` is merged into the server-side filter for every page. It MUST mirror the filter
+ * declared for this template in theme.config.ts — the prefetch seeds page 0 while this composable
+ * fetches the rest, so a mismatch shows one rule on page 1 and another from page 2 on.
+ * WorkGrid passes `{ is_top: 1 }`: only pinned projects are listed publicly (see LISTED_WORK_FILTER).
  */
-export function useArticleList(context: any, pageSize: number) {
+export function useArticleList(context: any, pageSize: number, extraFilter: Record<string, any> = {}) {
   const categoryId = context?.category?.id;
   const api = context?.api;
   const route = useRoute();
@@ -41,7 +59,8 @@ export function useArticleList(context: any, pageSize: number) {
     loading.value = true;
     try {
       const res = await api.contentAPI.listArticles({
-        filter: { category_id: categoryId }, orderBy: 'published_at', orderDesc: true, page: p, limit: pageSize,
+        filter: { category_id: categoryId, ...extraFilter },
+        orderBy: 'published_at', orderDesc: true, page: p, limit: pageSize,
       });
       items.value = res.data || [];
       total.value = res.total ?? items.value.length;

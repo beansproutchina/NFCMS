@@ -1,5 +1,6 @@
 import type { App } from 'vue';
 import type { ThemeInfo, ThemePages, ThemeConfigSchema } from '@/views/front/theme-runtime';
+import { LISTED_WORK_FILTER } from './lib';
 
 export const info: ThemeInfo = {
   name: "Neo Studio",
@@ -54,6 +55,12 @@ const listPrefetch = [
   { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
 ];
 
+// Same, but only the pinned projects — the studio's works page is a curated list, not an archive.
+// Filter comes from lib.ts so this and useArticleList (pages 2+) can never drift apart.
+const worksPrefetch = [
+  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
+];
+
 export const pages: ThemePages = {
   DefaultHome: {
     layout: 'Layout',
@@ -67,7 +74,7 @@ export const pages: ThemePages = {
   DefaultCategory: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
   DefaultArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
   // Portfolio
-  WorkGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
+  WorkGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: worksPrefetch },
   ProjectArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
   // Services & team
   ServiceList: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
