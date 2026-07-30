@@ -2,7 +2,9 @@
   "_meta": {
     "version": "1.0",
     "exportedAt": "2026-07-28T09:10:33.256Z",
-    "generator": "NFCMS"
+    "generator": "NFCMS",
+    "saltNote": "文件名里那个 admin123 是失效承诺:users[].password 是占位值(160 位,不是真实的 64 位 HMAC-SHA256),任何 PASSWORD_SALT 都对不上。下面这个指纹故意不可能与本机指纹相等,好让 /system/setup 走 saltState=mismatch 分支:重置这些账号并把一次性明文凭据返回给导入者(SetupWizard 会显示)。",
+    "saltFingerprint": "demo-data-placeholder-hashes-not-usable"
   },
   "system_config": [
     {
