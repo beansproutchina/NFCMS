@@ -15,7 +15,7 @@
 
     <div class="footer-bottom">
       <span>© {{ year }} {{ config?.site_name || 'NEO STUDIO' }}</span>
-      <span class="powered">Built with <a href="https://github.com/dyas-dev/NFCMS" target="_blank" rel="noopener">NFCMS</a><template v-if="config?.icp_record"> · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">{{ config.icp_record }}</a></template></span>
+      <span class="powered">Built with <a href="https://github.com/beansproutchina/NFCMS" target="_blank" rel="noopener">NFCMS</a><template v-if="config?.icp_record"> · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">{{ config.icp_record }}</a></template></span>
     </div>
     <div class="footer-decoration">⏤ ⏤ ⏤</div>
   </footer>
