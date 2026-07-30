@@ -191,7 +191,8 @@ const saveSettings = async () => {
         toast.add({ severity: 'success', summary: 'Success', detail: t('toast.savedSettings'), life: 3000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.saveFailed'), life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         saving.value = false;
     }
@@ -207,7 +208,8 @@ const restartBackend = async () => {
         toast.add({ severity: 'success', summary: 'Success', detail: t('toast.restarting'), life: 5000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.restartFailed'), life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         restarting.value = false;
     }
@@ -234,7 +236,8 @@ const handleExport = async () => {
         toast.add({ severity: 'success', summary: 'Success', detail: t('toast.exported'), life: 3000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.exportFailed'), life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         exporting.value = false;
     }
@@ -258,7 +261,8 @@ const testStorageConnection = async () => {
         });
     } catch (e: any) {
         testResult.value = { success: false, error: e.message || 'Test failed' };
-        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.connectionFailed'), life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         testing.value = false;
     }

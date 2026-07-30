@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { BTN, BTN_REMOVE, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, MESSAGE_PT, PASSWORD_LG, TEXT } from '../../ui/presets';
+import { BTN, BTN_LG, BTN_REMOVE, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, MESSAGE_PT, PASSWORD_LG, SEGMENT, TEXT } from '../../ui/presets';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { systemAPI } from '../../api';
@@ -156,22 +156,16 @@ const performSetup = async () => {
 
       <div v-else class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-6">
         <!-- Mode Toggle -->
-        <div class="flex rounded-control overflow-hidden border border-separator">
+        <div :class="SEGMENT.wrap">
           <Button
             @click="importMode = false; clearImportFile()"
             unstyled
-            :class="[
-              'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
-              !importMode ? 'bg-accent text-white' : 'bg-white text-label-2 hover:bg-canvas'
-            ]"
+            :class="[SEGMENT.item, !importMode ? SEGMENT.active : SEGMENT.idle]"
           >{{ $t('setup.tabNew') }}</Button>
           <Button
             @click="importMode = true"
             unstyled
-            :class="[
-              'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
-              importMode ? 'bg-accent text-white' : 'bg-white text-label-2 hover:bg-canvas'
-            ]"
+            :class="[SEGMENT.item, importMode ? SEGMENT.active : SEGMENT.idle]"
           >{{ $t('setup.tabImport') }}</Button>
         </div>
 
@@ -227,7 +221,7 @@ const performSetup = async () => {
         <div v-if="error" class="text-danger text-body text-center">{{ error }}</div>
 
         <Button :loading="loading" @click="performSetup" unstyled
-          class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
+          :class="BTN_LG.primary" class="mt-4 w-full">
           {{ importMode ? $t('setup.importAndInit') : $t('setup.completeSetup') }}
         </Button>
       </div>

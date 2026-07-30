@@ -7,6 +7,11 @@
       </div>
       
       <div>
+        <label :class="LABEL">{{ $t('form.nickname') }}</label>
+        <InputText v-model="formData.nickname" unstyled :class="INPUT_CLASS" />
+      </div>
+
+      <div>
         <label :class="LABEL">
             {{ $t('form.password') }} <span v-if="!isEditing" class="text-danger">*</span>
         </label>
@@ -56,7 +61,7 @@ const emit = defineEmits(['save', 'close']);
 
 // 新建用户**不预选角色**:预选 admin 等于"点两下就建出一个管理员",是提权方向的默认值。
 // 由创建者显式选一个(后端 users.role 的字段默认值也已改成空串)。
-const formData = ref<any>({ role: '' });
+const formData = ref<any>({ role: '', nickname: '' });
 
 // Roles are loaded from the RBAC roles table so any defined role can be assigned.
 const roles = ref<any[]>([]);

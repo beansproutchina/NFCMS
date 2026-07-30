@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { BTN, SECTION_TITLE, TEXT } from '../../ui/presets';
+import { BTN, NAV_ITEM, SECTION_TITLE, TEXT, TOPBAR_ICON } from '../../ui/presets';
 
 import { computed, ref, watch } from 'vue';
 import Button from 'primevue/button';
@@ -100,7 +100,7 @@ watch(() => route.path, () => {
       <span class="font-semibold text-title-item text-white flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
         <LucideSettings :size="18" /> {{ $t('system.title') }}
       </span>
-      <Button unstyled @click="sidebarVisible = !sidebarVisible" class="w-10 h-10 flex items-center justify-center text-white rounded-control hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer">
+      <Button unstyled @click="sidebarVisible = !sidebarVisible" :class="TOPBAR_ICON">
         <LucideMenu v-if="!sidebarVisible" :size="22" />
         <LucideX v-else :size="22" />
       </Button>
@@ -143,8 +143,7 @@ watch(() => route.path, () => {
           <Button unstyled 
             v-for="item in group.items" :key="item.path"
             @click="navigateTo(item.path)"
-            class="flex items-center gap-3 px-3 py-2 rounded-control transition-colors w-full text-left"
-            :class="isCurrentPath(item.path) ? 'bg-fill-strong text-label font-semibold' : 'text-label hover:bg-fill'"
+            :class="[NAV_ITEM.base, isCurrentPath(item.path) ? NAV_ITEM.active : NAV_ITEM.idle]"
           >
             <component :is="item.icon" :size="18" :class="{'opacity-70': !isCurrentPath(item.path)}" />
             {{ $t(item.label) }}
@@ -153,10 +152,10 @@ watch(() => route.path, () => {
       </div>
 
       <div class="p-4 border-t border-divider/60 flex flex-col gap-1">
-        <Button unstyled @click="navigateTo('/')" class="flex items-center gap-3 w-full text-left px-3 py-2 text-label hover:bg-fill rounded-control transition-colors">
+        <Button unstyled @click="navigateTo('/')" :class="[NAV_ITEM.base, NAV_ITEM.idle]">
             <LucideGlobe :size="18" class="opacity-70" />  {{$t('system.visitSite')}}
         </Button>  
-        <Button unstyled @click="logout" class="flex items-center gap-3 w-full text-left px-3 py-2 text-label hover:bg-fill rounded-control transition-colors">
+        <Button unstyled @click="logout" :class="[NAV_ITEM.base, NAV_ITEM.idle]">
             <LucideLogOut :size="18" class="opacity-70" /> {{ $t('auth.logout') }}
         </Button>
       </div>

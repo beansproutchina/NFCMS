@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG } from '../../ui/presets';
+import { BTN_LG, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG } from '../../ui/presets';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authAPI } from '../../api';
@@ -69,7 +69,7 @@ const performLogin = async () => {
 
         <div v-if="error" class="text-danger text-body text-center">{{ error }}</div>
 
-        <Button :loading="loading" @click="performLogin" unstyled class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
+        <Button :loading="loading" @click="performLogin" unstyled :class="BTN_LG.primary" class="mt-4 w-full">
           {{ $t('auth.signIn') }}
         </Button>
       </div>

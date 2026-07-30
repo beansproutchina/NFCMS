@@ -28,7 +28,7 @@ const newPerm = ref({ model: '', action: 'R', scope: 'any' });
 
 const models = ref<any[]>([]); // registered models (from schematools) for the permission dropdown
 const modelOptions = computed(() => models.value.map((m: any) => ({ label: `${m.modelName} (${m.tableName})`, value: m.tableName })));
-const ACTIONS = ['C', 'R', 'U', 'D', 'publish', 'share'];
+const ACTIONS = ['C', 'R', 'U', 'D', 'publish'];
 const SCOPES = ['any', 'own'];
 // "own" is meaningless for create (whatever you create is yours) — only offer "any" for C.
 // Category-limited create is expressed via the category grants section below.

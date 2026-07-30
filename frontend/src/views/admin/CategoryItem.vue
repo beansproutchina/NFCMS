@@ -6,8 +6,8 @@
         <span class="font-mono" :class="TEXT.caption">/{{ category.slug }}</span>
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-        <Button unstyled @click="$emit('edit', category)" class="text-link text-body font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
-        <Button unstyled @click="$emit('delete', category.id)" class="text-danger text-body font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
+        <Button unstyled @click="$emit('edit', category)" :class="LINK.action">{{$t("action.edit")}}</Button>
+        <Button unstyled @click="$emit('delete', category.id)" :class="LINK.danger" class="ml-2">{{$t("action.delete")}}</Button>
       </div>
     </div>
     
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { TEXT } from '../../ui/presets';
+import { LINK, TEXT } from '../../ui/presets';
 
 
 import { computed } from 'vue';

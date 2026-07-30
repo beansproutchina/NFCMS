@@ -74,12 +74,16 @@ const getCategoryName = (id: number) => {
 };
 
 const onPage = (event: any) => {
-    lazyParams.value = event;
+    // 只合并翻页字段。整体赋值会把 sortField/sortOrder 抹掉 —— PrimeVue 的 page 事件只带
+    // {first, rows, page, pageCount},于是点一下页码 orderBy/orderDesc 就没了,列表从
+    // 「id 倒序」退回数据库自然序。
+    lazyParams.value = { ...lazyParams.value, page: event.page, rows: event.rows };
     fetchArticles();
 };
 
 const onSort = (event: any) => {
-    lazyParams.value = event;
+    // 同理:sort 事件里没有 page。换排序回到第 1 页,否则会停在旧页码上看新排序。
+    lazyParams.value = { ...lazyParams.value, sortField: event.sortField, sortOrder: event.sortOrder, page: 0 };
     fetchArticles();
 };
 

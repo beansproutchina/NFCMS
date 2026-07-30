@@ -6,7 +6,7 @@
                 </h1>
             </div>
             <Button unstyled @click="openForm()"
-                class="bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-body font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                :class="BTN.primary">
                 <LucidePlus :size="16" /> {{ $t('action.new') }}
             </Button>
         </div>
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { CARD, EMPTY, PAGE } from '../../ui/presets';
+import { BTN, CARD, EMPTY, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 
@@ -143,7 +143,8 @@ const deleteCategory = async (id: number) => {
                 toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryDeleted'), life: 3000 });
                 fetchCategories();
             } catch (err) {
-                toast.add({ severity: 'error', summary: 'Error', detail: t('toast.deleteFailed'), life: 3000 });
+                // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+                console.error(err);
             }
         },
     });

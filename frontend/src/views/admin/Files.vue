@@ -89,7 +89,8 @@ const deleteFile = (id: number) => {
                 await fetchFiles();
             } catch(e) {
                 console.error(e);
-                toast.add({ severity: 'error', summary: 'Error', detail: t('toast.fileDeleteFailed'), life: 3000 });
+                // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+                console.error(e);
             }
         }
     });

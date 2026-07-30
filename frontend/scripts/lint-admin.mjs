@@ -1,8 +1,8 @@
 /**
  * Commit gate for the admin front-end.
  *
- * Nine rules, each one earned by something this codebase actually got wrong (see
- * docs/commit-gate-plan.md for the counts). The point is not strictness — it is that "did I scan
+ * R1–R8 与 R10–R14,每一条都是这套代码真的犯过的错换来的(计数见 docs/commit-gate-plan.md;
+ * R9 是公开站主题目录的铁律,归另一个脚本,尚未实现)。 The point is not strictness — it is that "did I scan
  * everywhere?" becomes the machine's job. During the design-system refactor that question was
  * answered wrongly three times in a row, always the same way: an incomplete scan reported as a
  * complete result. So three constraints are baked in:
@@ -179,6 +179,54 @@ for (const file of files) {
     }
   }
 
+  /**
+   * R14 — 两个 preset 穿同一身衣服。
+   *
+   * R13 只问"调用点有没有用 preset",答不了"preset 自己有没有重复"。加 R13 的那一轮我就当场犯了
+   * 这个错:`NAV_ITEM`(已存在且已写进 docs)和新写的 `NAV_ROW` 类集合一模一样,两份都能通过全部
+   * 规则 —— 于是调用点该用哪个成了掷硬币,而这正是设计系统失效的起点。
+   *
+   * 比的是**归一化后的类集合**(约束 1),所以词序不同也算重复;只在**不同成员之间**比,同一个
+   * preset 里两个天然同款的槽位(DATEPICKER 的 selectMonth / selectYear)不算。
+   */
+  if (isPresets) {
+    /**
+     * 归属:每个字面量属于「哪个顶层 const 的哪个属性」。按属性合并,`'a ' +\n  'b'` 这种跨行拼接
+     * 才会被当成一个值来比 —— 否则比的是**片段**:FIELD_SKIN 与 INPUT_CLASS_SM 的尾巴
+     * (`transition-shadow focus:…`)逐字相同,整体却是两个不同的控件,那是假阳性。
+     * 用行号定位而不是改写文本,报出来的 file:line 才还指得回源文件。
+     */
+    const lines = text.split('\n');
+    const groups = new Map();          // "OWNER.prop" → { line, tokens:Set }
+    let owner = '?', prop = '';
+    lines.forEach((l, i) => {
+      const c = /^(?:export\s+)?const\s+([A-Z][A-Z0-9_]*)\s*=/.exec(l);
+      if (c) { owner = c[1]; prop = ''; }
+      const p = /^\s{2,}([A-Za-z][\w]*):/.exec(l);
+      if (p) prop = p[1];
+      const key = `${owner}.${prop}`;
+      for (const m of l.matchAll(/'([^'\n]+)'/g)) {
+        const tokens = m[1].trim().split(/\s+/).filter(Boolean);
+        if (!tokens.length || !tokens.every((t) => /^[a-z!]([a-z0-9:_./[\]()%!-]*)$/.test(t)) || !tokens.some((t) => t.includes('-'))) continue;
+        if (!groups.has(key)) groups.set(key, { line: i + 1, owner, tokens: new Set() });
+        tokens.forEach((t) => groups.get(key).tokens.add(t));
+      }
+    });
+    const seen = new Map();
+    for (const [key, g] of groups) {
+      if (g.tokens.size < 4) continue;              // 太短的组合重复没有意义
+      const sig = [...g.tokens].sort().join(' ');
+      const prev = seen.get(sig);
+      // 同一个 preset 内部的兄弟槽位(DATEPICKER 的上一月 / 下一月)天生同款,不算重复。
+      if (prev && prev.owner !== g.owner) {
+        add('R14-preset-dupe', file, `${prev.key} ≡ ${key}`, g.line,
+          `与第 ${prev.line} 行的 ${prev.key} 类集合完全相同 —— 合并成一个,别让调用点二选一`);
+      } else if (!prev) {
+        seen.set(sig, { key, line: g.line, owner: g.owner });
+      }
+    }
+  }
+
   // R10 — the single source of truth must not itself bypass the tokens.
   if (isPresets) {
     // Appearance literals only — a one-off layout dimension inside a preset is fine (plan §7),
@@ -200,6 +248,35 @@ for (const file of files) {
     if (/\bclass="hidden"/.test(tag) || /\bhidden\b/.test(tag) && /class="[^"]*\bhidden\b/.test(tag)) continue;
     if (/:class="[A-Z_]/.test(tag)) continue;               // wears a preset
     add('R6-native-el', file, `<${m[1]}>`, text.slice(0, m.index).split('\n').length, '原生元素必须走 preset,或换 unstyled PrimeVue 组件');
+  }
+
+  /**
+   * R13 — a PrimeVue `<Button>` painted by hand.
+   *
+   * R1–R5 only ever ask "is every class a legitimate token". A button assembled out of perfectly
+   * good tokens passes all of them while still bypassing `BTN.*` —— 这就是 Login 和 SetupWizard 的
+   * 主按钮能长年顶着一串**逐字节相同**的手搓类活下来的原因(系统当时没有大号尺寸,两边各自造了一
+   * 个,连 hover 色都偏离了 BTN_TONE)。R11 看见了这对重复,但它只提示不拦。
+   *
+   * 所以这条规则管的是**外观来源**:`<Button>` 的颜色/字号/圆角/阴影必须来自 preset;布局
+   * (`w-full`/`flex-1`/`mt-4`)按设计系统约定继续内联,不算违规。判定条件刻意保守 —— 只要
+   * `:class` 里出现任何大写标识符(preset 引用)就放过,宁可漏也不误报。
+   */
+  for (const m of text.matchAll(/<Button\b/g)) {
+    const end = text.indexOf('>', m.index);
+    if (end === -1) continue;
+    const tag = text.slice(m.index, end + 1);
+    if (/:class="[^"]*[A-Z][A-Z_]/.test(tag)) continue;                  // wears a preset
+    const painted = [...tag.matchAll(/class="([^"]*)"/g)]
+      .flatMap((c) => c[1].split(/\s+/))
+      // 调色板/字号越界有 R2、R3 专管:同一处代码不该被两条规则各报一次,
+      // 否则 Dashboard 那些已判定接受的图表色会在 baseline 里重复占位。
+      .filter((t) => !/[{}$?]/.test(t) && isAppearance(t)
+        && !PALETTE.test(t) && !PALETTE_BW.test(t) && !BUILTIN_TEXT.test(t) && !BUILTIN_RADIUS.test(t));
+    if (painted.length) {
+      add('R13-button-preset', file, [...new Set(painted)].join(' ').slice(0, 40),
+        text.slice(0, m.index).split('\n').length, '<Button> 外观必须来自 BTN / BTN_LG / BTN_SM / BTN_ICON,布局才内联');
+    }
   }
 
   // R7 — native dialogs. CLAUDE.md forbids these outright.

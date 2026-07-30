@@ -84,12 +84,13 @@
 | 多行输入 | `TEXTAREA_CLASS` / 代码 `TEXTAREA_CLASS_MONO`(**永不给 textarea 固定 `h-*`**) |
 | 引导页字段 | `INPUT_CLASS_LG` / 密码 `PASSWORD_LG` |
 | 下拉 / 日期 / 复选 | `SELECT_PT` / `DATEPICKER_PT` / `CHECKBOX_PT` |
-| 按钮 | `BTN.primary\|secondary\|danger`;行内密集用 `BTN_SM.*` |
-| 圆形图标按钮 | `BTN_ICON.plain\|danger\|subtle` |
+| 按钮 | `BTN.primary\|secondary\|danger`;行内密集用 `BTN_SM.*`;独立表单卡片(登录 / 初始化向导)的提交键用 `BTN_LG.*` |
+| 圆形图标按钮 | `BTN_ICON.plain\|danger\|subtle\|nav` |
+| 深色顶栏图标按钮 | `TOPBAR_ICON` |
+| 二选一分段控件 | `SEGMENT.wrap` + `SEGMENT.item` + `SEGMENT.active\|idle` |
 | 移除一项 | `BTN_REMOVE` |
 | 权限位开关 | `TOGGLE.base` + `TOGGLE.on\|off` |
-| 可选中列表行 | `ROW.base` + `ROW.active\|idle` |
-| 侧边导航项 | `NAV_ITEM.base` + `NAV_ITEM.active\|idle` |
+| 侧边导航项 / 可选中列表行 | `NAV_ITEM.base` + `NAV_ITEM.active\|idle`;`ROW` 是它的别名(逐类相同,两个名字只为语义) |
 | 文字链接 | `LINK.action\|danger\|small` |
 | 页面骨架 | `PAGE.container\|header\|title\|subtitle` |
 | 卡片 / 区块标题 | `CARD` / `SECTION_TITLE` |
@@ -130,7 +131,9 @@ npm run lint:accept   # 把当前状态收进 baseline
 
 拦下时报出 `file:line` 与改法。**修掉是正途**;确实合理的例外往 `frontend/scripts/lint-baseline.json` 加一条(该文件进 review),不要用 `--no-verify`。
 
-规则覆盖:字面值 / 内置调色板与阶 / 死类 / 空操作状态 / 原生元素未走 preset / 原生 `confirm`·`alert` / 硬编码文案 / preset 自身旁路 / 未导入组件。另有「重复外观组合」仅提示。
+规则覆盖:字面值 / 内置调色板与阶 / 死类 / 空操作状态 / 原生元素未走 preset / 原生 `confirm`·`alert` / 硬编码文案 / preset 自身旁路 / 未导入组件 / **`<Button>` 外观未走 preset(R13)** / **两个 preset 类集合重复(R14)**。另有「重复外观组合」仅提示。
+
+R13 与 R14 补的是同一个洞的两头:前者拦「调用点自己拼一套按钮外观」——`BTN_LG` 就是因为没有大号尺寸,登录页和初始化向导各自手搓了一串逐字节相同的类;后者拦「preset 自己重复」——加 R13 那轮我就当场又写了个 `NAV_ROW`,而 `NAV_ITEM` 早已存在且内容相同。两条都比**归一化后的类集合**,词序不同一样算重复。
 
 ## i18n(务必遵守)
 - 新文案**一律加到 `src/i18n.ts` 的 en 和 zh**,组件里用 `$t('...')`/`t('...')`,**别硬编码中文**。

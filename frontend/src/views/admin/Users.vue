@@ -6,7 +6,7 @@
             </div>
             <div>
                 <Button unstyled v-if="isSuperAdmin" @click="openEditor()"
-                    class="bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 px-4 py-2 rounded-control text-body font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                    :class="BTN.primary">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
                 </Button>
             </div>
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { LINK, PAGE } from '../../ui/presets';
+import { BTN, LINK, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 import { ref, computed, onMounted } from 'vue';
@@ -84,12 +84,16 @@ const editingItem = ref<any>(null);
 const lazyParams = ref({ page: 0, rows: 10, sortField: 'id', sortOrder: -1 });
 
 const onPage = (event: any) => {
-    lazyParams.value = event;
+    // 只合并翻页字段。整体赋值会把 sortField/sortOrder 抹掉 —— PrimeVue 的 page 事件只带
+    // {first, rows, page, pageCount},于是点一下页码 orderBy/orderDesc 就没了,列表从
+    // 「id 倒序」退回数据库自然序。
+    lazyParams.value = { ...lazyParams.value, page: event.page, rows: event.rows };
     fetchUsers();
 };
 
 const onSort = (event: any) => {
-    lazyParams.value = event;
+    // 同理:sort 事件里没有 page。换排序回到第 1 页,否则会停在旧页码上看新排序。
+    lazyParams.value = { ...lazyParams.value, sortField: event.sortField, sortOrder: event.sortOrder, page: 0 };
     fetchUsers();
 };
 
@@ -129,7 +133,7 @@ const openEditor = (item?: any) => {
     // If not super admin and trying to edit someone else, block it (UI should prevent this anyway)
     if (!isSuperAdmin && item && item.id !== currentUser.value.id) return;
 
-    editingItem.value = item ? { ...item } : { username: '', password: '', role: '' };  // 不预选角色,见 UserEditor
+    editingItem.value = item ? { ...item } : { username: '', password: '', nickname: '', role: '' };  // 不预选角色,见 UserEditor
     showModal.value = true;
 };
 
@@ -162,7 +166,16 @@ const syncUserRoles = async (userId: number, desiredRoleIds: number[]) => {
     }
 };
 
+/**
+ * 单飞守卫。保存有两条触发路径(footer 的保存按钮、表单自身的 submit),再加上双击,
+ * 同一次提交可能进来两次 —— 表现就是两个一模一样的「用户更新成功」,以及两次 PUT。
+ * 守卫放在这里(唯一发请求 + 唯一弹 toast 的地方),不管上游怎么重复都只执行一次。
+ */
+const saving = ref(false);
+
 const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
+    if (saving.value) return;
+    saving.value = true;
     try {
         // Prevent password update if left empty during edit
         if (formData.id && !formData.password) {
@@ -186,8 +199,10 @@ const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
         showModal.value = false;
         fetchUsers();
     } catch (e) {
+        // 不弹 toast:api.ts 的拦截器已经把后端的具体消息弹出来了(见 App.vue 的 app-error)
         console.error('Save failed', e);
-        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.saveFailed'), life: 3000 });
+    } finally {
+        saving.value = false;
     }
 };
 </script>

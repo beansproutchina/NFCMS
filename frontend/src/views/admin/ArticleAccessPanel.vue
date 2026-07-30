@@ -18,7 +18,6 @@ import Select from 'primevue/select';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import Message from 'primevue/message';
-import { useToast } from 'primevue/usetoast';
 import AdminModal from '../../components/AdminModal.vue';
 import UserPicker from '../../components/UserPicker.vue';
 import { aclAPI, listRole, listUser, updateArticle, ARTICLES_AUDIENCE } from '../../api';
@@ -55,7 +54,6 @@ const props = defineProps<{
 const emit = defineEmits<{ close: []; changed: [patch: Record<string, any>] }>();
 
 const { t, locale } = useI18n();
-const toast = useToast();
 
 // ── ① 谁能看到这篇 ────────────────────────────────────────────────────
 
@@ -123,7 +121,8 @@ async function pushAudience(next: { audience?: string; teaser?: number }) {
         // 立即生效的失败必须回滚 UI,否则界面在说谎。
         tier.value = before.audience;
         teaser.value = before.teaser;
-        toast.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+            console.error(e);
     } finally {
         saving.value = false;
     }
@@ -205,7 +204,8 @@ async function setRowTier(g: any, key: string) {
         });
     } catch (e: any) {
         g.access = before;
-        toast.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+            console.error(e);
     }
 }
 
@@ -214,7 +214,8 @@ async function removeRow(g: any) {
         await aclAPI.revoke('articles', props.articleId, g.id);
         grants.value = grants.value.filter((x: any) => x.id !== g.id);
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+            console.error(e);
     }
 }
 
@@ -229,7 +230,8 @@ async function onUserSelected(u: any) {
         await aclAPI.grant('articles', props.articleId, { grantee_type: 'user', grantee_id: Number(u.id), access });
         await load();
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+            console.error(e);
     }
 }
 </script>

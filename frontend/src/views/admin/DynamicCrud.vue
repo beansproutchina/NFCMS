@@ -5,7 +5,7 @@
         <h1 :class="PAGE.title">{{ schemaName }} Management</h1>
         <p class="text-label-3">Managing records dynamically.</p>
       </div>
-      <Button unstyled @click="openForm()" class="bg-accent hover:bg-link text-white px-5 py-2.5 rounded-full font-medium transition-colors">
+      <Button unstyled @click="openForm()" :class="BTN.primary">
         New Record
       </Button>
     </div>
@@ -28,7 +28,7 @@
       <template #actions="{ data }">
         <div class="flex justify-end gap-3 text-body">
           <Button unstyled @click="openForm(data)" :class="LINK.action">Edit</Button>
-          <Button unstyled @click="deleteRecord(data)" class="text-danger hover:underline">Delete</Button>
+          <Button unstyled @click="deleteRecord(data)" :class="LINK.danger">Delete</Button>
         </div>
       </template>
     </SmartTable>
@@ -63,8 +63,8 @@
           </div>
           
           <div class="flex justify-end gap-3 pt-6 mt-8 border-t border-separator-weak">
-            <Button unstyled type="button" @click="showModal = false" class="px-6 py-2.5 rounded-full hover:bg-canvas text-label transition-colors font-medium">Cancel</Button>
-            <Button unstyled type="submit" class="bg-accent hover:bg-link text-white px-6 py-2.5 rounded-full transition-colors font-medium">Save Record</Button>
+            <Button unstyled type="button" @click="showModal = false" :class="BTN.secondary">Cancel</Button>
+            <Button unstyled type="submit" :class="BTN.primary">Save Record</Button>
           </div>
         </form>
       </div>
@@ -74,18 +74,16 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crud } from '../../api';
-import { CHECKBOX_PT, INPUT_CLASS, LABEL, LINK, PAGE, TEXT, TEXTAREA_CLASS_MONO } from '../../ui/presets';
+import { BTN, CHECKBOX_PT, INPUT_CLASS, LABEL, LINK, PAGE, TEXT, TEXTAREA_CLASS_MONO } from '../../ui/presets';
 import Checkbox from 'primevue/checkbox';
 import Button from 'primevue/button';
 import SmartTable from '../../components/SmartTable.vue';
-const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
 
@@ -164,7 +162,8 @@ const saveRecord = async () => {
         showModal.value = false;
         fetchSchemaAndData();
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: t('toast.saveFailed'), life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
         console.error(e);
     }
 };
@@ -177,7 +176,8 @@ const deleteRecord = async (id: string|number) => {
                 await crud(currentSchema.value.routePath).remove(id);
                 fetchSchemaAndData();
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: t('toast.deleteFailed'), life: 3000 });
+                // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+                console.error(e);
             }
         },
     });

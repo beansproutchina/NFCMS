@@ -166,6 +166,18 @@ export const BTN = {
   danger: `${BTN_SHAPE} h-9 px-4 text-body ${BTN_TONE.danger}`,
 };
 
+/**
+ * Large size, for the one submit button on a standalone form card (Login, SetupWizard) —— 那两处配的
+ * 是 `INPUT_CLASS_LG` 的大号输入框,BTN 的 h-9 在它旁边明显偏小。系统里原本**没有**这个尺寸,于是两
+ * 个调用点各自手搓了一串一模一样的类(`py-[14px] text-title-item hover:bg-link …`),连 hover 色都
+ * 偏离了 BTN_TONE —— 跟 BTN_SM 之前缺位时 MenuEditor 自创第四种样式是同一个病。宽度不在这里:按设计
+ * 系统约定,`w-full` / `mt-4` 这类布局写在调用点自己的 class 上。
+ */
+export const BTN_LG = {
+  primary: `${BTN_SHAPE} h-12 px-4 text-title-item ${BTN_TONE.primary}`,
+  secondary: `${BTN_SHAPE} h-12 px-4 text-title-item ${BTN_TONE.secondary}`,
+};
+
 /** Dense size, for buttons living inside a row: `+ add`, pagination steps, inline actions. */
 export const BTN_SM = {
   primary: `${BTN_SHAPE} h-8 px-3 text-small ${BTN_TONE.primary}`,
@@ -181,6 +193,11 @@ const BTN_ICON_SHAPE = 'w-10 h-10 rounded-full flex items-center justify-center 
 export const BTN_ICON = {
   plain: `${BTN_ICON_SHAPE} bg-white text-accent`,
   danger: `${BTN_ICON_SHAPE} bg-danger text-white hover:bg-danger-hover`,
+  /**
+   * 页面内导航用的圆钮(Editor 的返回)。原来是手写的 `bg-[rgba(210,210,215,0.64)]` + 一串 hover,
+   * 面色既不是令牌、hover 还额外长出 2px 边框;归到这里后跟其他圆钮同形同动效。
+   */
+  nav: `${BTN_ICON_SHAPE} bg-surface-hover text-label-3 hover:text-label`,
   /** Smaller, quieter round button — closing a drawer or a floating panel. */
   subtle: 'w-8 h-8 rounded-full flex items-center justify-center bg-canvas hover:bg-surface-hover text-label-2 hover:text-label cursor-pointer transition-colors',
 };
@@ -259,6 +276,24 @@ export const CHIP = {
  * `text-accent hover:underline` (10 call sites) was the wrong token for a link, and left the admin
  * with two spellings of the same thing. `inline-flex` rather than `flex` so these also work mid-sentence.
  */
+/**
+ * 深色顶栏里的图标按钮(移动端汉堡键)。BTN_ICON 那几个色调都是浅色面板语境,套上去在深色条上
+ * 是白底方块,所以单列一个;`bg-white/10` 取代原来的 `bg-[rgba(255,255,255,0.1)]` 字面量。
+ */
+export const TOPBAR_ICON =
+  'w-10 h-10 flex items-center justify-center text-white rounded-control hover:bg-white/10 transition-colors cursor-pointer';
+
+/**
+ * 二选一分段控件(SetupWizard 的「新建站点 / 导入数据」)。两个按钮之前各写一份相同的尺寸类,
+ * 选中/未选中的配色也是就地拼的。
+ */
+export const SEGMENT = {
+  wrap: 'flex rounded-control overflow-hidden border border-separator',
+  item: 'flex-1 py-2.5 text-body font-medium transition-colors cursor-pointer',
+  active: 'bg-accent text-white',
+  idle: 'bg-white text-label-2 hover:bg-canvas',
+};
+
 export const LINK = {
   action: 'text-link hover:underline text-body cursor-pointer inline-flex items-center gap-1',
   danger: 'text-danger hover:text-danger-hover hover:underline text-body cursor-pointer inline-flex items-center gap-1',
@@ -279,11 +314,17 @@ export const NAV_ITEM = {
   idle: 'text-label hover:bg-fill',
 };
 
+/**
+ * 勾选类控件的外壳:Checkbox 与 Radio 的 root/input 本来是两份逐字相同的字符串。真正的输入框叠在
+ * 最上层且透明,整块都可点、键盘也到得了 —— 这个技巧两个控件通用,所以只写一次。
+ */
+const TICK_ROOT = 'relative inline-flex w-5 h-5 shrink-0 cursor-pointer align-middle';
+const TICK_INPUT = 'absolute inset-0 w-full h-full opacity-0 cursor-pointer m-0';
+
 /** Unstyled PrimeVue Checkbox — replaces the two hand-rolled native ones. */
 export const CHECKBOX_PT = {
-  root: 'relative inline-flex w-5 h-5 shrink-0 cursor-pointer align-middle',
-  // The real input sits on top, invisible, so the whole box stays clickable and keyboard-reachable.
-  input: 'absolute inset-0 w-full h-full opacity-0 cursor-pointer m-0',
+  root: TICK_ROOT,
+  input: TICK_INPUT,
   /**
    * Driven by `context.checked`, not by Tailwind's `peer-checked:`. `peer` needs the input to be a
    * preceding SIBLING of the box, which is a fact about PrimeVue's internal DOM order — the kind of
@@ -364,8 +405,8 @@ export const SPLITBUTTON_PT = {
  * Round instead of square, and the mark is a filled dot rather than a tick.
  */
 export const RADIO_PT = {
-  root: 'relative inline-flex w-5 h-5 shrink-0 cursor-pointer align-middle',
-  input: 'absolute inset-0 w-full h-full opacity-0 cursor-pointer m-0',
+  root: TICK_ROOT,
+  input: TICK_INPUT,
   box: ({ context }: any) => ({
     class: [
       'w-5 h-5 rounded-full border flex items-center justify-center transition-colors',
@@ -380,12 +421,12 @@ export const RADIO_PT = {
 /**
  * A selectable row in a list or picker. Stays a native `<button>` on purpose — a row IS a button —
  * so this gives it the look without giving it PrimeVue's semantics.
+ *
+ * 与 `NAV_ITEM` 逐类相同(只是当年词序写得不一样,所以两份都活了下来)。保留两个名字是因为语义不同
+ * ——「列表里被选中的行」和「侧栏当前页」读起来不是一回事 —— 但**只留一处定义**:哪天两者要分家,
+ * 在这里展开成自己的字符串即可,而不是让它们无声地各自漂移。
  */
-export const ROW = {
-  base: 'w-full flex items-center gap-3 px-3 py-2 rounded-control text-left cursor-pointer transition-colors',
-  active: 'bg-fill-strong font-semibold text-label',
-  idle: 'text-label hover:bg-fill',
-};
+export const ROW = NAV_ITEM;
 
 /** "Nothing here yet" placeholder. Was written three different ways. */
 export const EMPTY = 'text-center py-10 text-body text-label-3';

@@ -237,7 +237,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
     <div class="h-full flex flex-col pt-6 pb-0 px-6 max-w-screen-2xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-4">
-                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-label-3 hover:bg-white hover:border-2 hover:border-accent hover:text-label transition-all cursor-pointer">
+                <Button unstyled @click="router.push('/admin/articles')" :class="BTN_ICON.nav">
                     <LucideChevronLeft :size="20" />
                 </Button>
                 <div>

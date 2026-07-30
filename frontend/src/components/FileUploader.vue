@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import Button from 'primevue/button';
-import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
 import { LucideUpload, LucideImage, LucideFile, LucideFolderOpen } from 'lucide-vue-next';
@@ -37,7 +36,6 @@ const emit = defineEmits<{
     (e: 'uploaded', rows: any[]): void;
 }>();
 
-const toast = useToast();
 const confirm = useConfirm();
 const { t } = useI18n();
 
@@ -83,8 +81,8 @@ const onFilesSelected = async (event: Event) => {
         const res = await uploadAPI.uploadFiles(input.files);
         apply(res?.data || []);
     } catch (e: any) {
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(detail 就是同一个 e.message)
         console.error(e);
-        toast.add({ severity: 'error', summary: t('fileUploader.uploadFailed'), detail: e?.message || '', life: 4000 });
     } finally {
         uploading.value = false;
         input.value = '';   // otherwise re-picking the same file fires no `change`
