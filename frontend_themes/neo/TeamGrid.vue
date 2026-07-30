@@ -20,7 +20,7 @@
           <span v-if="!a.thumbnail">{{ (a.title || '·').slice(0, 1) }}</span>
         </div>
         <div class="m-body">
-          <h2>{{ a.title }}</h2>
+          <h2>{{ a.title }}<span v-if="a.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></h2>
           <p class="role" v-if="a.data?.role">{{ a.data.role }}</p>
           <p class="bio" v-if="a.description">{{ a.description }}</p>
           <div class="skills" v-if="skillsOf(a).length">
@@ -85,4 +85,7 @@ const skillsOf = (a: any) => String(a?.data?.skills || '').split(',').map((s: st
 
 @media (max-width: 900px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .team-grid { grid-template-columns: 1fr; } }
+
+/* 受众轴:摘要墙内容的锁标记(正文已在后端剥离)。 */
+.lock { margin-left: .4em; font-size: .85em; opacity: .65; }
 </style>

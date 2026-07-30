@@ -54,7 +54,9 @@ const props = defineProps<{
 
 const emit = defineEmits(['save', 'close']);
 
-const formData = ref<any>({ role: 'admin' });
+// 新建用户**不预选角色**:预选 admin 等于"点两下就建出一个管理员",是提权方向的默认值。
+// 由创建者显式选一个(后端 users.role 的字段默认值也已改成空串)。
+const formData = ref<any>({ role: '' });
 
 // Roles are loaded from the RBAC roles table so any defined role can be assigned.
 const roles = ref<any[]>([]);
@@ -62,7 +64,8 @@ const additionalRoleIds = ref<number[]>([]);   // user_roles beyond the primary
 const roleOptions = computed(() =>
     roles.value.length
         ? roles.value.map((r: any) => ({ label: r.label || r.name, value: r.name }))
-        : [{ label: t('role.admin') || 'Admin', value: 'admin' }, { label: t('role.super_admin') || 'Super Admin', value: 'super_admin' }]
+        // roles 表读不到时的兜底:只给 super_admin(唯一被代码硬依赖的角色名),不猜其它。
+        : [{ label: t('role.super_admin') || 'Super Admin', value: 'super_admin' }]
 );
 
 onMounted(async () => {

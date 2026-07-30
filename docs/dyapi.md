@@ -52,3 +52,13 @@ PUT/DELETE /api/<route>   → 批量(默认关闭:multiUpdate/multiDelete=0)
 6. **无应用级 cron / SQLite 无 `rawSQLQuery`**:定时用应用层 `node-cron`;需要聚合/批量时走 ORM 读或自算。
 7. `@CRUD` 的 route 名与 Controller 名不要撞(历史约定:控制器名别以复数 `s` 结尾)。
 8. 注册顺序:`scanFiles` 只注册**默认导出**且含 `init` 的类(所以 `CMSModel` 用**命名导出**且放在 `app/lib/` 而非 `app/models/`,避免被自动注册出空表)。运行时新增路由用 `app.use(Class)`(会跑 `init`→`bindCRUD`)。
+
+## 本项目修过的 dyapi 行为(改了 `dyapi3/dyapi` 源码,记得在 `backend/` 重新 `bun install`)
+
+- **`Model.restore(item)` + 容器 `createWithId(table, item)`(新增)**:插入并**保留自带 id**。`create` 里
+  写死了 `delete item.id`("ID由系统生成"),容器里又跳过一次 —— 恢复数据必须绕开这两处,否则 id 重新编号、
+  交叉引用全错位。容器不支持时 `restore` 直接抛错,**不静默降级**(悄悄回退等于把恢复变成数据损坏)。
+- **真正的 `null` 不再被 JSON.stringify**:`create`/`update` 里 `typeof (item[field]) === "object"` 会把
+  `null` 也算进去,于是可空的 Date / Object 列写进库的是**4 个字符的文本 `"null"`**。读出来是字符串,Date 列
+  经 `process()` 变成 Invalid Date 并在下次插入时炸成一句莫名的 `Invalid Date`,Object 列则永远是那个字符串
+  (前端 DatePicker 显示满屏 NaN 也是它)。已在 SQLite 与 MySQL 两个容器的 create/update 路径改成先判 null。

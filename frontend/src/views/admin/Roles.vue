@@ -6,7 +6,7 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import { listRole, createRole as apiCreateRole, removeRole, listRolePermission, createRolePermission,
          removeRolePermission, listResourceGrant, listCategory,
-         schemaAPI, aclAPI, ARTICLES_CATEGORY } from '../../api';
+         schemaAPI, aclAPI, ARTICLES_CATEGORY, ARTICLES_AUDIENCE, VIEW_ACTION } from '../../api';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { LucidePlus, LucideTrash2 } from 'lucide-vue-next';
@@ -74,6 +74,36 @@ const revokeCatGrant = async (g: any) => {
     await loadCatGrants();
 };
 
+// --- 受众轴:该角色可在公开站查看哪些受限栏目(动作 V) ---
+// 与上面的分类授权同构,只换合成 model 与动作 —— 见 docs/public-access.md §2。
+const audGrants = ref<any[]>([]);
+const audForm = ref<{ category_id: any }>({ category_id: null });
+
+const loadAudGrants = async () => {
+    if (!selectedRole.value) { audGrants.value = []; return; }
+    const res = await listResourceGrant({
+        filter: { $and: { model: ARTICLES_AUDIENCE, grantee_type: 'role', grantee_id: selectedRole.value.id } },
+        limit: 999,
+    });
+    audGrants.value = res.data || [];
+};
+
+const addAudGrant = async () => {
+    if (!selectedRole.value || audForm.value.category_id == null) {
+        toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectCategory'), life: 2500 }); return;
+    }
+    await aclAPI.grant(ARTICLES_AUDIENCE, audForm.value.category_id,
+        { grantee_type: 'role', grantee_id: selectedRole.value.id, access: VIEW_ACTION });
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.granted'), life: 2000 });
+    audForm.value = { category_id: null };
+    await loadAudGrants();
+};
+
+const revokeAudGrant = async (g: any) => {
+    await aclAPI.revoke(ARTICLES_AUDIENCE, g.resource_id, g.id);
+    await loadAudGrants();
+};
+
 const loadRoles = async () => {
     const res = await listRole({ limit: 999, orderBy: 'weight', orderDesc: true });
     roles.value = res.data || [];
@@ -90,6 +120,7 @@ const selectRole = async (r: any) => {
     selectedRole.value = r;
     await loadPerms();
     await loadCatGrants();
+    await loadAudGrants();
 };
 
 const createRole = async () => {
@@ -235,6 +266,27 @@ onMounted(async () => {
                                     {{ a }}
                                 </button>
                                 <Button unstyled @click="addCatGrant" :class="[BTN.primary, 'ml-auto']">
+                                    <LucidePlus :size="14" /> {{ $t('roles.addPerm') }}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <!-- 受众轴:该角色在公开站可查看哪些受限栏目(只读,不含编辑权) -->
+                        <div class="mt-8 pt-5 border-t border-separator-weak">
+                            <h3 class="text-body font-semibold mb-1">{{ $t('roles.audienceGrants') }}</h3>
+                            <p class="mb-4" :class="TEXT.caption">{{ $t('roles.audienceGrantsHint') }}</p>
+
+                            <ul v-if="audGrants.length" class="mb-3" :class="FIELD_GROUP">
+                                <li v-for="g in audGrants" :key="g.id" class="flex items-center justify-between text-body bg-surface rounded-control px-3 py-2">
+                                    <span><span class="font-medium">{{ categoryName(g.resource_id) }}</span> · <span class="bg-indigo-fill text-indigo px-2 py-0.5 rounded-chip text-small">{{ g.access }}</span></span>
+                                    <LucideTrash2 :size="15" class="opacity-40 hover:opacity-100 hover:text-danger cursor-pointer" @click="revokeAudGrant(g)" />
+                                </li>
+                            </ul>
+                            <div v-else class="mb-3" :class="TEXT.caption">{{ $t('roles.noAudienceGrants') }}</div>
+
+                            <div class="flex gap-2 items-center bg-surface rounded-control p-3 flex-wrap">
+                                <Select v-model="audForm.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" :placeholder="$t('roles.pickCategory')" unstyled :pt="SELECT_PT" class="w-[200px] shrink-0" />
+                                <Button unstyled @click="addAudGrant" :class="[BTN.primary, 'ml-auto']">
                                     <LucidePlus :size="14" /> {{ $t('roles.addPerm') }}
                                 </Button>
                             </div>

@@ -4,17 +4,17 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { getArticle, createArticle, updateArticle, lifecycleAPI, contentAPI, uploadAPI } from '../../api';
+import { getArticle, createArticle, updateArticle, lifecycleAPI, uploadAPI } from '../../api';
 import InputText from 'primevue/inputtext';
-import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
-import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideEyeOff, LucideClock, LucideRotateCcw, LucideSettings, LucideX } from 'lucide-vue-next';
+import { LucideChevronLeft, LucideSave, LucideLock, LucideRotateCcw, LucideSettings, LucideX } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { BTN, BTN_ICON, CARD, DATEPICKER_PT, FIELD_GROUP, LABEL_BARE, LINK } from '../../ui/presets';
-import AclEditor from '../../components/AclEditor.vue';
+import { BTN, BTN_ICON, CARD, FIELD_GROUP, LABEL_BARE, LINK } from '../../ui/presets';
 import EditorPanel from './EditorPanel.vue';
+import ArticlePublishButton from './ArticlePublishButton.vue';
+import ArticleAccessPanel from './ArticleAccessPanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,12 +28,28 @@ const articleId = ref<string | number | null>(route.params.id ? (route.params.id
 // Content fields only. status/publish_at are lifecycle-managed on the backend (not sent here).
 const form = ref({
     category_id: 0, content_template: "", is_top: 0,
+    // 受众轴:'' = 继承栏目,-1 = teaser 继承栏目(见 docs/public-access.md §2)
+    audience: "", teaser: -1,
     title: '', slug: '', description: '', thumbnail: '', content: '',
     data: {} as Record<string, any>   // custom fields declared by the category (article_data_fields)
 });
 const status = ref<string>('hidden');       // hidden | scheduled | visible
 const publishAt = ref<Date | null>(null);    // scheduled publish time
+const articleAuthorId = ref<any>(null);      // 只用于权限面板里的作者行
+
+/**
+ * DYAPI 会把空的 Date 列返回成**字符串 `"null"`**(和 `data` 字段返回 `'null'` 是同一个毛病),
+ * 而 `new Date("null")` 是 Invalid Date —— 直接喂给 DatePicker 就是满屏 NaN。
+ * 所以日期一律在边界处归一:非法值统一收成 `null`。
+ */
+const toDate = (v: any): Date | null => {
+    if (v == null || v === '' || v === 'null') return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+};
 const revisions = ref<any[]>([]);
+/** 「权限」面板 —— 独立弹窗,改动立即生效(见 docs/editor-access-panel.md)。 */
+const accessOpen = ref(false);
 
 const loading = ref(false);
 const categories = ref<any[]>([]);
@@ -43,6 +59,24 @@ const categoryOptions = computed(() => { const opts = [{ label: '-', value: 0 }]
 // loaded — `manageableCategories` returns whole rows, so no extra request is needed.
 // article_data_fields arrives normalised by DYAPI as object | null | '' — collapse all three.
 // Being a computed, it also re-derives when the user switches category, without touching form.data.
+/** 当前分类行(带后端算好的 audience_eff / audience_from),权限面板据此禁用更宽松的档位。 */
+const currentCategory = computed(() =>
+    categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id)));
+
+/** 当前分类的祖先链 id(root→parent),用于展示级联下来的受众授权。 */
+const ancestorCategoryIds = computed(() => {
+    const byId = new Map(categories.value.map((c: any) => [Number(c.id), c]));
+    const out: number[] = [];
+    const seen = new Set<number>();
+    let id = Number(currentCategory.value?.parent_id) || 0;
+    while (id > 0 && byId.has(id) && !seen.has(id)) {
+        seen.add(id);
+        out.unshift(id);
+        id = Number(byId.get(id)!.parent_id) || 0;
+    }
+    return out;
+});
+
 const articleDataFields = computed(() => {
     const cat = categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id));
     const raw = cat?.article_data_fields;
@@ -53,12 +87,6 @@ const articleDataFields = computed(() => {
         type: def?.type || 'text',
     }));
 });
-
-const statusCls = computed(() => ({
-    hidden: 'bg-canvas text-label-2',
-    scheduled: 'bg-warn-fill text-warn',
-    visible: 'bg-info-fill text-link'
-}[status.value] || 'bg-canvas'));
 
 onMounted(async () => {
     try {
@@ -77,10 +105,15 @@ const loadArticle = async () => {
         title: item.title || '', slug: item.slug || '', description: item.description || '',
         thumbnail: item.thumbnail || '', content: item.content || '',
         category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0,
+        audience: item.audience || '', teaser: item.teaser === undefined ? -1 : Number(item.teaser),
         // `data` comes back as object | null | '' (DYAPI JSON.parse with a swallowed error) — normalise.
         data: (item.data && typeof item.data === 'object') ? item.data : {}
     };
     status.value = item.status || 'hidden';
+    // 权限面板要显示"作者 · 始终可编辑"那一行(作者靠 own scope 生效,不在 resource_grants 里),
+    // 且 publish_at 决定定时按钮显示什么时间 —— 两者都不是表单字段,单独存。
+    articleAuthorId.value = item.author_id ?? null;
+    publishAt.value = toDate(item.publish_at);
 };
 
 const loadRevisions = async () => {
@@ -139,24 +172,26 @@ const unpublish = async () => {
     await refresh();
 };
 
-const schedule = async () => {
-    if (!publishAt.value) { toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectPublishTime'), life: 3000 }); return; }
+/** 时间由头部的发布按钮组件给(它自带选时间的对话框),这里只负责落库。 */
+const schedule = async (when: Date) => {
+    if (!when) return;
     const id = await persist();
     if (!id) return;
-    await lifecycleAPI.transition('articles', id, { to: 'scheduled', publish_at: publishAt.value.toISOString() });
+    await lifecycleAPI.transition('articles', id, { to: 'scheduled', publish_at: when.toISOString() });
     status.value = 'scheduled';
+    publishAt.value = when;
     toast.add({ severity: 'success', summary: 'Success', detail: t('toast.scheduled'), life: 2500 });
     await refresh();
 };
 
-const doPreview = async () => {
-    const id = await persist();
-    if (!id) return;
-    try {
-        const res = await contentAPI.previewToken(id);
-        const token = res.data?.token;
-        if (token) window.open(`/preview?id=${id}&pt=${encodeURIComponent(token)}`, '_blank');
-    } catch (e) { console.error(e); }
+/** 取消定时 = 退回草稿(同一个 transition 接口)。 */
+const cancelSchedule = async () => {
+    if (!articleId.value) return;
+    await lifecycleAPI.transition('articles', articleId.value, { to: 'hidden' });
+    status.value = 'hidden';
+    publishAt.value = null;
+    toast.add({ severity: 'info', summary: 'Info', detail: t('toast.scheduleCancelled'), life: 2500 });
+    await refresh();
 };
 
 const rollback = (versionNo: number) => {
@@ -210,20 +245,20 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 </div>
             </div>
 
+            <!-- 三个按钮:保存 / 权限 / 发布▼。状态由第三个按钮自己表达,不再有单独的状态 chip。
+                 见 docs/editor-access-panel.md §4。 -->
             <div class="flex gap-2 items-center">
-                <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-control text-small font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
-                <Button unstyled @click="doPreview" :disabled="loading" :class="BTN.secondary">
-                    <LucideEye :size="16" /> {{ $t('action.preview') }}
-                </Button>
                 <Button unstyled @click="saveDraft" :disabled="loading" :class="BTN.secondary">
-                    <LucideSave :size="16" /> {{ $t('action.save') }}
+                    <LucideSave :size="16" /> <span class="hidden sm:inline">{{ $t('action.save') }}</span>
                 </Button>
-                <Button v-if="status === 'visible'" unstyled @click="unpublish" :disabled="loading" :class="BTN.danger">
-                    <LucideEyeOff :size="16" /> {{ $t('action.unpublish') }}
+                <!-- 立即生效需要文章 id,所以新建态禁用并解释。 -->
+                <Button unstyled @click="accessOpen = true" :disabled="!isEdit || loading"
+                    :title="!isEdit ? $t('access.newArticleHint') : ''" :class="BTN.secondary">
+                    <LucideLock :size="16" /> <span class="hidden sm:inline">{{ $t('access.title') }}</span>
                 </Button>
-                <Button v-else unstyled @click="publish" :disabled="loading" :class="BTN.primary">
-                    <LucideCheck :size="16" /> {{ $t('action.publish') }}
-                </Button>
+                <ArticlePublishButton :status="(status as any)" :publish-at="publishAt" :loading="loading"
+                    :is-mobile="isMobile" @publish="publish" @unpublish="unpublish"
+                    @schedule="schedule" @cancel-schedule="cancelSchedule" />
             </div>
         </div>
 
@@ -240,15 +275,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
             <div class="w-[320px] shrink-0 overflow-y-auto p-6 hidden lg:block" :class="CARD">
                 <h3 class="text-title-section font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
-                <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
-
-                <div class="mt-4">
-                    <label class="mb-2 flex items-center gap-1" :class="LABEL_BARE"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
-                    <div class="flex gap-2">
-                        <DatePicker v-model="publishAt" showTime hourFormat="24" dateFormat="yy-mm-dd" unstyled :pt="DATEPICKER_PT" class="flex-1" />
-                        <Button unstyled @click="schedule" :disabled="loading" :class="BTN.secondary">{{ $t('action.schedule') }}</Button>
-                    </div>
-                </div>
+                <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" :categories="categories" />
 
                 <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-separator-weak">
                     <label class="mb-3 flex items-center gap-1" :class="LABEL_BARE"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
@@ -263,11 +290,15 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                     </ul>
                 </div>
 
-                <div v-if="isEdit" class="mt-6 pt-4 border-t border-separator-weak">
-                    <AclEditor model="articles" :resource-id="articleId" :actions="['R', 'U', 'D', 'publish']" :title="$t('article.sharing')" />
-                </div>
             </div>
         </div>
+
+        <ArticleAccessPanel v-if="accessOpen && articleId" :article-id="articleId"
+            :audience="form.audience" :teaser="form.teaser" :status="status" :publish-at="publishAt"
+            :author-id="articleAuthorId"
+            :category="currentCategory" :ancestor-ids="ancestorCategoryIds" :categories="categories"
+            @close="accessOpen = false"
+            @changed="(patch) => { form.audience = patch.audience; form.teaser = patch.teaser; }" />
 
         <!-- Below lg the sidebar is hidden, so the same panel opens as a drawer. -->
         <button v-if="isMobile" @click="showMobilePanel = true"
@@ -288,7 +319,7 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                             <LucideX :size="16" />
                         </button>
                     </div>
-                    <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" />
+                    <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" :categories="categories" />
                 </div>
             </Transition>
         </Teleport>

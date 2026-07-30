@@ -19,8 +19,10 @@ const props = withDefaults(defineProps<{
     model: string;
     resourceId: string | number | null;
     actions?: string[];   // access letters offered as toggles
+    /** 从上级资源级联下来的授权(只读展示);每项需带 `_fromName` 说明来源。 */
+    inherited?: any[];
     title?: string;
-}>(), { actions: () => ['R', 'U', 'D'], title: '' });
+}>(), { actions: () => ['R', 'U', 'D'], title: '', inherited: () => [] });
 
 const toast = useToast();
 const grants = ref<any[]>([]);
@@ -103,6 +105,20 @@ watch(() => [props.model, props.resourceId], load);
             </li>
         </ul>
         <div v-else class="mb-3" :class="TEXT.caption">{{ $t('acl.none') }}</div>
+
+        <!-- 继承来的授权:级联到本资源却不属于它,只读展示。
+             不显示的话,作者会在看到"暂无授权"的同时实际已被上级授权 —— 和 audience 继承一样的
+             "看不见的配置"问题。要改就得去它真正所属的那一级。 -->
+        <div v-if="inherited?.length" class="mb-3">
+            <p class="mb-1.5" :class="TEXT.caption">{{ $t('access.inheritedGrants') }}</p>
+            <ul :class="FIELD_GROUP">
+                <li v-for="g in inherited" :key="`inh-${g.id}`"
+                    class="flex items-center justify-between text-small bg-surface/60 rounded-control px-3 py-2 opacity-75">
+                    <span class="text-label min-w-0 truncate">{{ granteeLabel(g) }} · <span class="font-medium">{{ g.access }}</span></span>
+                    <span class="ml-2 shrink-0" :class="TEXT.caption">{{ g._fromName }}</span>
+                </li>
+            </ul>
+        </div>
 
         <div class="bg-surface rounded-control p-3" :class="FIELD_GROUP">
             <div class="flex gap-2">

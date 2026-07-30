@@ -3,7 +3,7 @@ import i18n from './i18n';
 import {
     configureApi, crud,
     schematoolsGetAllSchemas,
-    contentGetHome, contentGetCategory, contentGetArticle, contentListArticles, contentPreviewToken, contentPreview,
+    contentGetHome, contentGetCategory, contentGetArticle, contentListArticles, contentListCategories,
     lifecycleTransition, lifecycleListRevisions, lifecycleRollback, lifecycleManageableCategories,
     aclList, aclCreate, aclRemove,
     systemStatus, systemGetConfig, systemUpdateConfig, systemRestart, systemSetup, systemExportData,
@@ -75,8 +75,24 @@ export const schemaAPI = {
  * + `crud()`, but this preserves the public theme-facing contract with zero theme edits.
  * Prefer `crud(route)` / the named functions in new app code.
  */
+/**
+ * 受众轴:`categories` 的公开读改走 `/api/content/categories`(按受众过滤)。
+ *
+ * 后端已把 `CategoryModel.PUBLIC` 降为 `""` —— 匿名再打 `/api/categories` 会 403,因为那条路
+ * 会把全部栏目(含受限栏目的名字/slug/层级)泄漏出去。重定向放在这层 shim 里,于是 4 个主题
+ * (`cosmos_love`/`school`/`pear` 都在用 `crudAPI.getList('categories')`)**一行都不用改**。
+ *
+ * 注意:授权用的分类选择器不该用这条路 —— 该用 `lifecycleAPI.manageableCategories`(它返回当前
+ * 用户真正可管辖的分类)。用 crudAPI 取分类做**编辑器**选择器本就是权限回退,neo 主题的设计文档
+ * 里已经记过这一条。管理后台走的是具名的 `listCategory()`,不经这里,不受影响。
+ */
+const CONTENT_REDIRECT: Record<string, (params?: any) => Promise<any>> = {
+    categories: () => contentListCategories(),
+};
+
 export const crudAPI = {
-    getList: (route: string, params: any = {}) => crud(route).list(params),
+    getList: (route: string, params: any = {}) =>
+        CONTENT_REDIRECT[route] ? CONTENT_REDIRECT[route](params) : crud(route).list(params),
     getOne: (route: string, id: string | number, params: any = {}) => crud(route).get(id, params),
     create: (route: string, data: any) => crud(route).create(data),
     update: (route: string, id: string | number, data: any) => crud(route).update(id, data),
@@ -103,11 +119,11 @@ export const contentAPI = {
     getHome: () => contentGetHome(),
     getCategory: (slug: string) => contentGetCategory({ slug }),
     getArticle: (slug: string) => contentGetArticle({ slug }),
+    // 受众轴过滤后的公开分类树(取代匿名直读 /api/categories)。
+    listCategories: () => contentListCategories(),
     // Public article list — same query shape as the admin list; server forces status=visible.
     // Referenced by theme.config.ts prefetch via the string "contentAPI.listArticles".
     listArticles: (params: Record<string, any> = {}) => contentListArticles(serializeContentQuery(params)),
-    previewToken: (id: string | number) => contentPreviewToken({ id }),
-    preview: (id: string | number, pt: string) => contentPreview({ id: String(id), pt }),
 };
 
 // Content lifecycle: status transitions and version history/rollback.
@@ -125,8 +141,13 @@ export const lifecycleAPI = {
 };
 
 // Generic resource ACL. `model` is a content tablename (e.g. "articles") for row sharing,
-// or "articles_category" with resourceId=<category id> for category-scoped article grants.
+// or a synthetic model with resourceId=<category id> for category-scoped grants.
+/** 管辖轴:可在该分类子树下**管理**文章。 */
 export const ARTICLES_CATEGORY = "articles_category";
+/** 受众轴:可在公开站**查看**该分类子树下的受限文章(动作 `V`)。见 docs/public-access.md。 */
+export const ARTICLES_AUDIENCE = "articles_audience";
+/** 受众轴的动作字母。也可用于行级授权:aclAPI.grant('articles', <id>, { access: 'V' })。 */
+export const VIEW_ACTION = "V";
 export const aclAPI = {
     list: (model: string, resourceId: string | number) => aclList(model, resourceId),
     grant: (model: string, resourceId: string | number, body: AclCreateBody) =>

@@ -8,6 +8,7 @@
 - [frontend.md](frontend.md) — 前端结构、api 约定、管理台惯例、i18n、主题/展示站、构建。
 - [development.md](development.md) — 本地运行、环境变量、**测试纪律(备份 DB / 杀进程)**、Docker 部署、陷阱清单。
 - [assessment.md](assessment.md) — 项目现状评估(五维度强项 / 待还的债 / 优先级建议)。
+- [public-access.md](public-access.md) — 公开站页面权限(**受众轴**)设计:audience 三级 + 摘要墙、`access_eff` 物化、判定纯函数、一期任务清单。**已定稿未实现**。
 
 其它既有文档:
 - [../README.md](../README.md) / [../README.zh-CN.md](../README.zh-CN.md) — 面向使用者的项目说明。

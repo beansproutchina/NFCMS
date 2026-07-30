@@ -11,8 +11,14 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import { systemAPI, contentAPI, crud, listMenu } from '../api';
-import { pages } from '../views/front/templates/theme.config';
+import { pages, info as themeInfo } from '../views/front/templates/theme.config';
 import { useAuthStore } from '../stores/auth';
+
+/**
+ * 受众轴的 gate 页模板名。主题可用 `info.accessGate` 指定自己的实现;缺省走约定名
+ * `AccessGate`,而主题若没提供该文件,DynamicView 的 loadComponent 会回落到框架内置的兜底组件。
+ */
+const accessGateTemplate = () => (themeInfo as any)?.accessGate || 'AccessGate';
 
 NProgress.configure({ showSpinner: false, speed: 400 });
 
@@ -93,7 +99,10 @@ const fetchContentData = async (to: any) => {
     // 1. 根据viewType获取基础内容并确定需要的模板
     try {
         if (viewType === 'home') {
-            templateName = baseData.config.home_template || 'DefaultHome';
+            // 模板入口由**主题**声明(theme.config 的 `info.home`),不再读站点配置 `home_template`:
+            // 站点配置跨主题存活,而模板名是主题的内部资产 —— 换主题后旧值就悬空了。
+            // 见 docs/public-access.md §6「模板入口声明归主题」。
+            templateName = themeInfo.home || 'DefaultHome';
         } else if (viewType === 'category') {
             templateName = 'DefaultCategory';
             const slug = to.params.category_slug as string;
@@ -116,6 +125,11 @@ const fetchContentData = async (to: any) => {
                 if (res.data.template) {
                     templateName = res.data.template;
                 }
+                // 受众轴:后端判定为 `locked` 的内容会带着摘要 + `locked:true` 返回 200(不是 403 ——
+                // 那样会触发全局错误 toast,而这里要的是页面内的登录引导)。整条渲染通路不变,
+                // 只把模板换成 gate 页,于是它照常套主题的 layout 链与标题解析。
+                // 见 docs/public-access.md §6。
+                if (res.data.locked) templateName = accessGateTemplate();
             } else {
                 to.meta.fetchedData = { ...baseData, success: false, error: res.message || 'Error loading article' };
                 return;
@@ -294,7 +308,6 @@ const routes: RouteRecordRaw[] = [
   { path: '/', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'home' } },
   { path: '/a/:category_slug/:article_slug', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'article' } },
   { path: '/a/:category_slug', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'category' } },
-  { path: '/preview', component: () => import('../views/front/Preview.vue') },
   ...customRoutes,
   
   // Setup & Auth

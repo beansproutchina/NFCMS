@@ -36,12 +36,19 @@ const cfg = computed(() => props.context?.config || {});
 const api = props.context?.api;
 
 const slug = computed(() => cfg.value.theme_neo_about_slug || 'about');
-const avatar = computed(() => cfg.value.theme_neo_avatar || '');
 // Tagline = the generic `subtitle` config key (single source of truth; see theme.config.ts).
 const tagline = computed(() => cfg.value.subtitle || '');
 
 const article = ref<any>(null);
 const heading = computed(() => article.value?.title || cfg.value.site_name || 'About');
+/**
+ * 配图 = **那篇「关于」文章自己的缩略图**,不再单开一个 `theme_neo_avatar` 主题配置。
+ *
+ * 这一页的标题和正文都来自这篇文章,图却要作者去「设置 → 主题设置」传第二次 —— 同一个页面的内容
+ * 分散在两处。而文章编辑器里本来就有缩略图字段和上传器,是同一件事的现成入口。
+ * 顺带也少一份换主题后会变成孤儿的站点级配置。
+ */
+const avatar = computed(() => article.value?.thumbnail || '');
 const rendered = computed(() => (article.value?.content ? (marked.parse(article.value.content) as string) : ''));
 
 onMounted(async () => {

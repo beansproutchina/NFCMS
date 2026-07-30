@@ -39,7 +39,6 @@ const configsMap = ref<Record<string, string>>({
     subtitle: '',
     icp_record: '',
     mourning_mode: '0',
-    home_template: 'DefaultHome'
 });
 
 const loading = ref(true);
@@ -316,10 +315,6 @@ onMounted(() => {
                     <Select v-model="configsMap.mourning_mode" :options="[{label: $t('form.mourningOff'), value: '0'}, {label: $t('form.mourningOn'), value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
                 </div>
 
-                <div class="max-w-lg" :class="FIELD_GROUP">
-                    <label :class="LABEL_BARE">{{ $t('form.home_template') }}</label>
-                    <InputText v-model="configsMap.home_template" unstyled placeholder="DefaultHome" :class="INPUT_CLASS" />
-                </div>
 
             </div>
             <div v-else class="text-body opacity-60">Loading...</div>

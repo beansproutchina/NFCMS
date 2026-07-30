@@ -300,6 +300,84 @@ export const CHECKBOX_PT = {
 };
 
 /**
+ * Unstyled PrimeVue Message passthrough — the inline notice strip ("this is still a draft, the
+ * settings below don't apply yet").
+ *
+ * Icons come from the caller via the `#icon` slot (lucide components), NOT from a glyph baked in
+ * here: severity is about colour, and which icon reads right depends on the sentence.
+ */
+export const MESSAGE_PT = {
+  // Tone pairs are the ones CHIP already uses (bg-*-fill + its text colour), so a notice and a
+  // status chip about the same thing can't end up different colours.
+  root: ({ props }: any) => ({
+    class: [
+      'flex items-start gap-2 px-3 py-2 rounded-control text-small',
+      props?.severity === 'warn' ? 'bg-warn-fill text-warn'
+        : props?.severity === 'error' ? 'bg-canvas text-danger'
+        : 'bg-info-fill text-link',
+    ],
+  }),
+  content: 'flex items-start gap-2 min-w-0',
+  icon: 'shrink-0 mt-0.5',
+  text: 'min-w-0',
+  closeButton: DIALOG_CLOSE,
+};
+
+/**
+ * Unstyled PrimeVue SplitButton passthrough — one primary action plus a `▼` for its variants
+ * ("发布" + "定时发布…").
+ *
+ * Shape notes: `pcButton`/`pcDropdown` take a NESTED Button pt object (`{ root: … }`), not a class
+ * string — they are real Button instances inside. `pcMenu` is a TieredMenu, and its overlay copies
+ * SELECT_PT.overlay verbatim so every dropdown surface in the admin looks the same.
+ *
+ * The two halves drop their inner corners and get a hairline between them, so they read as one
+ * control rather than two buttons that happen to touch.
+ */
+const SPLIT_HALF = 'inline-flex items-center justify-center gap-2 h-9 font-medium cursor-pointer transition-colors focus:outline-none disabled:opacity-50 text-body';
+export const SPLITBUTTON_PT = {
+  root: 'inline-flex',
+  pcButton: {
+    root: `${SPLIT_HALF} px-4 rounded-l-control ${BTN_TONE.primary} border-r-0`,
+    label: 'whitespace-nowrap',
+    icon: 'shrink-0',
+  },
+  pcDropdown: {
+    root: `${SPLIT_HALF} px-2 rounded-r-control ${BTN_TONE.primary} border-l border-l-white/25`,
+    icon: 'shrink-0',
+  },
+  pcMenu: {
+    root: 'bg-white border border-separator rounded-control shadow-lg mt-1 py-1 z-9999 overflow-hidden min-w-[180px]',
+    rootList: 'list-none m-0 p-0',
+    item: 'list-none',
+    itemContent: 'text-label hover:bg-canvas transition-colors',
+    itemLink: 'flex items-center gap-2 px-3 py-2 text-body cursor-pointer no-underline text-inherit',
+    itemIcon: 'shrink-0 opacity-70',
+    itemLabel: 'truncate',
+    separator: 'my-1 border-t border-separator-weak',
+  },
+};
+
+/**
+ * Unstyled PrimeVue RadioButton passthrough. Same four slots as CHECKBOX_PT (`root`/`input`/`box`/
+ * `icon`) and the same reason for reading `context.checked` instead of `peer-checked:` — see there.
+ * Round instead of square, and the mark is a filled dot rather than a tick.
+ */
+export const RADIO_PT = {
+  root: 'relative inline-flex w-5 h-5 shrink-0 cursor-pointer align-middle',
+  input: 'absolute inset-0 w-full h-full opacity-0 cursor-pointer m-0',
+  box: ({ context }: any) => ({
+    class: [
+      'w-5 h-5 rounded-full border flex items-center justify-center transition-colors',
+      context?.checked ? 'border-accent' : 'bg-white border-separator',
+    ],
+  }),
+  icon: ({ context }: any) => ({
+    class: ['w-2.5 h-2.5 rounded-full transition-colors', context?.checked ? 'bg-accent' : 'bg-transparent'],
+  }),
+};
+
+/**
  * A selectable row in a list or picker. Stays a native `<button>` on purpose — a row IS a button —
  * so this gives it the look without giving it PrimeVue's semantics.
  */

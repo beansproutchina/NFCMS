@@ -16,7 +16,7 @@
           <span class="svc-icon">{{ a.data?.icon || '✦' }}</span>
           <span class="svc-no">{{ String(i + 1).padStart(2, '0') }}</span>
         </div>
-        <h2>{{ a.title }}</h2>
+        <h2>{{ a.title }}<span v-if="a.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></h2>
         <p v-if="a.description">{{ a.description }}</p>
         <a class="svc-more" :href="articleUrl(a)">了解更多 →</a>
       </article>
@@ -69,4 +69,7 @@ const { items, page, loading, totalPages, goPage } = useArticleList(props.contex
 
 @media (max-width: 900px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .svc-grid { grid-template-columns: 1fr; } }
+
+/* 受众轴:摘要墙内容的锁标记(正文已在后端剥离)。 */
+.lock { margin-left: .4em; font-size: .85em; opacity: .65; }
 </style>

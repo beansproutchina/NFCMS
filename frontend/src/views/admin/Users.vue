@@ -129,7 +129,7 @@ const openEditor = (item?: any) => {
     // If not super admin and trying to edit someone else, block it (UI should prevent this anyway)
     if (!isSuperAdmin && item && item.id !== currentUser.value.id) return;
 
-    editingItem.value = item ? { ...item } : { username: '', password: '', role: 'admin' };
+    editingItem.value = item ? { ...item } : { username: '', password: '', role: '' };  // 不预选角色,见 UserEditor
     showModal.value = true;
 };
 

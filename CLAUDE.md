@@ -9,6 +9,7 @@ NFCMS 是基于自研框架 **DYAPI** 的无头 CMS:Bun + SQLite 后端 + Vue3 �
 - 前端(admin/api 约定/i18n/主题) → [docs/frontend.md](docs/frontend.md)
 - 本地运行/构建/测试/踩坑 → [docs/development.md](docs/development.md)
 - 项目现状评估(强项/技术债/优先级) → [docs/assessment.md](docs/assessment.md)
+- 公开站页面权限「受众轴」设计(**已定稿未实现**) → [docs/public-access.md](docs/public-access.md)
 
 ## 技术栈
 - **后端**:Bun + DYAPI **3.1.0**(自研框架,`backend/package.json` 里以 `file:../../dyapi3/dyapi` 本地路径 pin)+ SQLite(`backend/data/test.db`)。
@@ -41,7 +42,7 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
   ↑  CMSModel 基类(backend/app/lib/CMSModel.ts):HTTP* 全接管 → RBAC + 版本快照 + 生命周期
   ↑  服务层:PolicyService(鉴权唯一权威)/ RevisionService / SchedulerService / StaticGenService / HookManager
   ↑  数据模型:Role/RolePermission/UserRole/ResourceGrant/Revision + Article/Category/Menu/User/Attachment/SystemConfig
-前端:Vue SPA(admin + 展示)+ 公开站 SSG(后端生成静态 HTML)
+前端:Vue SPA(admin + 展示)  ← 公开站 SSG 当前已停用(接线注释在 index.ts 第 8 步 + nginx conf)
 ```
 
 ## 核心约定

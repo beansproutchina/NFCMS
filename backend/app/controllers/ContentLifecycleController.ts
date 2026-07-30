@@ -5,6 +5,7 @@ import { policy } from "../services/PolicyService.js";
 import { revisions } from "../services/RevisionService.js";
 import { hooks } from "../services/HookManager.js";
 import CategoryModel from "../models/CategoryModel.js";
+import { audience } from "../services/AudienceService.js";
 
 const STATES = ["hidden", "scheduled", "visible"];
 
@@ -91,6 +92,8 @@ export default class ContentLifecycleController extends Controller {
         const scope = await policy.manageableArticleCategories(ctx.state, action ? [String(action)] : undefined);
         const all = await this._app.I(CategoryModel).read({ limit: 100000, orderBy: "weight" });
         const categories = scope === "any" ? all : all.filter((c: any) => scope.includes(Number(c.id)));
+        // 带上受众轴的继承结果:文章编辑器要据此显示"本文继承到的有效受众"。
+        await audience.annotateCategories(categories);
         return { code: 200, data: { scope: scope === "any" ? "any" : "scoped", categories } };
     }
 }

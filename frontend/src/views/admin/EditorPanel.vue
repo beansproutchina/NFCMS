@@ -19,6 +19,7 @@ defineProps<{
     categoryOptions: { label: string; value: any }[];
     articleDataFields: { key: string; title: string; type: string }[];
 }>();
+
 </script>
 
 <template>
@@ -41,6 +42,7 @@ defineProps<{
         }}</label>
         <Checkbox unstyled v-model="form.is_top" :true-value="1" :false-value="0" binary :pt="CHECKBOX_PT" />
     </div>
+
 
     <div class="mt-4 flex flex-col gap-6">
         <div :class="FIELD_GROUP">

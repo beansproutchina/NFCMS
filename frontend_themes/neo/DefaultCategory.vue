@@ -13,7 +13,7 @@
     <div class="cat-grid" v-if="items.length">
       <a v-for="item in items" :key="item.id" class="cat-card" :href="articleUrl(item)">
         <div class="badge" v-if="item.is_top">✦ 置顶</div>
-        <h2>{{ item.title }}</h2>
+        <h2>{{ item.title }}<span v-if="item.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></h2>
         <p>{{ item.description || '暂无描述' }}</p>
         <time>{{ formatDate(item.published_at) }}</time>
       </a>
@@ -62,4 +62,7 @@ const { items, page, loading, totalPages, goPage } = useArticleList(props.contex
 .pager button:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
 
 @media (max-width: 700px) { .cat-grid { grid-template-columns: 1fr; } }
+
+/* 受众轴:摘要墙内容的锁标记(正文已在后端剥离)。 */
+.lock { margin-left: .4em; font-size: .85em; opacity: .65; }
 </style>

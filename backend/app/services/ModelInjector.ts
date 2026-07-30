@@ -2,12 +2,13 @@ import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
 import { CMSModel } from "../lib/CMSModel.js";
 import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { assert, ForbiddenError } from "dyapi/utils/error.js";
 import testContainer from "../containers/testContainer.js";
 import { decorateClass, decorateProperty } from "dyapi/utils/dynamic.js";
 import { hooks } from "./HookManager.js";
 import type { DYApp } from "dyapi/core/dyapiApp.js";
-import RoleModel from "../models/RoleModel.js";
 import RolePermissionModel from "../models/RolePermissionModel.js";
+import { policy } from "./PolicyService.js";
 
 /**
  * Stores user-defined content-type schemas. Each row is turned into a live, CRUD-exposed
@@ -25,12 +26,29 @@ export class ContentSchemaModel extends Model {
         F.Object("schemaDefinition").notNull(),   // [{ name, type }]
         F.Date("createdAt"),
     ];
+    /** 静态 map 只管写(与 super_admin);读走下面的 RBAC 闸门,不再硬编码角色名。 */
     permission = {
         "PUBLIC": "",
         "DEFAULT": "",
-        "admin": "R",
         "super_admin": "C,R,U,D"
     };
+
+    /** 读由 `role_permissions(schemas, R, any)` 决定。理由同 RevisionModel 的注释。 */
+    async HTTPReadMany(state, query) {
+        assert(policy.hasAnyScope(state, "R", this), ForbiddenError, "没有权限");
+        const param: any = this.processReadQuery(state, query);
+        const rows = await this.read(param);
+        return { code: 200, data: rows, total: param.total, pages: param.pages };
+    }
+
+    async HTTPReadOne(state, query) {
+        assert(policy.hasAnyScope(state, "R", this), ForbiddenError, "没有权限");
+        const param: any = this.processReadQuery(state, query);
+        param.limit = 1;
+        param.offset = 0;
+        param.page = 0;
+        return { code: 200, data: (await this.read(param))[0] };
+    }
 
     async create(item) {
         const result = await super.create(item);
@@ -99,13 +117,25 @@ export async function injectDynamicModel(app: DYApp, schemaDef: any) {
     console.log(`[ModelInjector] injected dynamic model '${modelName}' -> /${routePath}`);
 }
 
-/** Give the built-in `admin` role full access to a new dynamic model (super_admin already bypasses). */
+/**
+ * 给新建的动态内容类型播种权限:**凡是能全站创建文章的角色**(`articles:C any`),都获得该新模型
+ * 的同等全权。super_admin 无需播种(硬放行)。
+ *
+ * 以前这里是 `read({ filter: { name: "admin" } })` —— 按角色**名字**找。那意味着站点一旦把
+ * `admin` 改名或删掉,新建的内容类型就只有 super_admin 能用,而且没有任何提示。改成按**能力**
+ * 推断:"能管全站文章的人,也该能管新内容类型"是可解释的规则,且完全不认名字。
+ */
 async function seedDynamicPerms(app: DYApp, tableName: string) {
     const rpModel = app.I(RolePermissionModel);
     if ((await rpModel.read({ filter: { model: tableName } })).length > 0) return;
-    const adminRole = (await app.I(RoleModel).read({ filter: { name: "admin" } }))[0];
-    if (!adminRole) return;
-    for (const action of ["C", "R", "U", "D", "publish"]) {
-        await rpModel.create({ role_id: adminRole.id, model: tableName, action, scope: "any" });
+    const siteWideAuthors = await rpModel.read({
+        filter: { $and: { model: "articles", action: "C", scope: "any" } },
+    });
+    const roleIds = [...new Set(siteWideAuthors.map((p: any) => p.role_id))];
+    if (!roleIds.length) return; // 没有这样的角色 → 交给 super_admin 手动配
+    for (const roleId of roleIds) {
+        for (const action of ["C", "R", "U", "D", "publish"]) {
+            await rpModel.create({ role_id: roleId, model: tableName, action, scope: "any" });
+        }
     }
 }

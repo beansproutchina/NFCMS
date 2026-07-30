@@ -9,53 +9,8 @@ import UserModel from "./app/models/UserModel.js";
 import crypto from "crypto";
 import { authMiddlewareFactory } from "./app/middlewares/authmiddleware.js";
 import { policy } from "./app/services/PolicyService.js";
+import { audience } from "./app/services/AudienceService.js";
 import { scheduler } from "./app/services/SchedulerService.js";
-import { staticgen } from "./app/services/StaticGenService.js";
-import RoleModel from "./app/models/RoleModel.js";
-import RolePermissionModel from "./app/models/RolePermissionModel.js";
-
-/**
- * Seed default RBAC roles + permissions once (idempotent: skips if roles already exist).
- * super_admin has no rows here — it is hard-allowed by PolicyService.
- */
-const seedRbac = async (app) => {
-    const roleModel = app.I(RoleModel);
-    const rpModel = app.I(RolePermissionModel);
-    if ((await roleModel.read({})).length > 0) return;
-
-    const roleDefs = [
-        { name: "super_admin", label: "Super Admin", is_system: 1, weight: 100 },
-        { name: "admin", label: "Admin", is_system: 1, weight: 80 },
-        { name: "editor", label: "Editor", is_system: 1, weight: 50 },
-        { name: "author", label: "Author", is_system: 1, weight: 30 },
-    ];
-    const idByName = {};
-    for (const r of roleDefs) idByName[r.name] = await roleModel.create(r);
-
-    // [role, model, action, scope]
-    const perms = [
-        ["admin", "articles", "C", "any"], ["admin", "articles", "R", "any"],
-        ["admin", "articles", "U", "any"], ["admin", "articles", "D", "any"],
-        ["admin", "articles", "publish", "any"],
-        // NOTE: create ("C") is never granted with scope "own" — whatever you create is yours,
-        // so "own C" is meaningless. Blanket create = scope "any"; category-limited create is
-        // expressed via category grants (resource_grants, model="articles_category"). These roles
-        // manage their OWN content everywhere; a category grant additionally lets them create &
-        // manage ALL articles in a category subtree (see the demo grant seeded in setup).
-        ["editor", "articles", "R", "own"], ["editor", "articles", "U", "own"],
-        ["editor", "articles", "D", "own"], ["editor", "articles", "publish", "own"],
-        ["author", "articles", "R", "own"], ["author", "articles", "U", "own"],
-        // Media library (shared): let content roles manage attachments so the Files page works.
-        ["admin", "attachments", "C", "any"], ["admin", "attachments", "R", "any"],
-        ["admin", "attachments", "U", "any"], ["admin", "attachments", "D", "any"],
-        ["editor", "attachments", "C", "any"], ["editor", "attachments", "R", "any"], ["editor", "attachments", "D", "any"],
-        ["author", "attachments", "C", "any"], ["author", "attachments", "R", "any"],
-    ];
-    for (const [role, model, action, scope] of perms) {
-        await rpModel.create({ role_id: idByName[role], model, action, scope });
-    }
-    console.log("[RBAC] seeded default roles and permissions");
-};
 
 const start = async () => {
     const jwtSecret = process.env.JWT_SECRET;
@@ -84,10 +39,11 @@ const start = async () => {
     // 2. Scan core files (UserController, ArticleModel, etc)
     await scanFiles(app, path.join(import.meta.dirname, "app"));
 
-    // 3. RBAC: bind the policy authority and seed default roles/permissions
-    //    (must precede dynamic-model injection, which seeds admin perms per model).
+    // 3. RBAC: bind the policy authority. Default roles/permissions are NOT seeded here —
+    //    `/system/setup` owns that (see seedDefaultRbac), so an imported site keeps its own
+    //    role ids instead of colliding with boot-seeded ones.
     policy.bind(app);
-    await seedRbac(app);
+    audience.bind(app);
 
     // 4. Register the schema store, load existing dynamic content types, and inject new ones live.
     await app.use(ContentSchemaModel);
@@ -111,18 +67,31 @@ const start = async () => {
     // 7. Start the scheduled-publish cron (flips due `scheduled` content to `visible`).
     scheduler.start(app);
 
-    // 8. Public-site SSG: regenerate static pages on content changes, and do an initial build.
-    staticgen.bind(app);
-    hooks.addAction("content.saved.articles", async (id) => {
-        await staticgen.regenerateArticle(id);
-        await staticgen.generateSitemap();
-    });
-    hooks.addAction("content.published.articles", async (id) => {
-        await staticgen.regenerateArticle(id);
-        await staticgen.regenerateHome();
-        await staticgen.generateSitemap();
-    });
-    await staticgen.regenerateAll();
+    // 7b. 受众轴:回填 `articles.access_eff`。老库(本次改动之前建的)那一列是 DDL 默认值,
+    //     没经过派生 —— 不回填的话已有栏目的受众设置会静默不生效。只写真正变化的行,
+    //     所以正常启动是 0 改动、一次全表读的成本。
+    try {
+        await audience.recomputeAll();
+    } catch (e) {
+        console.log("[audience] backfill skipped:", (e as any).message);
+    }
+
+    // 8. Public-site SSG: DISABLED for now — the generated pages are far below the quality of the
+    //    themed SPA render, so the public site is served entirely by the SPA. `StaticGenService`
+    //    and its `docker/nginx.single.conf` locations are left in place but unwired; re-enable by
+    //    restoring the block below (and the SSG `location`s in the nginx conf).
+    //
+    // staticgen.bind(app);
+    // hooks.addAction("content.saved.articles", async (id) => {
+    //     await staticgen.regenerateArticle(id);
+    //     await staticgen.generateSitemap();
+    // });
+    // hooks.addAction("content.published.articles", async (id) => {
+    //     await staticgen.regenerateArticle(id);
+    //     await staticgen.regenerateHome();
+    //     await staticgen.generateSitemap();
+    // });
+    // await staticgen.regenerateAll();
 
     // 9. Keepalive: keep the SQLite connection warm (from upstream).
     setInterval(() => {

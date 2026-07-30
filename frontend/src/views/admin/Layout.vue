@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { SECTION_TITLE, TEXT } from '../../ui/presets';
+import { BTN, SECTION_TITLE, TEXT } from '../../ui/presets';
 
 import { computed, ref, watch } from 'vue';
 import Button from 'primevue/button';
 import { useRouter, useRoute } from 'vue-router';
-import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, LucideServer, LucideGlobe, LucideMenu, LucideUsers, LucideImage, LucideShieldCheck, LucideX } from 'lucide-vue-next';
+import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, LucideServer, LucideGlobe, LucideMenu, LucideUsers, LucideImage, LucideShieldCheck, LucideShieldOff, LucideX } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../stores/auth';
 import { authAPI } from '../../api';
@@ -24,7 +24,9 @@ const rawMenuGroups = [
   {
     title: 'system.dashboard',
     items: [
-      { label: 'system.dashboard', path: '/admin', icon: LucideLayoutDashboard, show: () => true }
+      // 仪表盘也要能力驱动:否则零权限账号(如受众轴的 `member`)登录后会看到一个"只有仪表盘"
+      // 的空壳。判据刻意复用其它菜单项的能力检查 —— 不在别处再维护一份"什么算后台权限"的清单。
+      { label: 'system.dashboard', path: '/admin', icon: LucideLayoutDashboard, show: () => hasAnyAdminNav() }
     ]
   },
   {
@@ -46,12 +48,24 @@ const rawMenuGroups = [
   }
 ];
 
+/** 除仪表盘本身之外,是否还有任何可见的后台菜单项。仪表盘的可见性与"无后台权限"提示都用它。 */
+function hasAnyAdminNav(): boolean {
+  return rawMenuGroups.some(g => g.title !== 'system.dashboard' && g.items.some(i => i.show()));
+}
+
 const menuGroups = computed(() => {
   return rawMenuGroups.map(group => ({
     ...group,
     items: group.items.filter(item => item.show())
   })).filter(group => group.items.length > 0);
 });
+
+/**
+ * 零权限账号(受众轴的 `member` 就是这种)登录后不该看到一个空壳后台。
+ * 判据复用 menuGroups —— router 守卫刻意**不动**,它只管"是否登录":在守卫里再维护一份权限
+ * 清单会和这里的 nav 清单漂移。见 docs/public-access.md §2。
+ */
+const noAdminAccess = computed(() => menuGroups.value.length === 0);
 
 const logout = async () => {
   try {
@@ -150,7 +164,14 @@ watch(() => route.path, () => {
 
     <!-- Main Content Area -->
     <main class="flex-1 h-full overflow-y-auto bg-white md:h-screen h-[calc(100vh-48px)]">
-      <router-view></router-view>
+      <!-- 零权限账号:不渲染任何后台页面,免得它们各自去打接口吃一串 403 toast。 -->
+      <div v-if="noAdminAccess" class="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
+        <LucideShieldOff :size="32" class="opacity-40" />
+        <p :class="SECTION_TITLE">{{ $t('system.noAdminAccess') }}</p>
+        <p :class="TEXT.caption" class="max-w-sm">{{ $t('system.noAdminAccessHint') }}</p>
+        <Button unstyled @click="navigateTo('/')" :class="BTN.secondary" class="mt-2">{{ $t('system.visitSite') }}</Button>
+      </div>
+      <router-view v-else></router-view>
     </main>
     
   </div>

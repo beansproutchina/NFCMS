@@ -58,8 +58,8 @@ curl -s -b /tmp/c "$B/articles?limit=999"        # 后台列表
 ```
 
 ## Docker 部署
-- **单容器(推荐)**:`docker compose -f docker-compose.single.yml up -d --build`。`Dockerfile.single` 三段构建(前端 build → 后端依赖 → oven/bun 运行时 + nginx + supervisor)。`docker/nginx.single.conf` 对 `/`、`/a/`、`/sitemap.xml` 优先命中 SSG,回落 SPA;`/api`、`/static` 代理到 :3000。主题用 `--build-arg THEME=<name>`。
-- **多容器**:`docker-compose.yml`(backend + frontend-nginx)。注:SSG 静态文件在 backend 容器,多容器要让 nginx 能读到(共享卷),否则 SSG 只在单容器拓扑生效。
+- **单容器(推荐)**:`docker compose -f docker-compose.single.yml up -d --build`。`Dockerfile.single` 三段构建(前端 build → 后端依赖 → oven/bun 运行时 + nginx + supervisor)。`docker/nginx.single.conf` 里那三条 SSG location(`/`、`/a/`、`/sitemap.xml`)**当前已注释**(SSG 停用),所有页面路由都落到 SPA;`/api`、`/static` 代理到 :3000。主题用 `--build-arg THEME=<name>`。
+- **多容器**:`docker-compose.yml`(backend + frontend-nginx)。注:SSG 静态文件在 backend 容器,多容器要让 nginx 能读到(共享卷),否则 SSG 只在单容器拓扑生效 —— SSG 当前停用,这条恢复 SSG 时才需要处理。
 - 生产前:确认 `.env`(JWT_SECRET/PASSWORD_SALT/SITE_URL),把 `backend/Dockerfile` 的 `bun --hot` 改为 `bun index.ts`(热重载不该上生产),配置数据卷备份。
 
 ## 陷阱清单(复述)

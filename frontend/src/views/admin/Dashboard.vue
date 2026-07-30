@@ -37,7 +37,9 @@ onMounted(async () => {
     const [schemasRes, articlesRes, categoriesRes, filesRes, usersRes, statusRes] = await Promise.allSettled([
       isSuper.value ? schemaAPI.getAll() : skip,
       canArticles ? listArticle({ orderBy: 'id', orderDesc: true, limit: 5 }) : skip,
-      listCategory(),
+      // 分类是 DEFAULT:"R"(任何登录用户可读),但零权限账号根本不该走到这个页面 —— Layout 会
+      // 直接渲染「无后台权限」。这里跟着 canArticles 收敛,免得没有内容权限的人白打一次请求。
+      canArticles || isSuper.value ? listCategory() : skip,
       canFiles ? uploadAPI.getList() : skip,
       isSuper.value ? listUser() : skip,
       systemAPI.getStatus()

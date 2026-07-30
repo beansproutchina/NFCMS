@@ -6,16 +6,27 @@
 1. 读 `JWT_SECRET`/`PASSWORD_SALT`(缺则抛错);`new DYApp({ jwtSecret, enableFileUpload:true, passwordHash })`。
 2. `hooks.doAction("app_init")`。
 3. `scanFiles(app, "app")` 自动注册 `app/**` 下的默认导出模型/控制器/容器。
-4. `policy.bind(app)` + `seedRbac(app)`(播种 super_admin/admin/editor/author 角色与默认权限,幂等)。
+4. `policy.bind(app)`。**注意:默认角色/权限不在启动时播种**——由 `/system/setup` 调 `seedDefaultRbac(app)`(`app/services/RbacSeedService.ts`)播种 super_admin/admin/editor/author 及默认权限,幂等(roles 非空即跳过)。放在 setup 而非 boot 是因为 setup 可能是「导入站点数据」:若 boot 先占了 role id 1..4,导入的角色只能落到新 id(重复且无权限),而导入的 `role_permissions`/`user_roles`/`resource_grants` 仍按原 id 引用 → 角色列表出现两份、权限错挂。
+
+   **播种是一次性的开箱起点,不是持续生效的契约**:没有 boot 时"按 name 补齐缺失角色"的逻辑(那会让所有者删掉的角色复活、让新版本静默改写已有站点数据)。
+
+   **`super_admin` 是唯一被代码硬依赖的角色名**(`policy.isSuper` + 各模型静态 `permission`,20 处),所以只有它 `is_system: 1`;`admin`/`editor`/`author`/`member` 都可改名可删除,代码不认它们的名字。`admin` 原先有 5 处名字耦合,已全部去掉:
+   - `RevisionModel` / `ContentSchemaModel` 的 `"admin": "R"` 静态键 → 改为 **RBAC 读闸门**(`hasAnyScope`),权限变成 `role_permissions` 里 `revisions:R any` / `schemas:R any` 两行数据。顺带修掉一个真实不对称:DYAPI 静态 map 匹配的 `state.usertype` **只取 JWT 主角色**,所以改造前把角色作为「附加角色」授出去时静态 map 看不见它;PolicyService 的 `state.roles` 是主 ∪ 附加,没这个毛病。
+   - `UserModel` 的 `"admin": "R,U"` → 与其上一行 `DEFAULT: "R,U"` 完全重复(`getPermission` 找不到 usertype 会回落 DEFAULT),是死代码,已删。
+   - `UserModel.role` 字段默认值 `"admin"` → 改成 `""`。"不传 role 就当 admin" 是提权方向的默认值。前端新建用户也不再预选角色。
+   - `seedDynamicPerms` 按名字找 admin → 改为按**能力**找(所有持 `articles:C any` 的角色)。
+
+   写入侧仍只有 `super_admin`(留在模型静态 map 里),所以两套机制不重叠:**读走 RBAC,写走静态 map**。
 5. `app.use(ContentSchemaModel)` + 加载已存在的动态 schema + 注册 `schema_inserted` 热注入监听。
 6. `app.koa.use(authMiddlewareFactory(app))` → `app.bootstrap()` → `hooks.doAction("app_ready")`。
-7. `scheduler.start(app)`(定时发布);`staticgen.bind(app)` + hook 接线 + 初次全量 SSG。
+7. `scheduler.start(app)`(定时发布)。
+8. ~~`staticgen.bind(app)` + hook 接线 + 初次全量 SSG~~ —— **已停用**(整块注释),见 [architecture.md](architecture.md) 的「公开站 SSG」。
 
 ## CMS 核心层
 - **`app/lib/CMSModel.ts`**(命名导出,非 `app/models/`):内容模型基类。
   - 重写 `HTTPReadMany/ReadOne/Create/Update/Delete`,鉴权全走 `PolicyService`。
   - `ownerField`(如 `"author_id"`):启用 `own` 行级范围。
-  - `lifecycleFields = ["status","publish_at","rev_version"]`:这些字段**不接受**普通 CRUD 写入。
+  - `lifecycleFields = ["status","publish_at","rev_version","access_eff"]`:这些字段**不接受**普通 CRUD 写入(前三个由生命周期控制器/调度器写,`access_eff` 由 `AudienceService` 派生 —— 见 [public-access.md](public-access.md))。
   - HTTP create/update 后 `revisions.snapshot(...)` + `hooks.doAction("content.saved.<t>")`。
 - **`app/services/PolicyService.ts`**(单例 `policy`,唯一鉴权权威,**无缓存**每请求读库):
   - `resolve(state)`:有效角色 = JWT 主角色 ∪ `user_roles`;构建 `state.perms: Map<"model:action", scope>`。
@@ -35,14 +46,17 @@
 
 内容/系统:
 - `ArticleModel(articles)` — `extends CMSModel`,`ownerField="author_id"`,字段含 `status/publish_at/rev_version`(**无** `visible`,已废弃)。
-- `CategoryModel(categories)`、`MenuModel(menus)`(公开可读 PUBLIC:R)、`AttachmentModel(attachments)`(锁死:PUBLIC/DEFAULT 空,admin R,super CRUD)、`SystemConfigModel(system_config, 无 @CRUD,仅 SystemController 管)`、`UserModel(users)`。
+- `CategoryModel(categories)`(**PUBLIC 已降为空**,公开侧走 `/api/content/categories` 按受众过滤)、`MenuModel(menus)`(公开可读 PUBLIC:R,菜单刻意不做受众过滤)、`AttachmentModel(attachments)`(锁死:PUBLIC/DEFAULT 空,admin R,super CRUD)、`SystemConfigModel(system_config, 无 @CRUD,仅 SystemController 管)`、`UserModel(users)`。
 - `UserModel`:`password` 字段 `setPermission("DEFAULT","w")`(可写不可读,登录走裸读);`PUBLIC:""`;`HTTPUpdate` 阻止非 super 改 role/改他人。
 
 ## 权限模型(RBAC)
 - **角色**:`roles`;**能力**:`role_permissions` 每行 = (role_id, model=表名, action ∈ C/R/U/D/publish/share, scope ∈ any/own)。
 - **用户角色**:主角色在 `users.role`(进 JWT);附加角色在 `user_roles`。有效 = 并集。
-- **资源 ACL**:`resource_grants`(把某条内容共享给 user/role,access 如 `R` / `R,U`)。
+- **资源 ACL**:`resource_grants`(把某条内容共享给 user/role,access 如 `R` / `R,U`)。合成 model 两个:`articles_category`(管辖轴,可管理该分类子树的文章)、`articles_audience`(受众轴,动作 `V`,可在公开站查看该分类子树的受限文章)。
 - `super_admin` 全放行(硬编码);未授权动作默认拒绝。
+
+## 受众轴(公开站门禁)
+内容除生命周期外还有一根**正交**的受众维度:`categories.audience/teaser` + `articles.audience/teaser` → 物化成 `articles.access_eff`,由 `policy.canView/viewFilter` 判定 `full|locked|hidden`。完整设计与判定矩阵见 **[public-access.md](public-access.md)**。
 
 ## 内容生命周期
 - 状态:`hidden` / `scheduled` / `visible`。
@@ -51,10 +65,29 @@
 - 共享:`POST .../share`、`GET .../grants`、`DELETE .../share/:grantId`(需能 `U` 该行)。
 - 预览:`POST /api/content/preview-token {id}` 签发短 token → `GET /api/content/preview?id=&pt=` 裸读绕过状态过滤。
 
+## 数据导出 / 导入(`/system/export`、`/system/setup` 的 importData 分支)
+恢复语义靠三条不变式撑住,任何一条破了都会**静默**出错:
+
+1. **保留原 id** —— 用 `model.restore(item)`(dyapi `Model.restore` + 容器 `createWithId`),不是 `create`。
+   `create` 会丢掉 id 让它重新自增,只要源库删过东西(id 有空洞),重新编号后**所有按 id 的交叉引用同时错位**:
+   `articles.category_id/author_id`、`categories.parent_id`、`role_permissions.role_id`、`user_roles.*`、
+   `resource_grants.grantee_id/resource_id`、`revisions.content_id`,以及藏在 JSON 里的 `menus.items[].refId`。
+   保 id 是唯一**不需要穷举引用图**就正确的做法。
+2. **密码原样搬运,不加解密** —— 存的是 `HMAC-SHA256(env PASSWORD_SALT)`,而导入走裸 `restore()`(不经
+   `HTTPCreate`),所以哈希直接落库、不会被二次哈希。**别把这里改成 `HTTPCreate`**:那会再哈希一次,
+   现象是"导入成功但密码就是不对"。
+3. **salt 指纹决定密码还能不能用** —— 导出的 `_meta.saltFingerprint = passwordHash("nfcms-salt-fingerprint-v1")`。
+   导入时比对本机指纹:`match` 原样保留;`mismatch` 说明 salt 换过、那些哈希全废,**把所有账号重置为随机密码
+   并在响应里一次性返回**(向导必须显示 —— 导入模式不创建新管理员,不显示就没人能登录);`unknown`(旧版导出
+   无指纹)保留 + 警告,不销毁数据。
+
+> 一次性凭据**只在 HTTP 响应里**。曾经 `authmiddleware` 有一行 `console.log(ctx.response.body)` 把每个响应体
+> 都打进日志(含明文密码与用户列表),已删。凡"只出现一次"的东西一旦进日志就不再是一次性的。
+
 ## 端点速查
 - 认证:`POST /api/user/login`
 - 系统:`GET/POST /api/system/config`、`GET /api/system/status`、`POST /api/system/setup`、`POST /api/system/restart`
-- 公开内容:`GET /api/content/home`、`/api/content/category?slug=`、`/api/content/article?slug=`、`/api/content/preview`
+- 公开内容(全部经 `readPublic` → 强制 `status=visible` + 受众轴 filter):`GET /api/content/home`、`/api/content/articles`、`/api/content/category?slug=`、`/api/content/categories`、`/api/content/article?slug=`、`/api/content/preview`
 - 生命周期:`/api/lifecycle/:type/:id/{transition,revisions,rollback,share,grants}`
 - 上传:`POST /api/upload`、`DELETE /api/upload/:id`
 - CRUD(RBAC 管控):`/api/articles|categories|menus|users|attachments|roles|role_permissions|user_roles|resource_grants|revisions|schemas`

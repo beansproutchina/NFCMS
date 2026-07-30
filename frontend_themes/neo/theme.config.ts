@@ -6,7 +6,10 @@ export const info: ThemeInfo = {
   name: "Neo Studio",
   version: "2.0.0",
   author: "NFCMS",
-  description: "Neo-Brutalist 工作室 / 个人主页主题:作品集、服务、团队、关于、联系,开箱即用"
+  description: "Neo-Brutalist 工作室 / 个人主页主题:作品集、服务、团队、关于、联系,开箱即用",
+  // 模板入口归主题声明(不再是站点配置 home_template)——见 docs/public-access.md §6。
+  home: "DefaultHome",
+  accessGate: "AccessGate",
 };
 
 export function init(_app: App) {
@@ -36,7 +39,8 @@ export const configSchema: ThemeConfigSchema = [
   { key: 'theme_neo_hero_cta_link', label: '首页 CTA 链接', type: 'text', group: '首页', placeholder: '/a/works' },
   { key: 'theme_neo_nav_cta_text', label: '导航 CTA 文案', type: 'text', group: '导航', hint: '留空则不显示导航按钮。', placeholder: '合作咨询' },
   { key: 'theme_neo_nav_cta_link', label: '导航 CTA 链接', type: 'text', group: '导航', placeholder: '/contact' },
-  { key: 'theme_neo_avatar', label: '头像 / 品牌图', type: 'image', group: '关于', hint: '用于关于页。留空则不显示。' },
+  // 关于页的配图不在这里:它取那篇「关于」文章自己的**缩略图**。同一个页面的标题/正文/图片应当
+  // 在同一处编辑,而不是分散在"文章"与"主题设置"两个地方。见 AboutPage.vue 的注释。
   { key: 'theme_neo_about_slug', label: '关于页文章 slug', type: 'text', group: '关于', hint: '关于页正文取自该 slug 的文章。', placeholder: 'about' },
   { key: 'theme_neo_contact_email', label: '联系邮箱', type: 'text', group: '联系', hint: '联系页表单的收件地址(mailto),也是页眉页脚邮件图标的地址。', placeholder: 'hello@studio.com' },
   { key: 'theme_neo_contact_phone', label: '联系电话', type: 'text', group: '联系' },
@@ -94,6 +98,9 @@ export const pages: ThemePages = {
   // Blog / journal
   DefaultCategory: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
   DefaultArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
+  // 受众轴:受限内容的 gate 页。声明在 pages 里就自动套上主题 Layout(页眉页脚)并参与标题解析
+  // —— 它走的是和其它页面完全相同的渲染通路。主题没有 AccessGate.vue 时会回落到框架内置兜底。
+  AccessGate: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
   // Portfolio
   WorkGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: worksPrefetch },
   ProjectArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },

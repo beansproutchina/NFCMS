@@ -23,7 +23,7 @@
             <span v-if="!w.thumbnail">{{ (w.title || '·').slice(0, 1) }}</span>
           </div>
           <div class="w-info">
-            <h3>{{ w.title }}</h3>
+            <h3>{{ w.title }}<span v-if="w.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></h3>
             <span class="w-sub" v-if="w.data?.client || w.data?.year">{{ [w.data?.client, w.data?.year].filter(Boolean).join(' · ') }}</span>
           </div>
         </a>
@@ -39,7 +39,7 @@
       <div class="svcs">
         <a v-for="(s, i) in services" :key="s.id" class="svc" :href="articleUrl(s)">
           <span class="svc-icon">{{ s.data?.icon || '✦' }}</span>
-          <h3>{{ s.title }}</h3>
+          <h3>{{ s.title }}<span v-if="s.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></h3>
           <p v-if="s.description">{{ s.description }}</p>
           <span class="svc-no">{{ String(i + 1).padStart(2, '0') }}</span>
         </a>
@@ -55,7 +55,7 @@
         <li v-for="p in latest" :key="p.id">
           <a :href="articleUrl(p)">
             <span class="p-cat" v-if="p.category">{{ p.category.name }}</span>
-            <span class="p-title">{{ p.title }}</span>
+            <span class="p-title">{{ p.title }}<span v-if="p.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></span>
             <time>{{ formatDate(p.published_at) }}</time>
           </a>
         </li>
@@ -177,4 +177,7 @@ const latest = computed(() => section(journalCat, ctx.journal));
   .posts a { grid-template-columns: 1fr; gap: 0.35rem; }
   .posts time { justify-self: start; }
 }
+
+/* 受众轴:摘要墙内容的锁标记(正文已在后端剥离)。 */
+.lock { margin-left: .4em; font-size: .85em; opacity: .65; }
 </style>

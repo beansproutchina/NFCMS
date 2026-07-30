@@ -198,7 +198,6 @@ const works = computed(() => (context.memberWorks || []).filter((w:any) =>
 | 2 | `theme_neo_hero_cta_link` | 首页 CTA 链接 | text | 首页 | ph: `/a/works` | 保留 |
 | 3 | `theme_neo_nav_cta_text` | 导航 CTA 文案 | text | 导航 | hint: 留空则不显示导航按钮。 | 保留 |
 | 4 | `theme_neo_nav_cta_link` | 导航 CTA 链接 | text | 导航 | ph: `/contact` | 保留 |
-| 5 | `theme_neo_avatar` | 头像 / 品牌图 | image | 关于 | hint: 用于关于页。留空则不显示。 | 保留(hint 简化) |
 | 6 | `theme_neo_about_slug` | 关于页文章 slug | text | 关于 | ph: `about` | 保留 |
 | 7 | `theme_neo_contact_email` | 联系邮箱 | text | 联系 | hint: 联系页表单的收件地址(mailto),也是页眉页脚邮件图标的地址。 | 保留 |
 | 8 | `theme_neo_contact_phone` | 联系电话 | text | 联系 | — | 保留 |
@@ -212,22 +211,6 @@ const works = computed(() => (context.memberWorks || []).filter((w:any) =>
 | 16 | `theme_neo_footer_note` | 页脚附言 | text | 页脚 | ph: `Made with care.` | 保留 |
 
 **共 16 项。** 两条 `image` 类型的 hint(#5 `theme_neo_avatar`、#15 `theme_neo_social_wechat_qr`)第一版里是"请先到 /admin/files 上传,再把 `/static/uploads/xxx.png` 粘到此处(文件页没有复制链接按钮,点开图片从地址栏拷)"这种又长又窝囊的操作说明 —— **接入 §5A 的 `FileUploader` 后,`image` 类型在"设置 → 主题设置"里获得真上传器 + 文件库选择,这两条 hint 简化为正常的功能说明**。这是 §5A 对本节的直接收益回填。
-
-**删除的旧 key(5 个)**
-
-| key | 删除理由 |
-|---|---|
-| `theme_neo_social_x` | 平台收敛:社交矩阵国内化,X / Twitter 不在最终集合 |
-| `theme_neo_social_dribbble` | 同上 |
-| `theme_neo_social_linkedin` | 同上 |
-| `theme_neo_social_instagram` | 同上 |
-| **`theme_neo_tagline`** | **重复通用键,不是平台收敛。** `subtitle` 是后端**通用配置键**(`backend/app/models/SystemConfigModel.ts:81` 的 `VALID_CONFIG_KEYS` 里有),后台"站点配置"已有它的输入框(`frontend/src/views/admin/Settings.vue:296`);而主题**本来就在兜底读它** —— `DefaultHome.vue:81` 与 `AboutPage.vue:40` 都写的是 `theme_neo_tagline \|\| cfg.subtitle`。同一个语义两个键、demo 数据两处都写值(`neo-demo-data.json:20` `subtitle` + `:40` `theme_neo_tagline`),违反 CLAUDE.md「同一类东西单一出处」。**改为直接读 `config.subtitle`。** |
-
-- 从 `configSchema` 和 `Socials.vue` 的 `ICONS`/`items` 同步删除;demo 数据不再写入。
-- 配套改动(§7.2):`DefaultHome.vue:81` 与 `AboutPage.vue:40` 的 `tagline` computed 去掉 `theme_neo_tagline` 分支,直接读 `config.subtitle`。
-- 老装机里遗留的 DB 行无害:后台不再渲染这些表单项,`GetConfig` 仍会返回它们但没有消费方。**不做数据迁移/清理**。
-
-**降级策略统一**:任一 key 为空 → 对应元素**不渲染**(社交图标、CTA 按钮、页脚附言、关于页头像均已是此行为,新增项照此)。
 
 ---
 

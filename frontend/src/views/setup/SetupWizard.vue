@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { BTN_REMOVE, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, PASSWORD_LG, TEXT } from '../../ui/presets';
+import { BTN, BTN_REMOVE, FIELD_GROUP, INPUT_CLASS_LG, LABEL_BARE, MESSAGE_PT, PASSWORD_LG, TEXT } from '../../ui/presets';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { systemAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Password from 'primevue/password';
-import { LucideUpload, LucideFileText, LucideX } from 'lucide-vue-next';
+import Message from 'primevue/message';
+import { LucideUpload, LucideFileText, LucideX, LucideTriangleAlert, LucideInfo, LucideCopy } from 'lucide-vue-next';
 const { t } = useI18n();
 
 const router = useRouter();
@@ -57,6 +58,17 @@ const clearImportFile = () => {
   if (fileInput.value) fileInput.value.value = '';
 };
 
+/** salt 不一致时后端重置出的一次性凭据 —— 只存在于内存,刷新即失。 */
+const resetCredentials = ref<{ username: string; password: string }[]>([]);
+/** 旧版导出(无指纹):哈希原样保留,但可能全体无法登录 —— 提示一下。 */
+const saltUnknown = ref(false);
+
+const copyCredentials = async () => {
+  const text = resetCredentials.value.map(c => `${c.username}\t${c.password}`).join('\n');
+  try { await navigator.clipboard.writeText(text); copied.value = true; } catch { /* 剪贴板不可用就算了 */ }
+};
+const copied = ref(false);
+
 const performSetup = async () => {
   if (importMode.value) {
     if (!importFileData.value) {
@@ -66,7 +78,17 @@ const performSetup = async () => {
     loading.value = true;
     error.value = '';
     try {
-      await systemAPI.setup({ importData: importFileData.value });
+      const res: any = await systemAPI.setup({ importData: importFileData.value });
+      /**
+       * salt 与导出方不一致时,后端把所有账号的密码重置成随机值,并**仅此一次**把明文带回来。
+       * 必须在这里显示出来:导入模式不会创建向导里的管理员,用户全部来自数据文件 ——
+       * 直接跳转就等于把唯一的登录凭据丢掉,站点当场变成没人能进。
+       */
+      if (res?.resetCredentials?.length) {
+        resetCredentials.value = res.resetCredentials;
+        return;   // 不跳转,停在凭据页等管理员确认
+      }
+      if (res?.saltState === 'unknown') saltUnknown.value = true;
       router.push('/login');
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || t('setup.importFailed');
@@ -105,7 +127,34 @@ const performSetup = async () => {
         <p class="text-title-section leading-[1.19] opacity-60 font-normal tracking-[0.231px]">Configure your new site.</p>
       </div>
 
-      <div class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-6">
+      <!-- salt 不一致 → 后端已重置全部密码,凭据只在这一次响应里。不显示就等于把站点锁死。 -->
+      <div v-if="resetCredentials.length" class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-5">
+        <Message severity="warn" :closable="false" unstyled :pt="MESSAGE_PT">
+          <template #icon><LucideTriangleAlert :size="15" /></template>
+          {{ $t('setup.saltMismatch') }}
+        </Message>
+
+        <div class="border border-separator rounded-control divide-y divide-separator-weak max-h-64 overflow-y-auto">
+          <div v-for="c in resetCredentials" :key="c.username"
+            class="flex items-center justify-between gap-3 px-3 py-2">
+            <span class="text-body text-label min-w-0 truncate">{{ c.username }}</span>
+            <code class="text-small font-mono text-label shrink-0">{{ c.password }}</code>
+          </div>
+        </div>
+
+        <p :class="TEXT.caption">{{ $t('setup.saltMismatchHint') }}</p>
+
+        <div class="flex gap-2">
+          <Button unstyled @click="copyCredentials" :class="BTN.secondary" class="flex-1">
+            <LucideCopy :size="16" /> {{ copied ? $t('setup.copied') : $t('setup.copyAll') }}
+          </Button>
+          <Button unstyled @click="router.push('/login')" :class="BTN.primary" class="flex-1">
+            {{ $t('setup.savedThemGoOn') }}
+          </Button>
+        </div>
+      </div>
+
+      <div v-else class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-6">
         <!-- Mode Toggle -->
         <div class="flex rounded-control overflow-hidden border border-separator">
           <Button
@@ -170,11 +219,16 @@ const performSetup = async () => {
           </button>
         </template>
 
+        <Message v-if="saltUnknown" severity="info" :closable="false" unstyled :pt="MESSAGE_PT">
+          <template #icon><LucideInfo :size="15" /></template>
+          {{ $t('setup.saltUnknown') }}
+        </Message>
+
         <div v-if="error" class="text-danger text-body text-center">{{ error }}</div>
 
         <Button :loading="loading" @click="performSetup" unstyled
           class="mt-4 bg-accent hover:bg-link text-white text-title-item py-[14px] rounded-control w-full font-medium transition-colors cursor-pointer flex justify-center items-center gap-2">
-          {{ importMode ? $t('setup.importAndInit') : $t('auth.completeSetup') }}
+          {{ importMode ? $t('setup.importAndInit') : $t('setup.completeSetup') }}
         </Button>
       </div>
     </div>

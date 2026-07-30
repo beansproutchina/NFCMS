@@ -49,7 +49,9 @@ DYAPI 是通用框架;CMS 的横切能力(RBAC、版本、生命周期、定时�
 - **HTTP 方法** `HTTP*(state,query,body)`:经 RBAC + 字段白名单 + 防批量赋值。`@CRUD` 生成的 REST 路由走这条。
 > 心智:公开内容 = 裸读 + `status='visible'` 过滤;后台 CRUD = HTTP* + RBAC。
 
-## 公开站 SSG
+## 公开站 SSG(当前已停用)
+> **状态:接线已摘除。** 生成出来的页面质量远低于主题化 SPA 渲染,故 `backend/index.ts` 第 8 步的 hook 接线与初次全量生成、以及 `docker/nginx.single.conf` 里 `/`、`/a/`、`/sitemap.xml` 三条 SSG location 全部注释掉了 —— 公开站**完全由 SPA 渲染**。`StaticGenService` 代码保留,恢复时把这两处一起放回。以下描述的是恢复后的行为。
+
 `StaticGenService` 监听 `content.published/saved.articles` hook,把可见文章/分类/首页渲染成带 SEO 头(title/OG/canonical/JSON-LD)+ Markdown 正文的静态 HTML,写到 `backend/static/ssg/`,并生成 `sitemap.xml`。有 `frontend/dist/index.html` 时以它为壳注入(爬虫拿内容,浏览器仍启动完整 SPA)。nginx 对 `/`、`/a/`、`/sitemap.xml` 优先命中 `ssg/`,否则回落 SPA(见 `docker/nginx.single.conf`)。
 > 注:当前 SSG 渲染的是 Markdown→HTML,而非跑 Vue 主题组件的真 SSR;真 SSR 是可选演进(替换 `StaticGenService.renderBody`,需要 Vite SSR 双入口 + 公开视图 SSR 化)。
 

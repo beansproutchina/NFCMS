@@ -18,7 +18,7 @@
           <span class="year" v-if="a.data?.year">{{ a.data.year }}</span>
         </div>
         <div class="info">
-          <h2>{{ a.title }}</h2>
+          <h2>{{ a.title }}<span v-if="a.locked" class="lock" :title="$t('front.lockedHint')">🔒</span></h2>
           <p v-if="a.data?.client || a.data?.role" class="sub">{{ [a.data?.client, a.data?.role].filter(Boolean).join(' · ') }}</p>
           <p v-else-if="a.description" class="sub">{{ a.description }}</p>
         </div>
@@ -65,6 +65,8 @@ const { items, total, page, loading, totalPages, goPage } = useArticleList(props
 .info { padding: 1.5rem; }
 .info h2 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.8rem; line-height: 1.1; }
 .work-card:hover .info h2 { color: var(--accent); }
+/* 受众轴:摘要墙的卡片正常展示,只加一个锁标记 —— 正文在后端已被剥离(a.locked)。 */
+.lock { margin-left: .4em; font-size: .8em; opacity: .65; }
 .info .sub { font-family: 'Space Mono', monospace; font-size: 0.85rem; color: rgba(28,28,28,.7); margin-top: 0.6rem; }
 
 .empty { text-align: center; padding: 5rem; border: 3px dashed var(--border-light); font-size: 1.2rem; }

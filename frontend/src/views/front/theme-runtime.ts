@@ -35,12 +35,22 @@ export interface PageConfig {
   prefetch?: PrefetchItem[];
 }
 
-/** Theme metadata block (`export const info`). */
+/**
+ * Theme metadata block (`export const info`) —— 也是**模板入口**的声明处。
+ *
+ * 为什么入口在这里而不是站点配置(`system_config`):站点配置跨主题存活(`subtitle` 就是刻意如此),
+ * 而模板名是主题的内部资产。放在站点级 = 一个引用活得比它指向的东西更久,换主题后就悬空。
+ * 详见 docs/public-access.md §6。
+ */
 export interface ThemeInfo {
   name: string;
   version: string;
   author: string;
   description: string;
+  /** 首页模板名。缺省 `DefaultHome`。 */
+  home?: string;
+  /** 受限内容的 gate 页模板名(受众轴)。缺省 `AccessGate`;主题不提供该组件时回落到框架内置兜底。 */
+  accessGate?: string;
 }
 
 /** The `pages` map a theme exports: template name -> its config. */

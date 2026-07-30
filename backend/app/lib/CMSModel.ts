@@ -3,6 +3,7 @@ import { assert, ForbiddenError, BadRequestError } from "dyapi/utils/error.js";
 import { policy } from "../services/PolicyService.js";
 import { revisions } from "../services/RevisionService.js";
 import { hooks } from "../services/HookManager.js";
+import { mergeFilter } from "../utils/filters.js";
 
 /**
  * Base class for CMS content models. RBAC (PolicyService) is the SOLE authority here:
@@ -25,8 +26,14 @@ export class CMSModel extends Model {
     categoryField: string | null = null;
 
     /** Lifecycle-managed fields: never writable via generic CRUD; only the lifecycle
-     *  controller / scheduler may change them (via raw update). */
-    lifecycleFields: string[] = ["status", "publish_at", "rev_version"];
+     *  controller / scheduler may change them (via raw update).
+     *
+     *  `access_eff` is the受众轴 derived value (see docs/public-access.md): it is computed from
+     *  the row's own `audience`/`teaser` plus its category chain, so accepting it from a request
+     *  body would let a client hand itself visibility. Author intent (`audience`/`teaser`) stays
+     *  writable — only the derivation is protected. Listing a field a subclass doesn't declare is
+     *  harmless (writableKeys filters over `datafields`). */
+    lifecycleFields: string[] = ["status", "publish_at", "rev_version", "access_eff"];
 
     private writableKeys(): string[] {
         return this.datafields
@@ -96,12 +103,4 @@ export class CMSModel extends Model {
         await this.remove({ id });
         return { code: 200 };
     }
-}
-
-/** AND two filter objects. Uses $and1/$and2 so keys never collide. */
-function mergeFilter(a: any, b: any): any {
-    const ae = a && Object.keys(a).length > 0;
-    const be = b && Object.keys(b).length > 0;
-    if (ae && be) return { $and1: a, $and2: b };
-    return ae ? a : be ? b : {};
 }
