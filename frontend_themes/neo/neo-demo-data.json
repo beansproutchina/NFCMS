@@ -192,6 +192,10 @@
       "content_template": "MemberPage",
       "weight": 30,
       "article_data_fields": {
+        "sort": {
+          "title": "排序(数字小的在前,留空排最后)",
+          "type": "number"
+        },
         "role": {
           "title": "职位",
           "type": "text"
@@ -231,7 +235,8 @@
       },
       "data": {
         "description": "一支小而全的远程团队。"
-      }
+      },
+      "editor_hint": "**参与作品**写在正文里的 `:::works` 块中(顺序即展示顺序)。每行一条,用 `|` 分隔:\n\n```\n:::works\n/a/works/work-1 | 品牌视觉、包装延展\nhttps://behance.net/xxx | 咖啡海报系列 | 主视觉 | 2025-03 | https://图片地址.jpg\n | 未公开的内部项目 | 交互设计 | 2024 | \n:::\n```\n\n- **站内作品**:第一列写站内地址(`/a/...` 开头),后面只写你自己的贡献 —— 标题、封面、客户年份由作品页自动带出,不用抄。\n- **站外作品**:第一列写完整链接,依次补 `标题 | 贡献 | 时间 | 图片`。\n- **不想给链接**:第一列留空,其余四列照写,该条目就只展示、不可点。\n- 同一个作品在不同人的页面上贡献可以不同 —— 这段话就是为此存在的。\n- ⚠ `:::works` 是本主题的约定,不是 markdown 标准语法。换成不解析它的主题时,这段会**原样显示**在正文里。"
     },
     {
       "id": 4,
@@ -870,17 +875,18 @@
       "author_id": "1",
       "description": "做品牌出身,现在负责工作室的设计方向。",
       "thumbnail": "",
-      "content": "在两家广告公司做过六年品牌,后来发现自己更喜欢陪一个产品从零走到上线,于是有了 ORBIT。\n\n## 我在做什么\n\n现在主要负责设计方向与客户沟通:把客户嘴里那句含糊的\"想要高级一点\",翻译成能落地的视觉决策。也画插画,大多用在自己的项目里。\n\n> 好设计不是加到不能再加,而是删到不能再删。\n\n业余时间在做一套关于二十四节气的插画,画了三年,还剩五张。",
+      "content": "在两家广告公司做过六年品牌,后来发现自己更喜欢陪一个产品从零走到上线,于是有了 ORBIT。\n\n## 我在做什么\n\n现在主要负责设计方向与客户沟通:把客户嘴里那句含糊的\"想要高级一点\",翻译成能落地的视觉决策。也画插画,大多用在自己的项目里。\n\n> 好设计不是加到不能再加,而是删到不能再删。\n\n业余时间在做一套关于二十四节气的插画,画了三年,还剩五张。\n\n## 参与作品\n\n:::works\n/a/works/work-1 | 品牌全案:视觉系统、包装延展\n/a/works/work-7 | 门店视觉与导视\n/a/works/work-12 | 主视觉与插画\nhttps://www.behance.net/gallery/000000/orbit-poster | 二十四节气插画(个人项目) | 全部插画 | 2023—2026 | \n:::\n",
       "content_template": "",
       "status": "visible",
       "publish_at": null,
       "rev_version": 0,
-      "is_top": 0,
+      "is_top": 1,
       "category_id": 3,
       "published_at": "2025-01-04T02:00:00.000Z",
       "created_at": "2025-01-04T02:00:00.000Z",
       "updated_at": "2025-01-04T02:00:00.000Z",
       "data": {
+        "sort": 1,
         "role": "创始人 / 设计负责人",
         "skills": "品牌,UI,策略,插画",
         "social_github": "https://github.com/linxiaoke",
@@ -897,17 +903,18 @@
       "author_id": "1",
       "description": "写了十年前端,现在更多时间花在架构与代码评审上。",
       "thumbnail": "",
-      "content": "从 jQuery 时代写到今天,经历过三轮技术栈更替,也因此对\"新框架\"这件事保持着克制的兴趣。\n\n## 我关心什么\n\n关心两件事:上线之后还改得动吗,以及新同事第一天能不能把项目跑起来。前者靠边界清晰的模块,后者靠一份认真写的 README。\n\n> 能删掉的依赖,就是不会出问题的依赖。\n\n偶尔在 B 站录一点重构过程的屏,主要是给自己看。",
+      "content": "从 jQuery 时代写到今天,经历过三轮技术栈更替,也因此对\"新框架\"这件事保持着克制的兴趣。\n\n## 我关心什么\n\n关心两件事:上线之后还改得动吗,以及新同事第一天能不能把项目跑起来。前者靠边界清晰的模块,后者靠一份认真写的 README。\n\n> 能删掉的依赖,就是不会出问题的依赖。\n\n偶尔在 B 站录一点重构过程的屏,主要是给自己看。\n\n## 参与作品\n\n:::works\n/a/works/work-2 | 前端架构、组件库\n/a/works/work-11 | 实时看板的数据层\n/a/works/work-14 | 重构与性能优化\n | 某券商内部工单系统 | 前端重构(客户未授权披露) | 2025 | \n:::\n",
       "content_template": "",
       "status": "visible",
       "publish_at": null,
       "rev_version": 0,
-      "is_top": 0,
+      "is_top": 1,
       "category_id": 3,
       "published_at": "2025-01-03T02:00:00.000Z",
       "created_at": "2025-01-03T02:00:00.000Z",
       "updated_at": "2025-01-03T02:00:00.000Z",
       "data": {
+        "sort": 2,
         "role": "技术负责人",
         "skills": "Vue,Node,架构,性能",
         "social_github": "https://github.com/chenmo",
@@ -923,17 +930,18 @@
       "author_id": "1",
       "description": "喜欢跟真实用户坐在一起看他们怎么用产品。",
       "thumbnail": "",
-      "content": "入行前在一家连锁书店做过两年店员,那段经历让我习惯了先看人怎么做,再想界面该怎么排。\n\n## 我的工作方式\n\n每个项目都会做至少五场一对一的用户观察。不问\"你觉得好不好用\",只看他们卡在哪一步、什么时候把手机放下。\n\n> 用户不会告诉你答案,但他们的犹豫会。\n\n动效是最近在补的一块,做完的原型都会自己录一遍看节奏。",
+      "content": "入行前在一家连锁书店做过两年店员,那段经历让我习惯了先看人怎么做,再想界面该怎么排。\n\n## 我的工作方式\n\n每个项目都会做至少五场一对一的用户观察。不问\"你觉得好不好用\",只看他们卡在哪一步、什么时候把手机放下。\n\n> 用户不会告诉你答案,但他们的犹豫会。\n\n动效是最近在补的一块,做完的原型都会自己录一遍看节奏。\n\n## 参与作品\n\n:::works\n/a/works/work-5 | 交互设计、可用性测试\n/a/works/work-8 | 预约流程设计\n/a/works/work-13 | 动效与原型\n:::\n",
       "content_template": "",
       "status": "visible",
       "publish_at": null,
       "rev_version": 0,
-      "is_top": 0,
+      "is_top": 1,
       "category_id": 3,
       "published_at": "2025-01-02T02:00:00.000Z",
       "created_at": "2025-01-02T02:00:00.000Z",
       "updated_at": "2025-01-02T02:00:00.000Z",
       "data": {
+        "sort": 3,
         "role": "产品设计师",
         "skills": "交互,原型,用研,动效",
         "social_bilibili": "https://space.bilibili.com/100000003",
@@ -960,6 +968,7 @@
       "created_at": "2025-01-01T02:00:00.000Z",
       "updated_at": "2025-01-01T02:00:00.000Z",
       "data": {
+        "sort": 4,
         "role": "全栈工程师",
         "skills": "TypeScript,小程序,DevOps",
         "social_github": "https://github.com/aze",

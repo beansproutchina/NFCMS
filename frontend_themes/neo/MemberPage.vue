@@ -28,29 +28,34 @@
       <Socials :context="context" :source="socialSource" size="lg" />
     </section>
 
-    <!-- ④ Credited works. Zero works is normal, not an error: the whole block is dropped. -->
-    <section class="m-works" v-if="works.length">
-      <p class="sec-title">WORKS · {{ works.length }}</p>
-      <a v-for="w in works" :key="w.id" class="work-row" :href="articleUrl(w)">
-        <span class="wt" :style="w.thumbnail ? { backgroundImage: `url(${w.thumbnail})` } : {}"
-              :class="{ 'no-img': !w.thumbnail }">
-          <span v-if="!w.thumbnail">{{ (w.title || '·').slice(0, 1) }}</span>
+    <!--
+      ④ 参与作品:**由成员自己在正文的 `:::works` 块里声明**(顺序、贡献、站外条目都归他自己)。
+      没写块 = 整块不出现(不是空框,也不回退到"署名反查"的列表)。
+      `is`:有链接的渲染成 <a>,不可点的条目渲染成 <div> —— 同一套样式,少一个假链接。
+    -->
+    <section class="m-works" v-if="workRows.length">
+      <p class="sec-title">WORKS · {{ workRows.length }}</p>
+      <component :is="w.href ? 'a' : 'div'" v-for="(w, i) in workRows" :key="w.href || w.title || i"
+                 class="work-row" :class="{ 'no-link': !w.href }" :href="w.href || undefined">
+        <span class="wt" :style="w.image ? { backgroundImage: `url(${w.image})` } : {}"
+              :class="{ 'no-img': !w.image }">
+          <span v-if="!w.image">{{ (w.title || '·').slice(0, 1) }}</span>
         </span>
         <span class="wb">
           <span class="wtitle">{{ w.title }}</span>
-          <span class="wmeta" v-if="metaOf(w)">{{ metaOf(w) }}</span>
+          <span class="wmeta" v-if="w.meta">{{ w.meta }}</span>
         </span>
-        <span class="warrow">↗</span>
-      </a>
+        <span class="warrow" v-if="w.href">{{ w.external ? '↗' : '→' }}</span>
+      </component>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { marked } from 'marked';
 import Socials from './components/Socials.vue';
-import { articleUrl, scrollToTopOnEnter } from './lib';
+import { articleUrl, parseWorksBlock, scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
 scrollToTopOnEnter();
@@ -63,7 +68,12 @@ const d = computed<any>(() => {
   return x && typeof x === 'object' ? x : {};
 });
 
-const bio = computed(() => (article.value?.content ? (marked.parse(article.value.content) as string) : ''));
+/**
+ * 正文里的 `:::works` 块由 lib 解析并**摘掉**,剩下的才是自我介绍。
+ * 不摘掉的话,marked 不认识 `:::works`,它会以字面量出现在页面上。
+ */
+const parsed = computed(() => parseWorksBlock(article.value?.content || ''));
+const bio = computed(() => (parsed.value.body ? (marked.parse(parsed.value.body) as string) : ''));
 const skills = computed(() => String(d.value.skills || '').split(',').map((s) => s.trim()).filter(Boolean));
 
 // Member-level links only — Socials ignores site config when `source` is given.
@@ -80,19 +90,53 @@ const socialSource = computed<Record<string, string>>(() => ({
 const hasSocial = computed(() => Object.values(socialSource.value).some((v) => String(v ?? '').trim()));
 
 /**
- * Works this member is credited on. The prefetch (theme.config.ts) is a LIKE over the whole `data`
- * column, so two client-side passes are mandatory:
- *   ① exact slug match — LIKE 'member-1' also matches 'member-10';
- *   ② keep only works — some other category's article could mention the same slug in its data.
- *      Judged by `list_template` because config-derived values cannot reach prefetch args.
+ * 站内条目的补料来源,三级取数:
+ *
+ *  ① **prefetch 命中**(零请求,覆盖绝大多数):`theme.config.ts` 的 `memberWorks` 仍按作品的
+ *     `data.members` 反查本成员参与的作品 —— 那次请求本来就要发,顺带把标题/封面/客户年份带回来。
+ *     它是 LIKE 整个 `data` 列,所以这里仍要精确核对 slug(`member-1` 会被 `member-10` 命中)。
+ *  ② **按 slug 补查**:块里写了、但没在 ① 里(比如作品没署名这位成员)的,收集起来批量查一次。
+ *  ③ **查不到**(受限内容 / slug 写错 / 已删):只渲染作者写的那点信息,不报错、不消失。
  */
-const works = computed<any[]>(() => (props.context?.memberWorks || []).filter((w: any) => {
-  if (w?.category?.list_template !== 'WorkGrid') return false;
-  const credited = String(w?.data?.members || '').split(',').map((s) => s.trim()).filter(Boolean);
-  return !!article.value?.slug && credited.includes(article.value.slug);
-}));
+const fetched = ref<Record<string, any>>({});
 
-const metaOf = (w: any) => [w?.data?.client, w?.data?.year].filter(Boolean).join(' · ');
+const prefetchedBySlug = computed<Record<string, any>>(() => {
+  const out: Record<string, any> = {};
+  for (const w of props.context?.memberWorks || []) if (w?.slug) out[w.slug] = w;
+  return out;
+});
+
+const resolve = (slug: string) => prefetchedBySlug.value[slug] || fetched.value[slug] || null;
+
+onMounted(async () => {
+  const missing = parsed.value.entries
+    .filter((e) => e.slug && !prefetchedBySlug.value[e.slug])
+    .map((e) => e.slug);
+  if (!missing.length) return;
+  const api = props.context?.api?.contentAPI;
+  if (!api?.listArticles) return;
+  try {
+    const res = await api.listArticles({ filter: { slug: { $in: [...new Set(missing)] } }, limit: missing.length });
+    const map: Record<string, any> = {};
+    for (const a of res?.data || []) if (a?.slug) map[a.slug] = a;
+    fetched.value = map;
+  } catch { /* 取不到就走 ③:作者写的信息照样显示 */ }
+});
+
+/** 渲染用的行:块的顺序就是展示顺序,标题/封面能补则补,贡献文案一律来自块。 */
+const workRows = computed(() =>
+  parsed.value.entries.map((e) => {
+    const hit = e.slug ? resolve(e.slug) : null;
+    const external = /^https?:\/\//i.test(e.url);
+    return {
+      href: hit ? articleUrl(hit) : (e.url || ''),
+      external,
+      title: hit?.title || e.title || e.slug || e.url,
+      image: hit?.thumbnail || e.image || '',
+      // 贡献是这次改动的重点:同一个作品在不同成员页上写的不一样,所以只能来自各自的正文。
+      meta: [e.contribution, e.date || hit?.data?.year, hit?.data?.client].filter(Boolean).join(' · '),
+    };
+  }));
 </script>
 
 <style scoped>
@@ -137,6 +181,9 @@ const metaOf = (w: any) => [w?.data?.client, w?.data?.year].filter(Boolean).join
   transition: background .12s, color .12s, padding .12s;
 }
 .work-row:hover { background: var(--ink); color: var(--surface); padding-left: .75rem; padding-right: .75rem; }
+/* 不可点的条目(块里 url 留空):同一套版式,但不做 hover 反色 —— 悬停变色等于假装能点。 */
+.work-row.no-link { cursor: default; }
+.work-row.no-link:hover { background: none; color: var(--ink); padding-left: 0; padding-right: 0; }
 .wt {
   flex: none; width: 64px; height: 64px; background: var(--bg-page) center/cover no-repeat;
   border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center;

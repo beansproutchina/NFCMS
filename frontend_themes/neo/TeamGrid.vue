@@ -10,8 +10,8 @@
       <p v-if="category?.data?.description">{{ category.data.description }}</p>
     </header>
 
-    <div class="team-grid" v-if="items.length">
-      <article v-for="a in items" :key="a.id" class="member">
+    <div class="team-grid" v-if="sorted.length">
+      <article v-for="a in sorted" :key="a.id" class="member">
         <!-- Stretched link: covers the card instead of wrapping it, so no <a> nesting. The card has
              no other interactive element (the socials live on the member's own page), so this needs
              no z-index layering. A real href keeps ⌘/middle-click and SEO working. -->
@@ -42,10 +42,25 @@
 </template>
 
 <script setup lang="ts">
-import { articleUrl, useArticleList } from './lib';
+import { computed } from 'vue';
+import { LISTED_TEAM_FILTER, articleUrl, memberSortKey, useArticleList } from './lib';
 const props = defineProps<{ context: any }>();
 const { category, breadcrumbs } = props.context || {};
-const { items, page, loading, totalPages, goPage } = useArticleList(props.context, 12);
+// 只列置顶成员 —— 过滤条件与 theme.config.ts 的 prefetch 共用同一个常量,否则第 1 页与第 2 页
+// 会按两套规则筛(lib.ts 里为这个漂移写过警告)。
+const { items, page, loading, totalPages, goPage } = useArticleList(props.context, 12, LISTED_TEAM_FILTER);
+
+/**
+ * 按分类自定义字段 `data.sort` 升序,没填的排最后。
+ *
+ * **只排当前页**:自定义字段都存在 `articles.data` 这个 JSON 列里,而 DYAPI 的排序是
+ * ``ORDER BY `列名` ``,给不了 JSON 路径,所以交不到数据库手上。团队人数通常一页装得下,
+ * 跨页顺序会乱这一点是明确接受的取舍。`sort` 相同时保持接口返回的原顺序(稳定排序)。
+ */
+const sorted = computed(() => items.value
+  .map((a: any, i: number) => ({ a, i }))
+  .sort((x, y) => (memberSortKey(x.a) - memberSortKey(y.a)) || (x.i - y.i))
+  .map((w) => w.a));
 const skillsOf = (a: any) => String(a?.data?.skills || '').split(',').map((s: string) => s.trim()).filter(Boolean);
 </script>
 

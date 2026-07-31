@@ -4,6 +4,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
+import { marked } from 'marked';
 import { getArticle, createArticle, updateArticle, lifecycleAPI, uploadAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -75,6 +76,19 @@ const ancestorCategoryIds = computed(() => {
         id = Number(byId.get(id)!.parent_id) || 0;
     }
     return out;
+});
+
+/**
+ * 分类给作者的正文格式说明(`categories.editor_hint`),渲染在正文编辑器上方。
+ *
+ * 自定义字段靠 title 自解释,而"正文里该按什么格式写"以前没有任何地方能说 —— 比如 neo 主题的
+ * 成员页要求正文里有一个 `:::works` 块。内容由 super_admin 在分类里维护,和正文一样走 marked
+ * (同一处 v-html 风险面,已记在 CLAUDE.md 的待硬化清单)。为空时整块不渲染,不占位。
+ */
+const editorHint = computed(() => {
+    const cat = categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id));
+    const raw = String(cat?.editor_hint || '').trim();
+    return raw ? (marked.parse(raw) as string) : '';
 });
 
 const articleDataFields = computed(() => {
@@ -267,6 +281,9 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
                 <div class="px-6 py-4 border-b border-separator-weak flex flex-col gap-2">
                     <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-semibold outline-none placeholder:opacity-30" />
                 </div>
+                <!-- 分类给作者的正文格式说明。为空时整块不存在,不占位。 -->
+                <div v-if="editorHint" class="editor-hint px-6 py-3 border-b border-separator-weak bg-info-fill text-body text-label"
+                    v-html="editorHint"></div>
                 <div class="flex-1 overflow-hidden" style="--md-bk-color: transparent;">
                     <MdEditor v-model="form.content" @onUploadImg="onUploadImg" :language="$i18n.locale === 'zh' ? 'zh-CN' : 'en-US'" class="h-full border-none!" previewTheme="github" />
                 </div>
@@ -336,4 +353,34 @@ onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
 .slide-leave-active { transition: transform 0.25s ease; }
 .slide-enter-from,
 .slide-leave-to { transform: translateX(100%); }
+
+/**
+ * 分类提示的最小排版。必须用 `:deep()` —— 内容来自 `v-html`,那些节点没有 scoped 属性,
+ * 普通选择器一条都不生效(主题那边踩过同一个坑,见 frontend_themes/neo/prose.css 顶部注释)。
+ * 后台没有 prose 层,所以这里只补最少的几条:段距、列表、行内码、可点的链接。
+ */
+.editor-hint :deep(p) { margin: 0 0 0.4em; }
+.editor-hint :deep(p:last-child) { margin-bottom: 0; }
+.editor-hint :deep(ul),
+.editor-hint :deep(ol) { margin: 0.3em 0; padding-left: 1.3em; list-style: disc; }
+.editor-hint :deep(ol) { list-style: decimal; }
+.editor-hint :deep(code) {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  padding: 0.05em 0.3em;
+  background: var(--color-white);
+  border: 1px solid var(--color-separator);
+  border-radius: var(--radius-chip);
+}
+.editor-hint :deep(pre) {
+  margin: 0.4em 0;
+  padding: 0.6em 0.8em;
+  background: var(--color-white);
+  border: 1px solid var(--color-separator);
+  border-radius: var(--radius-control);
+  overflow-x: auto;
+}
+.editor-hint :deep(pre code) { border: 0; padding: 0; background: none; }
+.editor-hint :deep(a) { color: var(--color-link); text-decoration: underline; }
+.editor-hint :deep(strong) { font-weight: 600; }
 </style>

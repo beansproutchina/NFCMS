@@ -333,6 +333,7 @@ export interface Category {
   audience: string;
   teaser: number;
   article_data_fields: any;
+  editor_hint: string;
   data: any;
 }
 
@@ -346,6 +347,7 @@ export interface CategoryCreateInput {
   audience?: string;
   teaser?: number;
   article_data_fields?: any;
+  editor_hint?: string;
   data?: any;
 }
 
@@ -359,6 +361,7 @@ export interface CategoryUpdateInput {
   audience?: string;
   teaser?: number;
   article_data_fields?: any;
+  editor_hint?: string;
   data?: any;
 }
 

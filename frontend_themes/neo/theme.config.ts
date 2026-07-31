@@ -1,6 +1,6 @@
 import type { App } from 'vue';
 import type { ThemeInfo, ThemePages, ThemeConfigSchema } from '@/views/front/theme-runtime';
-import { LISTED_WORK_FILTER } from './lib';
+import { LISTED_TEAM_FILTER, LISTED_WORK_FILTER } from './lib';
 
 export const info: ThemeInfo = {
   name: "Neo Studio",
@@ -65,6 +65,12 @@ const worksPrefetch = [
   { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
 ];
 
+// 团队同理:只取置顶成员。列表的**顺序**由 TeamGrid 客户端按 `data.sort` 排 —— 自定义字段在
+// JSON 列里,DYAPI 的 ORDER BY 只接列名,给不了它。
+const teamPrefetch = [
+  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id', ...LISTED_TEAM_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
+];
+
 export const pages: ThemePages = {
   DefaultHome: {
     layout: 'Layout',
@@ -106,7 +112,7 @@ export const pages: ThemePages = {
   ProjectArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
   // Services & team
   ServiceList: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
-  TeamGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
+  TeamGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: teamPrefetch },
   // Member profile: bare shell + the works this member is credited on.
   MemberPage: {
     layout: 'MemberLayout',

@@ -85,6 +85,15 @@
         </div>
       </div>
 
+      <!-- 正文格式说明:和上面的自定义字段是一回事的两面 —— 字段有 title 能自解释,
+           正文里"该按什么格式写"只能靠这段话。渲染在文章编辑器的正文上方。 -->
+      <div>
+        <label :class="LABEL">{{ $t('form.editorHint') }}</label>
+        <p class="mb-2" :class="TEXT.caption">{{ $t('form.editorHintDesc') }}</p>
+        <Textarea v-model="formData.editor_hint" unstyled rows="4" :class="TEXTAREA_CLASS_MONO"
+          :placeholder="$t('form.editorHintPlaceholder')" />
+      </div>
+
       <div>
         <label :class="LABEL">{{ $t('form.extraData')}}</label>
         <div class="border rounded-control border-separator p-2 bg-white  max-h-40 overflow-y-auto ">
@@ -128,7 +137,8 @@ import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
-import { BTN_REMOVE, CHECKBOX_PT, INPUT_CLASS, LABEL, LABEL_BARE, LINK, SELECT_PT, TEXT } from '../../ui/presets';
+import Textarea from 'primevue/textarea';
+import { BTN_REMOVE, CHECKBOX_PT, INPUT_CLASS, LABEL, LABEL_BARE, LINK, SELECT_PT, TEXT, TEXTAREA_CLASS_MONO } from '../../ui/presets';
 import AclEditor from '../../components/AclEditor.vue';
 import { categoryAudienceOptions, effectiveAudienceText } from '../../ui/audience';
 import { aclAPI, ARTICLES_CATEGORY, ARTICLES_AUDIENCE } from '../../api';

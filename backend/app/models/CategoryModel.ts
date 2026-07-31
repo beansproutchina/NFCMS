@@ -26,6 +26,13 @@ export default class CategoryModel extends Model {
         F.String("audience").default("public"), // public | authenticated | restricted
         F.Number("teaser").default(0),          // 受限时摘要是否仍进公开列表(0 隐身 / 1 摘要墙)
         F.Object("article_data_fields"),
+        /**
+         * 给本分类文章的**作者**看的一段 markdown,渲染在文章编辑器的正文上方。
+         *
+         * 自定义字段有 title 能自解释,而"正文里要按什么格式写"过去没有任何地方能说 ——
+         * neo 主题的成员页要求正文里有一个 `:::works` 块,不写在这里就只能靠口口相传。
+         */
+        F.String("editor_hint"),
         F.Object("data"),             // Additional JSON data
     ];
     permission = {

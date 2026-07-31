@@ -46,7 +46,7 @@
 
 内容/系统:
 - `ArticleModel(articles)` — `extends CMSModel`,`ownerField="author_id"`,字段含 `status/publish_at/rev_version`(**无** `visible`,已废弃)。
-- `CategoryModel(categories)`(**PUBLIC 已降为空**,公开侧走 `/api/content/categories` 按受众过滤)、`MenuModel(menus)`(公开可读 PUBLIC:R,菜单刻意不做受众过滤)、`AttachmentModel(attachments)`(锁死:PUBLIC/DEFAULT 空,admin R,super CRUD)、`SystemConfigModel(system_config, 无 @CRUD,仅 SystemController 管)`、`UserModel(users)`。
+- `CategoryModel(categories)`(**PUBLIC 已降为空**,公开侧走 `/api/content/categories` 按受众过滤;`article_data_fields` 声明该栏目下文章的自定义字段,`editor_hint` 是给作者看的一段 markdown,渲染在文章编辑器**正文上方** —— 用来说明正文里该按什么格式写,如 neo 主题成员页要求的 `:::works` 块)、`MenuModel(menus)`(公开可读 PUBLIC:R,菜单刻意不做受众过滤)、`AttachmentModel(attachments)`(锁死:PUBLIC/DEFAULT 空,admin R,super CRUD)、`SystemConfigModel(system_config, 无 @CRUD,仅 SystemController 管)`、`UserModel(users)`。
 - `UserModel`:`password` 字段 `setPermission("DEFAULT","w")`(可写不可读,登录走裸读);`PUBLIC:""`;`HTTPUpdate` 阻止非 super 改 role/改他人。
 
 ## 权限模型(RBAC)

@@ -18,6 +18,92 @@ export const articleUrl = (a: any) => (a?.category?.slug ? `/a/${a.category.slug
 export const LISTED_WORK_FILTER = { is_top: 1 };
 
 /**
+ * 团队页同理:只列置顶的成员。未置顶 ≠ 不可见 —— 个人页仍有固定链接,作品页的署名也照样链过去,
+ * 只是不出现在团队列表里。与 `LISTED_WORK_FILTER` 一样,prefetch 与 `useArticleList` 必须共用
+ * 这一个常量,否则第 1 页和第 2 页会按两套规则筛。
+ */
+export const LISTED_TEAM_FILTER = { is_top: 1 };
+
+/** 团队成员的排序键:分类自定义字段 `sort`,数字小的在前;没填的一律排到最后。 */
+export const memberSortKey = (a: any): number => {
+  const raw = a?.data?.sort;
+  const n = Number(raw);
+  return raw === '' || raw == null || Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
+};
+
+/** 成员正文里声明的一条参与作品。`url` 为空表示该条目不可点(纯自述)。 */
+export interface WorkEntry {
+  /** 原样的链接:`/a/...` 站内 · `https://...` 站外 · 空串 = 不可点 */
+  url: string;
+  /** 站内条目才有:从 url 末段取,用来和文章对上号 */
+  slug: string;
+  /** 站外或不可点的条目自带标题;站内条目留空,由文章补 */
+  title: string;
+  contribution: string;
+  date: string;
+  image: string;
+}
+
+const WORKS_FENCE_OPEN = /^:::\s*works\s*$/;
+const WORKS_FENCE_CLOSE = /^:::\s*$/;
+
+/**
+ * 解析成员正文里的参与作品块,并把这一块**从正文里摘掉**。
+ *
+ * ```
+ * :::works
+ * /a/works/aurora-coffee | 品牌视觉、包装延展
+ * https://behance.net/xxx | Aurora 咖啡海报 | 主视觉 | 2025-03 | https://cdn/x.jpg
+ *                         | 未公开的项目     | 交互设计 | 2024   |
+ * :::
+ * ```
+ *
+ * 判定内外**只看第一列的形状**,不数列数:
+ *   · `/` 开头 → 站内,写两列(`url | 贡献`);标题/封面/时间由文章本身提供,不用作者抄。
+ *   · 带协议 → 站外,写五列(`url | 标题 | 贡献 | 时间 | 图片`)。
+ *   · 空 → 自述条目,同样五列,只是渲染成不可点。
+ * 站外/自述条目**必须有标题**(没有标题的卡片没有意义),缺了就整行跳过 —— 弱约定格式的代价是
+ * 写错不报错,所以宁可少显示一行,也不要渲染出一张空卡片。
+ *
+ * 摘掉整块是必须的:`:::works` 不是 markdown 标准语法,marked 不认识它,留在正文里会以字面量
+ * 出现在页面上(这也是这套格式的已知代价,分类的 editor_hint 里要写明)。
+ */
+export function parseWorksBlock(md: string): { entries: WorkEntry[]; body: string } {
+  const src = String(md || '');
+  if (!src.includes(':::')) return { entries: [], body: src };
+
+  const lines = src.split('\n');
+  const entries: WorkEntry[] = [];
+  const kept: string[] = [];
+  let inside = false;
+  let found = false;
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (!inside && !found && WORKS_FENCE_OPEN.test(t)) { inside = true; found = true; continue; }
+    if (inside) {
+      if (WORKS_FENCE_CLOSE.test(t)) { inside = false; continue; }
+      if (!t) continue;
+      const cols = t.split('|').map((c) => c.trim());
+      const url = cols[0] || '';
+      if (url.startsWith('/')) {
+        const contribution = cols[1] || '';
+        entries.push({ url, slug: url.split('/').filter(Boolean).pop() || '', title: '', contribution, date: '', image: '' });
+      } else if (/^https?:\/\//i.test(url) || url === '') {
+        const [, title = '', contribution = '', date = '', image = ''] = cols;
+        if (!title) continue;   // 站外/自述条目没有标题就无从显示
+        entries.push({ url, slug: '', title, contribution, date, image });
+      }
+      // 其余形状(既不是路径也不是链接)视为写错,跳过
+      continue;
+    }
+    kept.push(line);
+  }
+
+  return { entries, body: kept.join('\n').trim() };
+}
+
+/**
  * 进入一篇内容页时回到顶部。
  *
  * 框架的 `router.scrollBehavior` 已经对新导航返回 `{ top: 0 }`,但实测在本主题里点进文章仍

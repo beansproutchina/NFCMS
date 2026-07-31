@@ -68,6 +68,7 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 - **提交门槛**:`pre-commit` 自动跑 `npm run lint`(设计系统规则)+ `vue-tsc` + `vite build`,约 5 秒。拦下时按提示修;确实合理的例外加进 `frontend/scripts/lint-baseline.json`(进 review),不要 `--no-verify`。
 
 ## 已知待硬化(非阻塞)
+- 后台文章编辑器把分类的 `editor_hint` 用 `v-html` 渲染(作者是 super_admin,风险低于正文,但同一处面)。
 - 前端主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面);SSG 侧只做了基础 strip。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。
 - 密码哈希是 `HMAC-SHA256(env salt)`(确定性,适配等值匹配登录),非 bcrypt/argon2;更强需改登录流程。
 - 前端路由守卫是"装饰性"的,真正鉴权在后端。
