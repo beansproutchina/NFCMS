@@ -77,7 +77,7 @@ const roleOptions = computed(() =>
 
 onMounted(async () => {
     try {
-        const res = await listRole({ limit: 999, orderBy: 'weight', orderDesc: true });
+        const res = await listRole({ limit: 999, orderBy: 'id' });
         roles.value = res.data || [];
     } catch (e) { console.error(e); }
     // Load this user's additional roles (user_roles) when editing.

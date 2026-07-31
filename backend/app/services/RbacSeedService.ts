@@ -10,7 +10,7 @@ export const DEFAULT_ROLES = [
     // `is_system: 1` 的含义很窄:**代码真的依赖这个名字**,所以后台 UI 不许删。
     // 全部默认角色里只有 super_admin 满足 —— `policy.isSuper` 硬编码检查它,各模型的静态
     // `permission` 映射里也有它,共 20 处引用。它是基础设施,不是种子。
-    { name: "super_admin", label: "Super Admin", is_system: 1, weight: 100 },
+    { name: "super_admin", label: "Super Admin", is_system: 1 },
 
     // 以下三个是**开箱起点**,可改名可删除(is_system: 0)。权限行由首次播种落库,之后完全归
     // 站点所有者。**代码里没有任何地方按名字引用它们** —— 曾经有 5 处(见下),已全部去掉:
@@ -19,17 +19,17 @@ export const DEFAULT_ROLES = [
     //   · UserModel 的 `"admin": "R,U"` → 与 DEFAULT 完全重复,是死代码,已删。
     //   · UserModel.role 的字段默认值 `"admin"` → 改成空串(缺省不该给角色)。
     //   · seedDynamicPerms 按名字找 admin → 改成按能力找(`articles:C any`)。
-    { name: "admin", label: "Admin", is_system: 0, weight: 80 },
+    { name: "admin", label: "Admin", is_system: 0 },
     // editor / author 零运行时耦合:只在 setup 的 demo 数据里被按名字引用一次。
-    { name: "editor", label: "Editor", is_system: 0, weight: 50 },
-    { name: "author", label: "Author", is_system: 0, weight: 30 },
+    { name: "editor", label: "Editor", is_system: 0 },
+    { name: "author", label: "Author", is_system: 0 },
     // 受众轴的前台会员角色:**故意零 role_permissions**。因为「分类授权 / 行级 ACL 不需要基础
     // 角色权限也能生效」,它只要出现在 `articles_audience` 的 V 授权里就能看受限内容,而后台每个
     // 接口都会拒绝它 —— 不需要"前台用户 vs 后台用户"的二分表。见 docs/public-access.md §2。
     //
     // `is_system: 0`(与上面四个不同):代码里**没有任何地方**依赖 "member" 这个名字,它纯粹是
     // 一个开箱可用的起点。站点想改叫「客户」「师生」「订阅者」都行,想删也行。
-    { name: "member", label: "Member", description: "前台会员示例:可被授权访问受限内容,无后台权限", is_system: 0, weight: 10 },
+    { name: "member", label: "Member", description: "前台会员示例:可被授权访问受限内容,无后台权限", is_system: 0 },
 ];
 
 /**

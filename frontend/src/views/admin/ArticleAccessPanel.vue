@@ -163,7 +163,7 @@ async function load() {
     try {
         const [g, r] = await Promise.all([
             aclAPI.list('articles', props.articleId),
-            listRole({ limit: 999, orderBy: 'weight', orderDesc: true }),
+            listRole({ limit: 999, orderBy: 'id' }),
         ]);
         grants.value = g.data || [];
         roles.value = r.data || [];

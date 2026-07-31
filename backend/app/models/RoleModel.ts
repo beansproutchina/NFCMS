@@ -16,7 +16,6 @@ export default class RoleModel extends Model {
         F.String("label"),
         F.String("description"),
         F.Number("is_system").default(0),       // seeded roles cannot be deleted
-        F.Number("weight").default(50),
     ];
     permission = {
         "PUBLIC": "",

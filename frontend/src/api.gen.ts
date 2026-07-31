@@ -568,7 +568,6 @@ export interface Role {
   label: string;
   description: string;
   is_system: number;
-  weight: number;
 }
 
 export interface RoleCreateInput {
@@ -576,7 +575,6 @@ export interface RoleCreateInput {
   label?: string;
   description?: string;
   is_system?: number;
-  weight?: number;
 }
 
 export interface RoleUpdateInput {
@@ -584,7 +582,6 @@ export interface RoleUpdateInput {
   label?: string;
   description?: string;
   is_system?: number;
-  weight?: number;
 }
 
 /** GET /api/roles — list Role records (paginated). */

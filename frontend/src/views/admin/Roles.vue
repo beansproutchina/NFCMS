@@ -124,7 +124,7 @@ const revokeAudGrant = async (g: any) => {
 };
 
 const loadRoles = async () => {
-    const res = await listRole({ limit: 999, orderBy: 'weight', orderDesc: true });
+    const res = await listRole({ limit: 999, orderBy: 'id' });
     roles.value = res.data || [];
     if (!selectedRole.value && roles.value.length) selectRole(roles.value[0]);
 };
