@@ -15,7 +15,9 @@
         <label :class="LABEL">
             {{ $t('form.password') }} <span v-if="!isEditing" class="text-danger">*</span>
         </label>
-        <Password v-model="formData.password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: INPUT_CLASS, placeholder: isEditing ? $t('form.leaveBlankToKeep') : '', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4', unmaskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4' }" />
+        <Password v-model="formData.password" unstyled :feedback="false" toggleMask fluid
+          :inputProps="{ class: PASSWORD_PT.inputClass, placeholder: isEditing ? $t('form.leaveBlankToKeep') : '', autocomplete: 'current-password' }"
+          :pt="PASSWORD_PT.pt" />
       </div>
 
       <div>
@@ -47,7 +49,7 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Select from 'primevue/select';
 import { listRole, listUserRole } from '../../api';
-import { INPUT_CLASS, LABEL, SELECT_PT, TEXT } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, PASSWORD_PT, SELECT_PT, TEXT } from '../../ui/presets';
 
 const { t } = useI18n();
 

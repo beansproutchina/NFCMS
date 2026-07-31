@@ -47,6 +47,7 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 
 ## 核心约定
 - **内容模型继承 `CMSModel`、声明 `ownerField`、不写静态 `permission`**——权限完全由 RBAC(PolicyService)决定。基础设施模型(Role 等)仍用普通 `Model` + 静态 `permission`。
+- **RBAC 只管 `CMSModel`**:`articles` / `attachments` / 动态内容类型是全量,`revisions` / `schemas` 只读接入,其余(users/categories/menus/system_config + RBAC 自身三张表)走 dyapi 静态 permission map、只认 super_admin —— 这是决定不是遗漏。判超管一律 `policy.isSuper(state)`(附加角色给的 super 与主角色列同级,`authmiddleware` 会把 `usertype` 抬上去),别读 `state.user.role`。权限面板按模型自报的 `rbacActions`/`ownerField` 列项,新增模型只需声明这两样。详见 [docs/backend.md](docs/backend.md)。
 - **鉴权优先级(PolicyService)**:`super_admin` → 角色权限 `any` → 独立授权路径(`own` 属主 · 行级 ACL · **分类授权**)。任一路径命中即放行,分类授权/行级 ACL **不需要**基础角色权限也能生效。
 - **分类授权(文章按目录管辖)**:`ResourceGrant` 用合成 `model="articles_category"`、`resource_id=分类id`、`access=C,R,U,...`,表示"可管理该分类(**级联整棵子树**)下的文章"。`ArticleModel.categoryField="category_id"` 触发此逻辑。角色与权限页可按角色分配,分类编辑弹窗可按用户/角色分配。
 - **create(`C`)不认 `own`**:创建出来的必属于自己,`own C` 无意义。全站创建=`articles:C any`;受限创建=对应分类的分类授权(含 C)。后端 `HTTPCreate` 会用具体 item 复核目标分类。

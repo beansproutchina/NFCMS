@@ -35,6 +35,9 @@ export default class RevisionModel extends Model {
         "super_admin": "R,D"
     };
 
+    /** 只有**读**走 RBAC(见下面两个重写);写仍然只有 super_admin。权限矩阵据此只列 R。 */
+    rbacActions = ["R"];
+
     /**
      * 读改由 RBAC 决定:配一行 `role_permissions(revisions, R, any)` 即可,不再认角色名。
      *

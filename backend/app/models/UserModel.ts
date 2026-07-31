@@ -2,6 +2,7 @@ import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
 import { CRUD, Inject, PopTarget } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
+import { policy } from "../services/PolicyService.js";
 
 @CRUD("users")
 @PopTarget("uid")
@@ -26,7 +27,7 @@ export default class UserModel extends Model {
     };
 
     async HTTPReadOne(state, query, body) {
-        if (state.user?.role !== "super_admin") {
+        if (!policy.isSuper(state)) {
             query.id = state.user?.id;
         }
         return await super.HTTPReadOne(state, query, body);
@@ -39,7 +40,7 @@ export default class UserModel extends Model {
     }
 
     async HTTPUpdate(state, query, body) {
-        if (state.user?.role !== "super_admin") {
+        if (!policy.isSuper(state)) {
             query.id = state.user?.id;
             delete body.role; // Prevent escalating privilege
         }

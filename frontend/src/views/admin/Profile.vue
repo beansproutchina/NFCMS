@@ -1,43 +1,44 @@
 <template>
-    <div :class="PAGE.container">
+    <!-- 骨架照抄「站点配置」页:窄容器 + 页头右上放动作键 + 卡片 padding 由调用点给、不带副标题。 -->
+    <div class="max-w-4xl mx-auto py-10 w-full px-6">
         <div :class="PAGE.header">
             <div>
                 <h1 :class="PAGE.title">{{ $t('profile.title') }}</h1>
-                <p :class="PAGE.subtitle">{{ $t('profile.desc') }}</p>
+            </div>
+            <div class="flex gap-4 items-center">
+                <Button :disabled="saving || !form.username" unstyled @click="save" :class="BTN.primary">
+                    <LucideSave :size="16" /> {{ $t('action.save') }}
+                </Button>
             </div>
         </div>
 
-        <div :class="CARD" class="max-w-lg flex flex-col gap-5">
-            <div :class="FIELD_GROUP">
-                <label :class="LABEL">{{ $t('form.username') }}</label>
-                <InputText v-model="form.username" unstyled :class="INPUT_CLASS" autocomplete="username" />
-            </div>
-
-            <div :class="FIELD_GROUP">
-                <label :class="LABEL">{{ $t('form.nickname') }}</label>
-                <InputText v-model="form.nickname" unstyled :class="INPUT_CLASS" />
-            </div>
-
-            <div :class="FIELD_GROUP">
-                <label :class="LABEL">{{ $t('form.password') }}</label>
-                <Password v-model="form.password" unstyled :feedback="false" toggleMask fluid
-                    :inputProps="{ class: PASSWORD_PT.inputClass, placeholder: $t('form.leaveBlankToKeep'), autocomplete: 'new-password' }"
-                    :pt="PASSWORD_PT.pt" />
-            </div>
-
-            <!-- 角色只读:提权必须由 super_admin 在「用户」页做,后端也会剥掉本人提交的 role。 -->
-            <div :class="FIELD_GROUP">
-                <label :class="LABEL">{{ $t('form.role') }}</label>
-                <div class="flex flex-wrap items-center gap-2">
-                    <span :class="CHIP.accent">{{ roleLabel }}</span>
-                    <span :class="TEXT.caption">{{ $t('profile.roleReadonly') }}</span>
+        <div class="p-8 mb-6" :class="CARD">
+            <div class="flex flex-col gap-6">
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.username') }}</label>
+                    <InputText v-model="form.username" unstyled :class="INPUT_CLASS" autocomplete="username" />
                 </div>
-            </div>
 
-            <div class="flex justify-end">
-                <Button unstyled @click="save" :disabled="saving || !form.username" :class="BTN.primary">
-                    {{ $t('action.save') }}
-                </Button>
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.nickname') }}</label>
+                    <InputText v-model="form.nickname" unstyled :class="INPUT_CLASS" />
+                </div>
+
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.password') }}</label>
+                    <Password v-model="form.password" unstyled :feedback="false" toggleMask fluid
+                        :inputProps="{ class: PASSWORD_PT.inputClass, placeholder: $t('form.leaveBlankToKeep'), autocomplete: 'new-password' }"
+                        :pt="PASSWORD_PT.pt" />
+                </div>
+
+                <!-- 角色只读:提权必须由 super_admin 在「用户」页做,后端也会剥掉本人提交的 role。 -->
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.role') }}</label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span :class="CHIP.accent">{{ roleLabel }}</span>
+                        <span :class="TEXT.caption">{{ $t('profile.roleReadonly') }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -58,10 +59,11 @@ import { useI18n } from 'vue-i18n';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
+import { LucideSave } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { getUser, updateUser } from '../../api';
 import { useAuthStore } from '../../stores/auth';
-import { BTN, CARD, CHIP, FIELD_GROUP, INPUT_CLASS, LABEL, PAGE, PASSWORD_PT, TEXT } from '../../ui/presets';
+import { BTN, CARD, CHIP, FIELD_GROUP, INPUT_CLASS, LABEL_BARE, PAGE, PASSWORD_PT, TEXT } from '../../ui/presets';
 
 const { t, te } = useI18n();
 const toast = useToast();
@@ -99,7 +101,7 @@ const save = async () => {
         if (form.value.password) body.password = form.value.password;
         await updateUser(id, body);
         form.value.password = '';
-        // 用户名进了 JWT 载荷的显示层,改完要让侧栏/头部立刻跟上
+        // 用户名进了侧栏/头部的显示,改完要立刻跟上
         authStore.setUser({ ...(authStore.user as any), username: form.value.username });
         toast.add({ severity: 'success', summary: 'Success', detail: t('toast.saved'), life: 3000 });
     } catch (e) {

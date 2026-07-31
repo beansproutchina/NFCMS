@@ -331,7 +331,9 @@ const routes: RouteRecordRaw[] = [
       { path: 'schemas', component: () => import('../views/admin/Schemas.vue') },
       { path: 'crud/:modelName', component: () => import('../views/admin/DynamicCrud.vue') },
       { path: 'files', component: () => import('../views/admin/Files.vue') },
-      { path: 'settings', component: () => import('../views/admin/Settings.vue') }
+      { path: 'settings', component: () => import('../views/admin/Settings.vue') },
+      // 我的资料:任何登录用户都能进(后端把读写锁在本人),不需要任何后台能力
+      { path: 'profile', component: () => import('../views/admin/Profile.vue') }
     ]
   }
 ];
@@ -388,7 +390,9 @@ router.beforeEach(async (to, from, next) => {
     next('/login?redirect=' + encodeURIComponent(to.path));
   } else if (to.meta.requiresAuth && authStore.isAuthenticated) {
     const isSuper = authStore.isSuperAdmin;
-    const adminAllowedPaths = ['/admin', '/admin/articles', '/admin/articles/new', '/admin/files'];
+    // '/admin/profile' 必须在列:它是给**非超管**用的(改自己的用户名/昵称/密码),
+    // 漏了就会被下面这条重定向打回 /admin —— 需要它的人恰好一个都进不去。
+    const adminAllowedPaths = ['/admin', '/admin/articles', '/admin/articles/new', '/admin/files', '/admin/profile'];
     
     const isEditingArticle = to.path.startsWith('/admin/articles/edit/');
     const isAllowedForAdmin = adminAllowedPaths.includes(to.path) || isEditingArticle;

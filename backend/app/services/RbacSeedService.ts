@@ -52,7 +52,10 @@ export const DEFAULT_ROLE_PERMISSIONS = [
     ["admin", "attachments", "C", "any"], ["admin", "attachments", "R", "any"],
     ["admin", "attachments", "U", "any"], ["admin", "attachments", "D", "any"],
     ["editor", "attachments", "C", "any"], ["editor", "attachments", "R", "any"], ["editor", "attachments", "D", "any"],
-    ["author", "attachments", "C", "any"], ["author", "attachments", "R", "any"],
+    // author 只看自己上传的:`uploader_id` 落地后 `own` 才真的可用(以前属主列不存在,配 own 是静默无效)。
+    // 只影响**新建站点** —— 这张表只在 /setup 播种,现有站点的 role_permissions 行不动。
+    // 代价说清楚:author 因此看不到别人上传的素材,想复用同事的图就得由 admin 上传或改成 any。
+    ["author", "attachments", "C", "any"], ["author", "attachments", "R", "own"],
     // 基础设施表的**读**权限。这两行取代了以前写在模型里的 `"admin": "R"` 静态键 —— 现在是
     // 一行可配置的数据,而不是硬编码的角色名。写入仍只有 super_admin(模型静态 map 里)。
     ["admin", "revisions", "R", "any"],   // 后台的版本历史面板

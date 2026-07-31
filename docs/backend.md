@@ -50,10 +50,27 @@
 - `UserModel`:`password` 字段 `setPermission("DEFAULT","w")`(可写不可读,登录走裸读);`PUBLIC:""`;`HTTPUpdate` 阻止非 super 改 role/改他人。
 
 ## 权限模型(RBAC)
-- **角色**:`roles`;**能力**:`role_permissions` 每行 = (role_id, model=表名, action ∈ C/R/U/D/publish/share, scope ∈ any/own)。
+- **角色**:`roles`;**能力**:`role_permissions` 每行 = (role_id, model=表名, action ∈ C/R/U/D/publish, scope ∈ any/own)。
 - **用户角色**:主角色在 `users.role`(进 JWT);附加角色在 `user_roles`。有效 = 并集。
 - **资源 ACL**:`resource_grants`(把某条内容共享给 user/role,access 如 `R` / `R,U`)。合成 model 两个:`articles_category`(管辖轴,可管理该分类子树的文章)、`articles_audience`(受众轴,动作 `V`,可在公开站查看该分类子树的受限文章)。
 - `super_admin` 全放行(硬编码);未授权动作默认拒绝。
+- **附加角色给的 `super_admin` 与主角色列的 `super_admin` 同级**:`state.usertype` 只有一个值(来自 JWT 的主角色列),dyapi 的静态 permission map 与 `@Auth()` 都只看它。所以 `authmiddleware` 在 `policy.resolve` 之后,若 `policy.isSuper(state)` 就把 `usertype` 抬成 `super_admin` —— 否则"通过 user_roles 授予 super_admin"的人在所有非 CMSModel 的表上都不被当 super,同一个角色因来路不同而权限不同。代码里判超管一律用 `policy.isSuper(state)`,不要读 `state.user.role`。
+
+### RBAC 到底管哪些表(**三档**,别被权限面板误导)
+
+| 档 | 表 | 机制 |
+|---|---|---|
+| **全量 RBAC** | `articles`、`attachments`、**所有动态内容类型** | 继承 `CMSModel`,`HTTP*` 全接管 → PolicyService |
+| **只读 RBAC** | `revisions`、`schemas` | 普通 `Model`,但在重写的 `HTTPRead*` 里 `assert(policy.hasAnyScope(...))`;写仍只有 super_admin |
+| **不进 RBAC**(刻意) | `users`、`categories`、`menus`、`system_config`、`roles`、`role_permissions`、`user_roles` | dyapi 静态 permission map,键是 `state.usertype` |
+
+不进 RBAC 是决定,不是遗漏:配置类表由 super_admin 独占;**RBAC 自身那三张表必须永久 super-only**,否则"能改权限的角色"可以给自己提权,形成闭环。`users` 的自助场景由模型重写覆盖(见下)。
+
+**模型自报判据,面板照着列**:`CMSModel.rbacActions` 给出"这张表上真的会被判定的动作"(有 `status` 字段才含 `publish`);`ownerField` 决定 `own` 是否可选。`/api/schematools/all` 把两者一并返回,`Roles.vue` 据此过滤 —— 以前面板列出全部 13 张表、固定 5 个动作、固定两种 scope,给 `users`/`menus` 配的行没人读,给没有属主列的表配 `own` 静默无效。**新增模型时不要在前端加白名单,声明 `rbacActions` 即可。**
+
+**属主列**:`articles.author_id`、`attachments.uploader_id`(本次新增)、动态内容类型固定 `author_id`(由 `ModelInjector` 的 `OWNER_FIELD` 保证存在 —— 固化而非推断,建模型的人不需要知道任何隐式命名规则)。`CMSModel.HTTPCreate` 一律记录属主:受限创建者强制写自己,全站创建者缺省写自己。**升级注意**:历史行的属主列为 NULL,只有 `any` 管得到。
+
+**用户自助**:`UserModel` 的 `HTTPReadOne`/`HTTPUpdate` 对非超管把 `query.id` 锁成本人并 `delete body.role`,所以"改自己的资料"不经 RBAC 也成立;后台入口是 `/admin/profile`(侧栏底部,对所有登录用户可见,零权限账号也放行 —— 能登录的人总该能改自己的密码)。
 
 ## 受众轴(公开站门禁)
 内容除生命周期外还有一根**正交**的受众维度:`categories.audience/teaser` + `articles.audience/teaser` → 物化成 `articles.access_eff`,由 `policy.canView/viewFilter` 判定 `full|locked|hidden`。完整设计与判定矩阵见 **[public-access.md](public-access.md)**。

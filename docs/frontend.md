@@ -110,6 +110,21 @@
 ```
 per-instance 的宽度/flex 写在组件自己的 `class`(会并入 root);**尺寸与内边距由 preset 决定,调用点不要重写**。
 
+#### 页面骨架(新建后台页照抄 `Settings.vue`)
+
+preset 只保证"零件长得一样",页面怎么摆是另一回事 —— 这几条只存在于现有页面里,新页面必须跟上,
+否则一眼就能看出是外挂的(「我的资料」页初版就踩了全部三条):
+
+| 位置 | 约定 |
+|---|---|
+| 容器 | 表单类页面用 `max-w-4xl mx-auto py-10 w-full px-6`(`PAGE.container` 是 `max-w-7xl`,给列表页用) |
+| 页头 | `PAGE.header` + 左侧 `PAGE.title`;**动作键一律在右上**(`<div class="flex gap-4 items-center">` 里放 `BTN.primary` / `BTN.secondary`,带 Lucide 图标),不要把保存放在卡片底部 |
+| 副标题 | **不用**。`PAGE.subtitle` 存在但没有任何页面在用,后台页只有标题 |
+| 卡片 | `<div class="p-8 mb-6" :class="CARD">` —— `CARD` 只有底色/圆角/描边/阴影,**内边距由调用点给**,漏了就是一个 padding 为 0 的框 |
+| 字段 | 卡片内 `flex flex-col gap-6`,每个字段 `<div class="max-w-lg" :class="FIELD_GROUP">` + `LABEL_BARE`(`FIELD_GROUP` 自带间距,别再用带下边距的 `LABEL`) |
+
+写新页面前先打开 `Settings.vue` 对一遍 —— CLAUDE.md 的「复用现有模式而非另起一套」说的就是这件事。
+
 **同一串外观类出现第二次就提成 preset**,并把它放进上表。`npm run lint` 会提示重复组合。
 
 ### 3. 组件与交互

@@ -5,6 +5,7 @@ import * as crypto from "crypto";
 import AttachmentModel from "../models/AttachmentModel.js";
 import SystemConfigModel from "../models/SystemConfigModel.js";
 import { createStorageProvider, getProviderMetas } from "../services/storage/index.js";
+import { policy } from "../services/PolicyService.js";
 
 /**
  * Unified Upload Controller with pluggable storage providers.
@@ -93,6 +94,8 @@ export default class UploadController extends Controller {
                     mime_type: mimeType,
                     size: file.size || 0,
                     storage_provider: providerName,
+                    // 裸 create 不经 HTTPCreate,属主要自己填(见 AttachmentModel.ownerField)
+                    uploader_id: ctx.state?.user?.id ?? null,
                 };
                 const insertId = await this.attachmentModel.create(payload);
 
@@ -142,7 +145,7 @@ export default class UploadController extends Controller {
      */
     @Route("get", "/providers")
     async getProviders(ctx: any) {
-        if (!ctx.state?.user || ctx.state.user?.role !== "super_admin") {
+        if (!ctx.state?.user || !policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied." };
         }
 
@@ -164,7 +167,7 @@ export default class UploadController extends Controller {
      */
     @Route("post", "/test")
     async testStorage(ctx: any) {
-        if (!ctx.state?.user || ctx.state.user?.role !== "super_admin") {
+        if (!ctx.state?.user || !policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied." };
         }
 

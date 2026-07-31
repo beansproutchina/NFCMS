@@ -5,7 +5,7 @@ import { BTN, NAV_ITEM, SECTION_TITLE, TEXT, TOPBAR_ICON } from '../../ui/preset
 import { computed, ref, watch } from 'vue';
 import Button from 'primevue/button';
 import { useRouter, useRoute } from 'vue-router';
-import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, LucideServer, LucideGlobe, LucideMenu, LucideUsers, LucideImage, LucideShieldCheck, LucideShieldOff, LucideX } from 'lucide-vue-next';
+import { LucideFileText, LucideGlobe, LucideImage, LucideLayoutDashboard, LucideLogOut, LucideMenu, LucideServer, LucideSettings, LucideShieldCheck, LucideShieldOff, LucideUserCog, LucideUsers, LucideX } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../stores/auth';
 import { authAPI } from '../../api';
@@ -152,6 +152,12 @@ watch(() => route.path, () => {
       </div>
 
       <div class="p-4 border-t border-divider/60 flex flex-col gap-1">
+        <!-- 我的资料刻意放在这一组(而不是 menuGroups):它对所有登录用户可见,若进了 menuGroups
+             就会让 noAdminAccess 永远为假,零权限账号的空壳提示随之失效。 -->
+        <Button unstyled @click="navigateTo('/admin/profile')"
+          :class="[NAV_ITEM.base, isCurrentPath('/admin/profile') ? NAV_ITEM.active : NAV_ITEM.idle]">
+            <LucideUserCog :size="18" class="opacity-70" /> {{ $t('profile.title') }}
+        </Button>
         <Button unstyled @click="navigateTo('/')" :class="[NAV_ITEM.base, NAV_ITEM.idle]">
             <LucideGlobe :size="18" class="opacity-70" />  {{$t('system.visitSite')}}
         </Button>  
@@ -164,7 +170,8 @@ watch(() => route.path, () => {
     <!-- Main Content Area -->
     <main class="flex-1 h-full overflow-y-auto bg-white md:h-screen h-[calc(100vh-48px)]">
       <!-- 零权限账号:不渲染任何后台页面,免得它们各自去打接口吃一串 403 toast。 -->
-      <div v-if="noAdminAccess" class="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
+      <!-- 「我的资料」是唯一放行的页面:一个能登录的人总该能改自己的密码。 -->
+      <div v-if="noAdminAccess && route.path !== '/admin/profile'" class="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
         <LucideShieldOff :size="32" class="opacity-40" />
         <p :class="SECTION_TITLE">{{ $t('system.noAdminAccess') }}</p>
         <p :class="TEXT.caption" class="max-w-sm">{{ $t('system.noAdminAccessHint') }}</p>

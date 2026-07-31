@@ -8,7 +8,7 @@ import ArticleModel from "../models/ArticleModel.js";
 import MenuModel from "../models/MenuModel.js";
 import RoleModel from "../models/RoleModel.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
-import { ARTICLES_CATEGORY } from "../services/PolicyService.js";
+import { ARTICLES_CATEGORY, policy } from "../services/PolicyService.js";
 import { seedDefaultRbac } from "../services/RbacSeedService.js";
 
 
@@ -73,7 +73,7 @@ export default class SystemController extends Controller {
 
     @Route("post", "/config")
     async updateConfig(ctx) {
-        if (ctx.state.user?.role !== "super_admin") {
+        if (!policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
         
@@ -103,7 +103,7 @@ export default class SystemController extends Controller {
     }
     @Route("post", "/restart")
     async restart(ctx) {
-        if (ctx.state.user?.role !== "super_admin") {
+        if (!policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
         
@@ -347,7 +347,7 @@ export default class SystemController extends Controller {
 
     @Route("get", "/export")
     async exportData(ctx) {
-        if (ctx.state.user?.role !== "super_admin") {
+        if (!policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
 

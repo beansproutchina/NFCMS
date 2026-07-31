@@ -11,6 +11,12 @@ import RolePermissionModel from "../models/RolePermissionModel.js";
 import { policy } from "./PolicyService.js";
 
 /**
+ * 动态内容类型的属主列名。固定值,不可配置也不做推断 —— 见 injectDynamicModel 里的说明。
+ * 与 `ArticleModel.ownerField` 同名,后台/主题看到的属主语义因此在所有内容类型上一致。
+ */
+export const OWNER_FIELD = "author_id";
+
+/**
  * Stores user-defined content-type schemas. Each row is turned into a live, CRUD-exposed
  * CMSModel at boot (and on creation, via the schema_inserted hook) by injectDynamicModel.
  */
@@ -32,6 +38,9 @@ export class ContentSchemaModel extends Model {
         "DEFAULT": "",
         "super_admin": "C,R,U,D"
     };
+
+    /** 只有**读**走 RBAC(下面的重写);写仍然只有 super_admin。权限矩阵据此只列 R。 */
+    rbacActions = ["R"];
 
     /** 读由 `role_permissions(schemas, R, any)` 决定。理由同 RevisionModel 的注释。 */
     async HTTPReadMany(state, query) {
@@ -95,6 +104,16 @@ export async function injectDynamicModel(app: DYApp, schemaDef: any) {
     if (!names.has("status")) datafields.push(F.String("status").default("hidden"));
     if (!names.has("publish_at")) datafields.push(F.Date("publish_at"));
     if (!names.has("rev_version")) datafields.push(F.Number("rev_version").default(0));
+    /**
+     * 属主列也**固化**成约定,和上面三个生命周期字段同级 —— 不去猜、不看 schema 里叫什么。
+     *
+     * 以前这里写死 `ownerField = null`,于是每个动态内容类型的 `own` 都是静默无效:
+     * "让作者只管自己那批"这个最常见的需求,在用户自建的内容类型上根本表达不出来。
+     * 反过来,如果按"有 author_id / uid 就当属主"之类的规则去推断,那规则只写在这行代码里 ——
+     * 建模型的人无从知道自己该起什么字段名才能让 own 生效,踩坑了也查不出来。所以:
+     * **列名固定为 `author_id`**,由注入器保证存在,与 ArticleModel 用同一个名字。
+     */
+    if (!names.has(OWNER_FIELD)) datafields.push(F.Number(OWNER_FIELD));
 
     // Set tablename/datafields in a CONSTRUCTOR (not on the prototype): Model declares
     // `tablename;` / `datafields = []` as class fields, whose per-instance initializers would
@@ -104,7 +123,7 @@ export async function injectDynamicModel(app: DYApp, schemaDef: any) {
             super(app);
             this.tablename = tableName;
             this.datafields = datafields;
-            this.ownerField = null;
+            this.ownerField = OWNER_FIELD;   // 固化约定,见上方 datafields 处的注释
         }
     };
     Object.defineProperty(DynamicClass, "name", { value: modelName, writable: false });

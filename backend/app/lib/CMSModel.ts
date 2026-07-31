@@ -25,6 +25,22 @@ export class CMSModel extends Model {
      *  (PolicyService cascades a category grant to that category's article subtree). */
     categoryField: string | null = null;
 
+    /**
+     * 这个模型上**真的会被 RBAC 判定**的动作 —— 权限矩阵只该列出这些。
+     *
+     * 存在的理由:后台的权限面板过去把所有注册模型、所有动作、两种 scope 都列出来,而引擎只认
+     * CMSModel;给 `users`、`menus` 配一行权限写了等于没写,给没有 `ownerField` 的模型配 `own`
+     * 也是静默无效。判据必须由模型自己给出(它才知道自己有没有生命周期字段、有没有属主列),
+     * 不能靠面板去猜、更不能靠读源码才知道的规则。
+     *
+     * `publish` 只在有生命周期字段的模型上有意义(附件没有 status,发布无从谈起)。
+     */
+    get rbacActions(): string[] {
+        const base = ["C", "R", "U", "D"];
+        const hasLifecycle = this.datafields?.some?.((f: any) => f.name === "status");
+        return hasLifecycle ? [...base, "publish"] : base;
+    }
+
     /** Lifecycle-managed fields: never writable via generic CRUD; only the lifecycle
      *  controller / scheduler may change them (via raw update).
      *
@@ -68,7 +84,16 @@ export class CMSModel extends Model {
         for (const raw of items) {
             const item: any = {};
             for (const k of this.writableKeys()) if (raw[k] !== undefined) item[k] = raw[k];
-            if (forceOwner) item[this.ownerField as string] = state.user?.id;
+            /**
+             * 属主列**一律**落到创建者身上:受限创建者是强制(不许伪造他人),全站创建者是
+             * 缺省(没显式给就是自己)。
+             *
+             * 以前只有 `forceOwner` 那一支写属主,于是站点级创建者建的行属主为空 —— 谁的
+             * `own` 都匹配不上。"own 只对一部分行生效"比"own 不生效"更难查。
+             */
+            if (this.ownerField && (forceOwner || item[this.ownerField] === undefined)) {
+                item[this.ownerField as string] = state.user?.id;
+            }
             // Re-check with the concrete item so category-scoped users can only create in a
             // category they're granted (no-op for "any"/"own"-owner creators).
             assert(await policy.can(state, "C", this, item), ForbiddenError, "没有该分类的权限");

@@ -272,6 +272,7 @@ export interface Attachment {
   mime_type: string;
   size: number;
   storage_provider: string;
+  uploader_id: number;
 }
 
 export interface AttachmentCreateInput {
@@ -280,6 +281,7 @@ export interface AttachmentCreateInput {
   mime_type?: string;
   size?: number;
   storage_provider?: string;
+  uploader_id?: number;
 }
 
 export interface AttachmentUpdateInput {
@@ -288,6 +290,7 @@ export interface AttachmentUpdateInput {
   mime_type?: string;
   size?: number;
   storage_provider?: string;
+  uploader_id?: number;
 }
 
 /** GET /api/attachments — list Attachment records (paginated). */
@@ -922,7 +925,7 @@ export function lifecycleManageableCategories(query?: { action?: string }): Prom
 
 
 /** GET /api/schematools/all — SchemaDevController.getAllSchemas */
-export function schematoolsGetAllSchemas(): Promise<{ code: number; data: { modelName: any; tableName: any; routePath: any; fields: any; }[]; }> {
+export function schematoolsGetAllSchemas(): Promise<{ code: number; data: { modelName: any; tableName: any; routePath: any; rbacActions: any; ownerField: any; fields: any; }[]; }> {
   return request({ method: "get", url: "/api/schematools/all" });
 }
 
@@ -959,13 +962,13 @@ export interface SystemSetupBody {
 }
 
 /** POST /api/system/setup — SystemController.setup */
-export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; }>; message: string; } | { code: number; message: string; }> {
+export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; }>; saltState: "match" | "mismatch" | "unknown"; resetCredentials: { username: string; password: string; }[]; message: string; } | { code: number; message: string; }> {
   return request({ method: "post", url: "/api/system/setup", data: body });
 }
 
 
 /** GET /api/system/export — SystemController.exportData */
-export function systemExportData(): Promise<{ code: number; data: { _meta: { version: string; exportedAt: string; generator: string; }; }; }> {
+export function systemExportData(): Promise<{ code: number; data: { _meta: { version: string; exportedAt: string; generator: string; saltFingerprint: string; }; }; }> {
   return request({ method: "get", url: "/api/system/export" });
 }
 

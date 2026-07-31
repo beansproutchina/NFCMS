@@ -56,6 +56,19 @@ export const INPUT_CLASS_LG =
   'focus:outline-none focus:border-accent focus:bg-white focus:ring-1 focus:ring-accent transition-all';
 
 /**
+ * Password field at admin size (UserEditor 的弹窗、我的资料页)。
+ * 这份 passthrough 原本内联在 UserEditor 的模板里 —— 第二个用它的页面出现时就该提上来。
+ */
+export const PASSWORD_PT = {
+  inputClass: INPUT_CLASS,
+  pt: {
+    root: 'relative w-full',
+    maskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4',
+    unmaskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4',
+  },
+};
+
+/**
  * Password field on the onboarding pages: the large field plus the show/hide eye.
  * Login and the setup wizard had identical copies of both the class and the icon passthrough.
  */

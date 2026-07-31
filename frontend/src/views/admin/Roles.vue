@@ -26,14 +26,33 @@ const newRole = ref({ name: '', label: '' });
 // New-permission row
 const newPerm = ref({ model: '', action: 'R', scope: 'any' });
 
-const models = ref<any[]>([]); // registered models (from schematools) for the permission dropdown
-const modelOptions = computed(() => models.value.map((m: any) => ({ label: `${m.modelName} (${m.tableName})`, value: m.tableName })));
-const ACTIONS = ['C', 'R', 'U', 'D', 'publish'];
-const SCOPES = ['any', 'own'];
+/**
+ * 只列**引擎真的会判**的模型与动作。
+ *
+ * 这里过去列出后端注册的全部 13 张表、固定 5 个动作、固定两种 scope,而 RBAC(PolicyService)
+ * 只管继承了 CMSModel 的表:给 `users` / `categories` / `menus` / RBAC 自身那三张表配一行权限,
+ * 写进库里也没人读 —— 它们走 dyapi 的静态 permission map,只认 super_admin。同理,没有属主列的
+ * 模型配 `own` 是静默无效,没有生命周期字段的模型(附件)根本谈不上 `publish`。
+ *
+ * 判据来自后端 `/schema` 的 `rbacActions` 与 `ownerField`(由模型自己声明,见 CMSModel),
+ * 不在前端猜。空 `rbacActions` = 这张表不由 RBAC 管,直接不出现在下拉里。
+ */
+const models = ref<any[]>([]);
+const rbacModels = computed(() => models.value.filter((m: any) => (m.rbacActions || []).length > 0));
+const modelOptions = computed(() => rbacModels.value.map((m: any) => ({ label: `${m.modelName} (${m.tableName})`, value: m.tableName })));
+const currentModel = computed(() => rbacModels.value.find((m: any) => m.tableName === newPerm.value.model));
+const actionOptions = computed(() => currentModel.value?.rbacActions || ['R']);
 // "own" is meaningless for create (whatever you create is yours) — only offer "any" for C.
 // Category-limited create is expressed via the category grants section below.
-const scopeOptions = computed(() => (newPerm.value.action === 'C' ? ['any'] : SCOPES));
-watch(() => newPerm.value.action, (a) => { if (a === 'C') newPerm.value.scope = 'any'; });
+const scopeOptions = computed(() => {
+    if (newPerm.value.action === 'C') return ['any'];
+    return currentModel.value?.ownerField ? ['any', 'own'] : ['any'];
+});
+// 换模型/动作后,原来选中的值可能已经不在候选里 —— 收回到合法值,别提交出一条无效权限。
+watch([() => newPerm.value.model, () => newPerm.value.action], () => {
+    if (!actionOptions.value.includes(newPerm.value.action)) newPerm.value.action = actionOptions.value[0];
+    if (!scopeOptions.value.includes(newPerm.value.scope)) newPerm.value.scope = scopeOptions.value[0];
+});
 
 const isSystem = computed(() => !!selectedRole.value?.is_system);
 
@@ -171,7 +190,7 @@ onMounted(async () => {
         try {
             const res = await schemaAPI.getAll();
             models.value = res.data || [];
-            if (models.value.length && !newPerm.value.model) newPerm.value.model = models.value[0].tableName;
+            if (rbacModels.value.length && !newPerm.value.model) newPerm.value.model = rbacModels.value[0].tableName;
         } catch (e) { console.error(e); }
         try {
             const cr = await listCategory({ limit: 999, orderBy: 'weight' });
@@ -239,7 +258,7 @@ onMounted(async () => {
                         <!-- add permission row -->
                         <div class="flex gap-2 items-center bg-surface rounded-control p-3">
                             <Select v-model="newPerm.model" :options="modelOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="flex-1 min-w-0" />
-                            <Select v-model="newPerm.action" :options="ACTIONS" unstyled :pt="SELECT_PT" class="w-[130px] shrink-0" />
+                            <Select v-model="newPerm.action" :options="actionOptions" unstyled :pt="SELECT_PT" class="w-[130px] shrink-0" />
                             <Select v-model="newPerm.scope" :options="scopeOptions" unstyled :pt="SELECT_PT" class="w-[110px] shrink-0" />
                             <Button unstyled @click="addPerm" :class="BTN.primary">
                                 <LucidePlus :size="14" /> {{ $t('roles.addPerm') }}
