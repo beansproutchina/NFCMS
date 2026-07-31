@@ -27,7 +27,7 @@
 
       <div class="proj-content">
         <div v-if="article?.thumbnail" class="cover"><img :src="article.thumbnail" alt=""></div>
-        <div class="prose" v-html="rendered"></div>
+        <div class="prose neo-prose" v-html="rendered"></div>
         <div class="gallery" v-if="gallery.length">
           <img v-for="(g, i) in gallery" :key="i" :src="g" alt="">
         </div>
@@ -39,8 +39,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { marked } from 'marked';
+import { scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
+scrollToTopOnEnter();
 const { article, breadcrumbs } = props.context || {};
 
 const d = computed<any>(() => article?.data || {});
@@ -50,6 +52,11 @@ const rendered = computed(() => (article?.content ? (marked.parse(article.conten
 </script>
 
 <style scoped>
+/* 外观全在 prose.css 的 .neo-prose 里;这里只定尺度。 */
+.prose {
+  --prose-measure: 720px;
+  --prose-size: 1.15rem;
+}
 .proj-main { max-width: 1280px; margin: 0 auto; padding: 3rem 2rem 5rem; width: 100%; }
 .crumbs { font-family: 'Space Mono', monospace; font-size: 0.85rem; margin-bottom: 2.5rem; }
 .crumbs a { color: var(--ink); text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 3px; }
@@ -76,12 +83,6 @@ const rendered = computed(() => (article?.content ? (marked.parse(article.conten
 
 .cover { border: 3px solid var(--ink); margin-bottom: 2rem; }
 .cover img { width: 100%; display: block; }
-.prose { font-size: 1.15rem; line-height: 1.7; max-width: 720px; }
-.prose :deep(h2) { font-family: 'Bricolage Grotesque', sans-serif; margin: 2.5rem 0 1rem; }
-.prose :deep(p) { margin-bottom: 1.3em; }
-.prose :deep(img) { max-width: 100%; border: 3px solid var(--ink); margin: 1.5rem 0; }
-.prose :deep(blockquote) { border-left: 12px solid var(--accent); background: var(--surface); padding: 1.25rem; box-shadow: 6px 6px 0 var(--ink); margin: 2rem 0; }
-.prose :deep(a) { color: var(--accent); }
 .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 2rem; }
 .gallery img { width: 100%; border: 3px solid var(--ink); display: block; }
 

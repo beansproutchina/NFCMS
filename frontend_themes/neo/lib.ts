@@ -17,6 +17,26 @@ export const articleUrl = (a: any) => (a?.category?.slug ? `/a/${a.category.slug
  */
 export const LISTED_WORK_FILTER = { is_top: 1 };
 
+/**
+ * 进入一篇内容页时回到顶部。
+ *
+ * 框架的 `router.scrollBehavior` 已经对新导航返回 `{ top: 0 }`,但实测在本主题里点进文章仍
+ * 停在原位置,所以这里补一道主题侧的保证 —— 它**不会**和 back/forward 的位置恢复打架:
+ * vue-router 把离开时的滚动位置写在 `history.state.scroll` 上,后退/前进进来的历史条目带着
+ * 这份记录,于是这里直接跳过,让框架的 300ms 延迟恢复照常生效;而一次全新的 push 没有这份
+ * 记录,才滚到顶。
+ *
+ * 只能放在**每次导航都会重挂的**模板里:布局(Layout/MemberLayout)由 DynamicView 按
+ * `layouts.join('>')` 做 key,同一套布局在导航间是复用的,写在那儿只会在首次进站生效一次。
+ */
+export function scrollToTopOnEnter() {
+  onMounted(() => {
+    const restored = (window.history.state as any)?.scroll;
+    if (restored) return;
+    window.scrollTo({ top: 0, left: 0 });
+  });
+}
+
 const pad = (n: number) => String(n).padStart(2, '0');
 export const formatDate = (s: string) => { if (!s) return ''; const d = new Date(s); return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`; };
 

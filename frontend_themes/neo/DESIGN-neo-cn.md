@@ -1035,3 +1035,98 @@ const menus  = computed<any[]>(() => props.context?.menus || []);
 - 后台 team 文章编辑器出现 9 个自定义字段,微信二维码字段是 `FileUploader`(可上传、可从文件库选)
 - 后台"主题设置"里 `theme_neo_avatar` / `theme_neo_social_wechat_qr` 是 `FileUploader`,hint 不再包含"去 /admin/files 手动粘 URL"的操作说明
 - `/admin/files` 每个文件卡可「复制链接」,删除走全局确认框
+
+---
+
+## 16. 后续修订(上线后)
+
+### 16.1 正文样式收到 `prose.css`(唯一一份)
+
+**症状**:文章正文里标题、引用、表格、列表"和纯文本没什么区别"。
+
+**根因两条**:
+
+1. **`<style scoped>` 管不到 `v-html`**。`marked.parse()` 出来的节点没有 `data-v-xxx`,所以
+   `.prose code { … }` 这类写法**一条都不生效**,只有 `:deep()` 包住的才行。四个模板里真正生效的
+   规则加起来只有 `h2 / p / blockquote / a` —— `h3`、列表、表格、代码块、`hr`、`img` 全是浏览器
+   默认样式。
+2. **四份复制已经漂移**:同一个链接在 MemberPage 是墨黑 + 朱红波浪线,在 AboutPage / ProjectArticle
+   是朱红实色;`blockquote` 的 padding 三个值。
+
+**做法**:新增 `prose.css`,选择器一律 `.neo-scope .neo-prose ...`(同 tokens.css 的理由:类选择器
+在 /admin 匹配不到,不会漏样式),由两个 shell `import`。覆盖 Markdown 能产出的全部元素:三级标题
+三种"材质"(h2 朱红竖条 / h3 方块+细底线 / h4-h6 等宽小标签)、自绘列表标记(朱红方块 / Space Mono
+编号)、GFM 任务列表复选框、引用、行内码与反相代码块、三线表 + 墨底表头、`hr`(左朱红右墨黑)、
+图片描边硬阴影、`figcaption`、`kbd`、`iframe`,以及窄屏下的字号与表格横滑。
+
+调用点只用变量调**尺度**,不再复制外观:
+
+```css
+.content { --prose-measure: 680px; --prose-size: 1.2rem; }
+```
+
+另:正文字体栈补了 CJK 兜底(`'Manrope', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei'`)——
+Manrope 没有汉字字形,不写就掉进浏览器默认字体;行距按中文调到 1.85。
+
+### 16.2 移动端抽屉:`fixed` → `absolute`
+
+**症状**:汉堡按钮行为异常、菜单被遮挡、未展开时还在右侧占地方把页面横向撑宽。
+
+**根因是一个**:`.site-header` 有 `backdrop-filter`,而 backdrop-filter 会让自身成为后代
+**fixed 元素的包含块**。于是 `.nav-menu` 的 `top:76px; bottom:0` 相对的是 76px 高的表头 ——
+算出来高度 ≈ 0(看着像被遮挡),而 `translateX(100%)` 把它停在表头右侧之外,收起态照样贡献
+布局溢出,页面被撑宽。
+
+**做法**:改 `position: absolute` + `top:100%` + `left/right:0`(表头是 sticky,已定位;它的
+padding box 本身就是整屏宽,所以 0 就铺满),收起态用 `opacity/visibility/pointer-events` +
+**纵向** `translateY(-8px)`(和本文件里 `.sub-nav` 同一套写法),不再有任何横向位移。
+`max-height: calc(100dvh - 76px)` + `overflow-y:auto`;`z-index: 70`。顺带给汉堡加
+`aria-expanded` / `aria-controls`。
+
+**教训**:`filter` / `backdrop-filter` / `transform` 都会悄悄改写"谁是包含块"。表头这类会加
+这些属性的容器里,别用 `position: fixed` 排布子元素。
+
+### 16.3 进文章不回到顶部
+
+框架的 `router.scrollBehavior` 已对新导航返回 `{ top: 0 }`,但实测本主题点进文章仍停在原位置。
+补 `lib.ts` 的 `scrollToTopOnEnter()`,在 DefaultArticle / ProjectArticle / MemberPage /
+DefaultCategory 调用。它靠 `history.state.scroll` 区分"全新 push"与"后退/前进":后者带着
+vue-router 写下的滚动记录,直接跳过,不和框架的 300ms 延迟恢复打架。
+
+只能放在**每次导航都会重挂的模板**里 —— 布局由 DynamicView 按 `layouts.join('>')` 做 key,
+在导航之间是复用的,写在 Layout 里只会首次进站生效一次。
+
+### 16.4 作品页被横向撑开:`1fr` 轨道的 `min-width: auto`
+
+**症状**:进作品页,整页被横向撑宽。
+
+**两个来源,一个是我新引入的、一个是一直都在的**:
+
+1. **我引入的**:`prose.css` 给行内 `code` 写了 `white-space: nowrap`。一段长命令 / 长路径因此
+   不能断行,成了一个"最小宽度很大"的盒子。改成 `white-space: pre-wrap` + `overflow-wrap: anywhere`
+   (保留码内空格,但允许在任意位置断)。表格同样:`max-width` 拦不住表格(它按内容最小宽度算),
+   所以让它自己变成滚动容器 —— `display: block; width: fit-content; max-width: 100%; overflow-x: auto`,
+   窄表格贴着内容、宽表格内部横滑,窄屏那套单独规则也就不需要了。
+
+2. **一直都在的**:`min-width` 对**弹性/网格项**的初始值是 `auto`,意思是"不得窄于内容的最小
+   尺寸"。本主题有 25 处 `1fr` 轨道、原先**一处 `min-width` 都没有** —— 于是任何一个宽子元素
+   (大图、宽表格、`pre`、不可断长串)都能把轨道顶开,把整页撑宽。作品页 `.proj-body` 是
+   `260px 1fr`,正是这个形状;它的 `.cover img` / `.gallery img` 与 markdown 内容都在那条 `1fr` 里。
+
+**地基规则**(tokens.css,`:where()` 写法所以特异性为 0,页面里的显式规则照旧覆盖):
+
+```css
+.neo-scope :where(*) { min-width: 0; }
+.neo-scope :where(img, svg, video, iframe, canvas) { max-width: 100%; }
+```
+
+`min-width: 0` 对普通块盒本来就是初始值,所以第一条**只影响弹性/网格项** —— 正是要治的那批。
+代价是弹性项从此可以被压扁:表头的标志与右侧图标组因此显式加了 `flex: none`(被压扁只会重叠)。
+
+**排查手法**(下次再遇到,一行定位元凶):
+
+```js
+[...document.querySelectorAll('*')]
+  .filter(e => e.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
+  .map(e => e.tagName + '.' + e.className)
+```

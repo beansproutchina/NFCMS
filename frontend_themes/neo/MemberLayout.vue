@@ -9,6 +9,8 @@
 import { computed } from 'vue';
 // Same token file Layout.vue uses — one source, Vite emits it once.
 import './tokens.css';
+// 正文(v-html 出来的 Markdown)样式的唯一一份来源,见 prose.css 顶部注释。
+import './prose.css';
 
 /**
  * Bare page shell for member profiles. Its whole reason to exist is that it is NOT Layout.vue:

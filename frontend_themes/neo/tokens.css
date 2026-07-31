@@ -23,3 +23,15 @@
   color: var(--ink);
   font-family: 'Manrope', sans-serif;
 }
+
+/**
+ * 两条防"撑开"的地基规则。都用 `:where()` 写,特异性为 0,页面里任何显式规则照旧覆盖。
+ *
+ * 1) `min-width: 0`:`min-width` 的初始值对普通块盒本来就是 0,这条**只影响弹性/网格项** ——
+ *    它们的初始值是 `auto`,意思是"不得窄于内容的最小尺寸"。于是一张大图、一个宽表格、一段
+ *    不可断的长串,都能把 `1fr` 轨道顶开,把整页横向撑宽(本主题 25 处 `1fr`,原先一处
+ *    min-width 都没有;作品页 `260px 1fr` 就是这么被撑开的)。
+ * 2) 替换元素封顶:图片/视频/内嵌框架永远不超过容器宽度。
+ */
+.neo-scope :where(*) { min-width: 0; }
+.neo-scope :where(img, svg, video, iframe, canvas) { max-width: 100%; }

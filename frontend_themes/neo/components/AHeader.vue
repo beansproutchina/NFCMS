@@ -6,7 +6,7 @@
         <span class="logo-text">{{ config?.site_name || 'NEO STUDIO' }}</span>
       </a>
 
-      <nav class="nav-menu" :class="{ open: mobileOpen }">
+      <nav id="neo-nav" class="nav-menu" :class="{ open: mobileOpen }">
         <template v-for="(item, i) in navItems" :key="i">
           <div class="nav-item" :class="{ 'has-children': item.children && item.children.length }">
             <a class="nav-link" :href="item.url" @click="mobileOpen = false">{{ item.label }}</a>
@@ -20,7 +20,8 @@
 
       <div class="header-right">
         <Socials :context="context" class="header-socials" />
-        <button class="hamburger" :class="{ open: mobileOpen }" @click="mobileOpen = !mobileOpen" aria-label="菜单">
+        <button class="hamburger" :class="{ open: mobileOpen }" @click="mobileOpen = !mobileOpen"
+          :aria-expanded="mobileOpen" aria-controls="neo-nav" aria-label="菜单">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -57,7 +58,7 @@ const mobileOpen = ref(false);
 }
 .header-inner { max-width: 1440px; margin: 0 auto; height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
 
-.logo { display: flex; align-items: baseline; gap: 8px; text-decoration: none; color: var(--ink); font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.02em; white-space: nowrap; }
+.logo { flex: none; display: flex; align-items: baseline; gap: 8px; text-decoration: none; color: var(--ink); font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.02em; white-space: nowrap; }
 .logo-mark { color: var(--accent); font-size: 1.7rem; line-height: 1; }
 
 .nav-menu { display: flex; align-items: center; gap: 2rem; }
@@ -87,7 +88,9 @@ const mobileOpen = ref(false);
 }
 .nav-cta:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--ink); }
 
-.header-right { display: flex; align-items: center; gap: 1rem; }
+/* flex: none —— tokens.css 的全局 `min-width: 0` 让弹性项可以收缩,而标志与这一组图标
+   被压扁只会重叠,不会变好看。 */
+.header-right { flex: none; display: flex; align-items: center; gap: 1rem; }
 
 .hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; border: 2px solid var(--ink); background: var(--surface); cursor: pointer; padding: 9px; }
 .hamburger span { display: block; height: 3px; background: var(--ink); transition: transform .25s, opacity .25s; }
@@ -98,12 +101,44 @@ const mobileOpen = ref(false);
 @media (max-width: 940px) {
   .header-socials { display: none; }
   .hamburger { display: flex; }
+  /**
+   * 抽屉改成"从表头下方落下"的绝对定位面板。原来是 `position: fixed` + `translateX(100%)`,
+   * 三个症状同一个根因:`.site-header` 有 `backdrop-filter`,而 backdrop-filter 会让自己成为
+   * 后代 fixed 元素的**包含块** —— 于是
+   *   · `top:76px; bottom:0` 相对的是 76px 高的表头,算出来高度 ≈ 0,菜单等于被"遮挡"看不见;
+   *   · `translateX(100%)` 把面板停在表头右侧之外,未展开时照样占据布局溢出,横向把页面撑宽。
+   * 用 absolute 就不再依赖"谁是包含块"这件容易被 filter/transform 悄悄改掉的事:表头本身是
+   * sticky(已定位),面板直接贴着它的 padding box 排。
+   */
   .nav-menu {
-    position: fixed; top: 76px; left: 0; right: 0; bottom: 0; background: var(--bg-page);
+    position: absolute;
+    top: 100%;
+    /* 绝对定位相对的是表头的 padding box,而它本身就是整屏宽,所以 0 就已铺满;
+       面板自己的左右 padding(下面 2rem)接上表头的视觉边距。 */
+    left: 0;
+    right: 0;
+    z-index: 70;                       /* 高于 Socials 下拉(70)之外的一切页面内容 */
+    background: var(--bg-page);
+    border-bottom: 3px solid var(--ink);
+    box-shadow: var(--shadow-soft);
     flex-direction: column; align-items: stretch; gap: 0; padding: 1rem 2rem 2rem;
-    transform: translateX(100%); transition: transform .25s ease; overflow-y: auto;
+    max-height: calc(100vh - 76px);
+    max-height: calc(100dvh - 76px);   /* 移动端浏览器地址栏收起/展开时更准 */
+    overflow-y: auto;
+    /* 收起态:不可见、不可点、不吃事件。用的是本文件里 .sub-nav 同一套写法,
+       且**不做横向位移** —— 位移出屏才是把页面撑宽的元凶。 */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
   }
-  .nav-menu.open { transform: translateX(0); }
+  .nav-menu.open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
   .nav-item { border-bottom: 2px solid var(--border-light); }
   .nav-link { display: block; padding: 16px 0; font-size: 1.2rem; }
   .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; box-shadow: none; padding: 0 0 8px 1rem; }

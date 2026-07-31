@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { marked } from 'marked';
+import { scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
+scrollToTopOnEnter();
 const { article, breadcrumbs } = props.context || {};
 
 const renderedContent = computed(() => {
@@ -37,7 +39,7 @@ const renderedContent = computed(() => {
         <img :src="article.thumbnail" alt="">
       </div>
 
-      <div class="content" v-html="renderedContent"></div>
+      <div class="content neo-prose" v-html="renderedContent"></div>
     </article>
   </main>
 </template>
@@ -74,18 +76,10 @@ const renderedContent = computed(() => {
   border-bottom: 3px solid var(--ink);
 }
 .featured-image img { width: 100%; display: block; }
+/* 外观全在 prose.css 的 .neo-prose 里;这里只定尺度(行宽 / 基准字号)。 */
 .content {
-  max-width: 680px;
+  --prose-measure: 680px;
+  --prose-size: 1.2rem;
   margin-left: 0; /* 偏左不对称 */
-  font-size: 1.2rem;
-  line-height: 1.6;
-}
-.content :deep(h2) { font-family: 'Bricolage Grotesque'; margin-top: 3rem; }
-.content :deep(blockquote) {
-  border-left: 12px solid var(--accent);
-  background: var(--surface);
-  padding: 1.5rem;
-  box-shadow: 6px 6px 0 var(--ink);
-  margin: 2rem 0;
 }
 </style>

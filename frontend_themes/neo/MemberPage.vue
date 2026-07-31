@@ -15,7 +15,7 @@
 
     <!-- ② Bio + skills (whole block gone when both are empty) -->
     <section class="m-about" v-if="bio || skills.length">
-      <div class="prose" v-if="bio" v-html="bio"></div>
+      <div class="prose neo-prose" v-if="bio" v-html="bio"></div>
       <div class="skills" v-if="skills.length">
         <span v-for="s in skills" :key="s" class="skill">{{ s }}</span>
       </div>
@@ -50,9 +50,10 @@
 import { computed } from 'vue';
 import { marked } from 'marked';
 import Socials from './components/Socials.vue';
-import { articleUrl } from './lib';
+import { articleUrl, scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
+scrollToTopOnEnter();
 
 const article = computed<any>(() => props.context?.article || null);
 // `article.data` comes back as an object, `null`, or `''` (DYAPI JSON.parses it and swallows
@@ -95,6 +96,11 @@ const metaOf = (w: any) => [w?.data?.client, w?.data?.year].filter(Boolean).join
 </script>
 
 <style scoped>
+/* 外观全在 prose.css 的 .neo-prose 里;这里只定尺度。 */
+.prose {
+  --prose-measure: 680px;
+  --prose-size: 1.1rem;
+}
 .member-main { max-width: 1000px; margin: 0 auto; padding: 4rem 2rem 6rem; width: 100%; }
 
 /* ① identity */
@@ -117,15 +123,6 @@ const metaOf = (w: any) => [w?.data?.client, w?.data?.year].filter(Boolean).join
 
 /* ② bio + skills */
 .m-about { margin-top: 4rem; }
-.prose { max-width: 680px; font-size: 1.1rem; line-height: 1.65; }
-.prose :deep(h2) { font-family: 'Bricolage Grotesque', sans-serif; margin-top: 2.5rem; }
-.prose :deep(p) { margin: 1rem 0; }
-.prose :deep(a) { color: var(--ink); text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 3px; }
-.prose :deep(blockquote) {
-  border-left: 12px solid var(--accent); background: var(--surface);
-  padding: 1.25rem 1.5rem; box-shadow: 6px 6px 0 var(--ink); margin: 2rem 0;
-}
-.prose :deep(img) { max-width: 100%; display: block; border: 3px solid var(--ink); }
 .skills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2rem; }
 .skill { font-family: 'Space Mono', monospace; font-size: .7rem; border: 2px solid var(--ink); padding: 3px 8px; }
 

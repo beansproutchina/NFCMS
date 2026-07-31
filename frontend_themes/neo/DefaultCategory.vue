@@ -30,8 +30,9 @@
 </template>
 
 <script setup lang="ts">
-import { articleUrl, formatDate, useArticleList } from './lib';
+import { articleUrl, formatDate, scrollToTopOnEnter, useArticleList } from './lib';
 const props = defineProps<{ context: any }>();
+scrollToTopOnEnter();
 const { category, breadcrumbs } = props.context || {};
 const { items, page, loading, totalPages, goPage } = useArticleList(props.context, 12);
 </script>
