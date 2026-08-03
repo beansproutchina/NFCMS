@@ -2,7 +2,8 @@
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
-import { CHECKBOX_PT, FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXTAREA_CLASS } from '../../ui/presets';
+import DatePicker from 'primevue/datepicker';
+import { CHECKBOX_PT, DATEPICKER_PT, FIELD_GROUP, INPUT_CLASS, LABEL, LABEL_BARE, SELECT_PT, TEXT, TEXTAREA_CLASS } from '../../ui/presets';
 import FileUploader from '../../components/FileUploader.vue';
 import Checkbox from 'primevue/checkbox';
 
@@ -10,7 +11,11 @@ import Checkbox from 'primevue/checkbox';
  * Article property panel — the single definition of the article's content fields, mounted
  * twice by Editor.vue (desktop sidebar + mobile drawer). `form` is the parent's reactive
  * object, so field edits land straight on it.
+ *
  * Lifecycle (status / publish_at) is NOT here: it goes through ContentLifecycleController.
+ * `published_at` **is** here despite sounding like lifecycle — it is content metadata (the
+ * date the piece carries on the public site), writable by anyone who can edit the body, and
+ * it goes out with the ordinary save. 它只是被"首次发布"自动盖一次章,不是状态机的一部分。
  * File fields are self-contained (FileUploader owns its input + upload), so this component
  * emits nothing.
  */
@@ -41,6 +46,15 @@ defineProps<{
         <label :class="LABEL_BARE">{{ $t('form.is_top') || 'Is Top'
         }}</label>
         <Checkbox unstyled v-model="form.is_top" :true-value="1" :false-value="0" binary :pt="CHECKBOX_PT" />
+    </div>
+
+    <!-- 发布日期:公开站显示的那个日期,也是列表默认排序键。留空则首次发布时由后端盖章;
+         已有值(自动盖的或手工补录的)后端一律保留。提示只在为空时出现 —— 已有日期时那句话不成立。 -->
+    <div class="mt-4">
+        <label :class="LABEL">{{ $t('form.published_at') }}</label>
+        <DatePicker v-model="form.published_at" showTime hourFormat="24" dateFormat="yy-mm-dd" showButtonBar
+            unstyled :pt="DATEPICKER_PT" class="w-full" />
+        <p v-if="!form.published_at" class="mt-1" :class="TEXT.caption">{{ $t('article.publishedAtHint') }}</p>
     </div>
 
 

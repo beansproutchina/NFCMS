@@ -22,7 +22,7 @@ export function init(_app: App) {
     const link = document.createElement('link');
     link.id = id;
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.cn/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700&display=swap';
     document.head.appendChild(link);
   }
 }

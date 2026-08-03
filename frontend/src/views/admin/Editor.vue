@@ -32,6 +32,10 @@ const form = ref({
     // 受众轴:'' = 继承栏目,-1 = teaser 继承栏目(见 docs/public-access.md §2)
     audience: "", teaser: -1,
     title: '', slug: '', description: '', thumbnail: '', content: '',
+    // 发布日期。**新建态必须留空** —— 留空 = 首次发布时由后端盖章;填了 = 作者补录旧文章的日期,
+    // 后端的 isBlankDate 守卫会保留它不覆盖。预填"今天"就等于把"发布时间=创建时间"那个 bug
+    // 从后端搬到前端。
+    published_at: null as Date | null,
     data: {} as Record<string, any>   // custom fields declared by the category (article_data_fields)
 });
 const status = ref<string>('hidden');       // hidden | scheduled | visible
@@ -120,6 +124,7 @@ const loadArticle = async () => {
         thumbnail: item.thumbnail || '', content: item.content || '',
         category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0,
         audience: item.audience || '', teaser: item.teaser === undefined ? -1 : Number(item.teaser),
+        published_at: toDate(item.published_at),   // 未发布过 → null(库里也可能是文本 "null")
         // `data` comes back as object | null | '' (DYAPI JSON.parse with a swallowed error) — normalise.
         data: (item.data && typeof item.data === 'object') ? item.data : {}
     };
@@ -144,6 +149,18 @@ onMounted(async () => {
 
 const refresh = async () => { await loadArticle(); await loadRevisions(); };
 
+/**
+ * 出网前把 `published_at` 从 Date 归一成 ISO 串 / `null`。
+ *
+ * `null` 是这个字段的**合法值**(清空 = 退回"未发布",由首次发布重新盖章),但生成的输入类型
+ * 把日期列写成 `published_at?: string`,表达不了它 —— 而 `api.gen.ts` 是生成物,不能手改。
+ * 所以只对这一个字段做窄化断言,其余字段照旧受类型检查。
+ */
+const outbound = () => ({
+    ...form.value,
+    published_at: (form.value.published_at ? form.value.published_at.toISOString() : null) as unknown as string | undefined,
+});
+
 // Persist content fields (create or update). Returns the article id, or null on validation failure.
 const persist = async (): Promise<string | number | null> => {
     if (Number(form.value.category_id) === 0) {
@@ -153,9 +170,9 @@ const persist = async (): Promise<string | number | null> => {
     loading.value = true;
     try {
         if (articleId.value) {
-            await updateArticle(articleId.value, { ...form.value });
+            await updateArticle(articleId.value, outbound());
         } else {
-            const res = await createArticle({ ...form.value }); // author_id set server-side
+            const res = await createArticle(outbound()); // author_id set server-side
             articleId.value = res.id ?? null;         // HTTPCreate returns { code, id }
         }
         return articleId.value;

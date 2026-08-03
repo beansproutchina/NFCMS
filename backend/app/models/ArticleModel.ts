@@ -49,8 +49,27 @@ export default class ArticleModel extends CMSModel {
      * 受众轴:每次写入都重新盖章 `access_eff`(见 docs/public-access.md §3)。
      * 放在裸 `create`/`update` 上而不是 `HTTPCreate`/`HTTPUpdate`,是为了让内部写入(公开站、
      * 导入、脚本)也一律带上正确的派生值 —— 派生值陈旧等于门禁失效。
+     *
+     * 另外把两个"事件时间"显式置空(见下)。
      */
     async create(item) {
+        /**
+         * `published_at` / `publish_at` 是**事件时间**,不是创建元数据:一个记"首次公开于何时",
+         * 一个记"预约何时公开"。新建的行两件事都还没发生,必须是 NULL。
+         *
+         * 为什么要显式写:容器给「未出现在 item 里的每个 Date 列」自动填 `new Date()`
+         * (SqliteContainer 的 `#applyDefaults` → `DataField.getDefaultValue()`)。这个默认对
+         * `created_at`/`updated_at` 恰好是对的,对这两个字段则是错的 —— 草稿一建出来就带着
+         * "发布时间 = 现在",而 `ContentLifecycleController`/`SchedulerService` 里"首次转
+         * visible 才盖章"的守卫是 `isBlankDate(row.published_at)`,字段已有值就永远跳过。
+         * 净效果:`published_at` 恒等于创建时间,而它正是公开站全部日期显示、列表排序和
+         * JSON-LD `datePublished` 的唯一来源。
+         *
+         * 用 `=== undefined` 而不是 falsy 判断:种子/导入/作者在新建时手填日期都会显式传值,
+         * 那是明确意图(补录旧文章),不能被抹掉。
+         */
+        if (item.published_at === undefined) item.published_at = null;
+        if (item.publish_at === undefined) item.publish_at = null;
         await audience.stampArticle(item);
         return await super.create(item);
     }

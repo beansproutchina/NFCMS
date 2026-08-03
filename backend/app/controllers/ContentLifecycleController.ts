@@ -6,6 +6,7 @@ import { revisions } from "../services/RevisionService.js";
 import { hooks } from "../services/HookManager.js";
 import CategoryModel from "../models/CategoryModel.js";
 import { audience } from "../services/AudienceService.js";
+import { isBlankDate } from "../utils/dates.js";
 
 const STATES = ["hidden", "scheduled", "visible"];
 
@@ -46,7 +47,11 @@ export default class ContentLifecycleController extends Controller {
             update.publish_at = null;
         }
         const hasField = (n: string) => model.datafields.some((f: any) => f.name === n);
-        if (to === "visible" && hasField("published_at") && !row.published_at) update.published_at = new Date();
+        // 首次公开才盖 published_at:已有值(含作者手工补录的日期)一律保留。
+        // 空判必须走 isBlankDate —— 库里可能是文本 "null",而它是 truthy。
+        if (to === "visible" && hasField("published_at") && isBlankDate(row.published_at)) {
+            update.published_at = new Date();
+        }
 
         await model.update({ id }, update);
         await revisions.snapshot(model, id, ctx.state.user?.id, `status -> ${to}${note ? ": " + note : ""}`);
