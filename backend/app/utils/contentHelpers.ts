@@ -3,7 +3,6 @@
  */
 
 import CategoryModel from "../models/CategoryModel.js";
-import ArticleModel from "../models/ArticleModel.js";
 import { policy } from "../services/PolicyService.js";
 import { mergeFilter } from "./filters.js";
 import { applyVisibility, type Visibility } from "../lib/audience.js";
@@ -104,28 +103,4 @@ export async function getChildren(
     categoryModel: CategoryModel
 ): Promise<any[]> {
     return await categoryModel.read({ filter: { parent_id: categoryId } }) || [];
-}
-
-/**
- * 获取分类下的文章列表（按 is_top 和 published_at 排序）
- * @param categoryId - 分类ID
- * @param articleModel - ArticleModel 实例
- * @returns 文章数组
- */
-export async function getCategoryArticles(
-    categoryId: number,
-    articleModel: ArticleModel
-): Promise<any[]> {
-    const articles = await articleModel.read({
-        filter: { category_id: categoryId, visible: 1 },
-        fields: ['id', 'title', 'description', 'thumbnail', 'is_top', 'published_at', 'slug', 'category_id']
-    }) || [];
-
-    // 按 is_top 降序，然后按 published_at 降序排序
-    articles.sort((a: any, b: any) => {
-        if (a.is_top !== b.is_top) return a.is_top ? -1 : 1;
-        return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
-    });
-
-    return articles;
 }
