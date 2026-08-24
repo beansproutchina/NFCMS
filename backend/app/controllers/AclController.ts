@@ -3,6 +3,7 @@ import { Controller } from "dyapi/core/controller.js";
 import { CMSModel } from "../lib/CMSModel.js";
 import { policy, ARTICLES_CATEGORY, ARTICLES_AUDIENCE } from "../services/PolicyService.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
+import { findModelByTable } from "../lib/registry.js";
 
 /**
  * Generic resource-ACL management: list / grant / revoke access on a (model, resource) pair.
@@ -25,9 +26,8 @@ import ResourceGrantModel from "../models/ResourceGrantModel.js";
 @ControllerRoute("acl")
 export default class AclController extends Controller {
     private resolveModel(type: string): any {
-        const dict = (this._app as any).instanceDict;
-        const models = dict instanceof Map ? [...dict.values()] : Object.values(dict);
-        return models.find((m: any) => m && m.tablename === type && m instanceof CMSModel);
+        const found = findModelByTable(this._app, type);
+        return found instanceof CMSModel ? found : undefined;
     }
 
     /** Whether the caller may view/modify grants for (model, resourceId). */

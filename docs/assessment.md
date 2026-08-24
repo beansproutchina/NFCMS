@@ -37,6 +37,13 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 - `assert(cond, ErrorType, msg)` 的 TS 类型偏松(dyapi 侧 JS),IDE 报警但 bun 运行无碍。
 - 密码为确定性 `HMAC-SHA256(env salt)`,适配等值匹配登录,非 bcrypt/argon2。
 
+### 数据层面的已知瑕疵(不是代码 bug)
+
+- **`roles` 表有 4 条孤儿重复行**(id 5–8 与 1–4 同名)。`seedDefaultRbac` 本身是幂等的(表里有任何角色就直接返回),重复来自一次**导入**:dump 自带 roles,被追加到了已播种的库上。5–8 没有任何 `user_roles` / `role_permissions` / `resource_grants` 引用,是纯孤儿。
+  影响:dyapi 3.2.1 起 `.unique()` 在 SQLite 上真的生效,而 `roles.name` 因为存在重复值**建不出唯一索引**,启动时会打一条警告并继续 —— 也就是说这个约束目前是空的,直到重复行被清掉。
+  清理(确认过无引用后):`DELETE FROM roles WHERE id IN (5,6,7,8);` 然后重启。
+  真要修的是导入语义(追加 vs 先清后灌),那是独立议题。
+
 ## ④ 前端
 
 **强项**:管理台表单控件已统一到设计系统预设 [`frontend/src/ui/presets.ts`](../frontend/src/ui/presets.ts)(`INPUT_CLASS`/`SELECT_PT`/`DATEPICKER_PT`/`BTN`),消灭了原生 `<select>` 和内联大 `:pt`;能力驱动导航(后端 `loginInfo` 下发权限);可复用 `AclEditor` + 分页搜索 `UserPicker`;回滚用全局 `ConfirmDialog`。

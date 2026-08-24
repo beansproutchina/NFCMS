@@ -1,6 +1,6 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 
 /**

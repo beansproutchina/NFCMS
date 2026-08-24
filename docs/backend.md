@@ -18,7 +18,8 @@
 
    写入侧仍只有 `super_admin`(留在模型静态 map 里),所以两套机制不重叠:**读走 RBAC,写走静态 map**。
 5. `app.use(ContentSchemaModel)` + 加载已存在的动态 schema + 注册 `schema_inserted` 热注入监听。
-6. `app.koa.use(authMiddlewareFactory(app))` → `app.bootstrap()` → `hooks.doAction("app_ready")`。
+6. `new Koa()` → `koa.use(authMiddlewareFactory(app))` → `app.bindKoa(koa)` → `app.bootstrap()` → `hooks.doAction("app_ready")`。
+   自己的中间件必须排在 `bindKoa` **之前**:`bindKoa` 会把 static/body 反插到队首、把 logger/错误兜底/路由接在后面,于是实际顺序仍是 static/body → 鉴权 → 框架中间件 → 路由。
 7. `scheduler.start(app)`(定时发布)。
 8. ~~`staticgen.bind(app)` + hook 接线 + 初次全量 SSG~~ —— **已停用**(整块注释),见 [architecture.md](architecture.md) 的「公开站 SSG」。
 

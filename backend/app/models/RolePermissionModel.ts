@@ -1,6 +1,6 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 
 /**
@@ -9,7 +9,6 @@ import testContainer from "../containers/testContainer.js";
  * A role with no matching row here has NO permission for that (model, action).
  */
 @CRUD("role_permissions")
-@PopTarget("uid")
 export default class RolePermissionModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "role_permissions";

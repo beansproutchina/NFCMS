@@ -27,7 +27,7 @@ NFCMS = 自研后端框架 **DYAPI** 之上的无头 CMS,加一个解耦的 Vue 
 └───────────────┬─────────────────────────────────────────────┘
                 │
 ┌───────────────▼─────────────────────────────────────────────┐
-│ DYAPI 3.1.0 框架 (dyapi3/dyapi, 本地 file: 依赖)              │
+│ DYAPI 3.3.1 框架 (dyapi3/dyapi, 本地 file: 依赖)              │
 │  DYApp(Koa)/ Model / Container(SQLite)/ Controller /        │
 │  装饰器(@CRUD/@Route/@Inject/@Auth/@ValidateBody)/ jwt      │
 └──────────────────────────────────────────────────────────────┘
@@ -39,7 +39,7 @@ NFCMS = 自研后端框架 **DYAPI** 之上的无头 CMS,加一个解耦的 Vue 
 3. DYApp 的全局中间件:解析 `?filter=` JSON、`fields`、`hideFields`、`pops`;初始化 `ctx.state.settingsOverrides = {}`。
 4. 路由分发到 Controller `@Route` 或 Model 的 `HTTP*`。
 5. **内容模型**(CMSModel):`HTTP*` → `policy.can()` 鉴权 → 列表注入 `scopeFilter` / 单条取行后判 → 裸 `read/create/update/remove` → 容器 SQL。写操作快照版本 + 触发 hook。
-6. 返回 `{code, data, ...}`;DYAPI 3.1.0 用 body.code 设**真实 HTTP 状态码**。
+6. 返回 `{code, data, ...}`;DYAPI 用 body.code 设**真实 HTTP 状态码**。
 
 ## CMS 核心层为什么这样设计
 DYAPI 是通用框架;CMS 的横切能力(RBAC、版本、生命周期、定时、SSG)不塞进每个 Model,而是收敛到 **`CMSModel` 基类 + 一组单例服务**——这是唯一接缝。好处:内容模型只声明字段 + `ownerField`,自动获得全部能力;动态 schema 模型也复用同一套。

@@ -1,6 +1,6 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 
 /**
@@ -8,7 +8,6 @@ import testContainer from "../containers/testContainer.js";
  * A user's effective roles = primary JWT role ∪ roles listed here.
  */
 @CRUD("user_roles")
-@PopTarget("uid")
 export default class UserRoleModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "user_roles";

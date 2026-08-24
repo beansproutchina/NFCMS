@@ -68,6 +68,11 @@ const copyCredentials = async () => {
   try { await navigator.clipboard.writeText(text); copied.value = true; } catch { /* 剪贴板不可用就算了 */ }
 };
 const copied = ref(false);
+/**
+ * 导入结果里**有问题的那些表**。后端一直如实返回 `data[table].failed`,而这里从来不看它 ——
+ * 于是「四条角色一条都没进来」在屏幕上就是一句「导入完成」。三个绿灯测不到人看到什么,这就是一例。
+ */
+const importProblems = ref<{ table: string; failed: number; droppedColumns?: string[] }[]>([]);
 
 const performSetup = async () => {
   if (importMode.value) {
@@ -89,6 +94,15 @@ const performSetup = async () => {
         return;   // 不跳转,停在凭据页等管理员确认
       }
       if (res?.saltState === 'unknown') saltUnknown.value = true;
+
+      const problems = Object.entries(res?.data ?? {})
+        .map(([table, r]: [string, any]) => ({ table, failed: r?.failed ?? 0, droppedColumns: r?.droppedColumns }))
+        .filter(p => p.failed > 0 || p.droppedColumns?.length);
+      if (problems.length) {
+        importProblems.value = problems;
+        return;   // 停下来让人看见,不直接跳走
+      }
+
       router.push('/login');
     } catch (err: any) {
       error.value = err.response?.data?.message || err.message || t('setup.importFailed');
@@ -152,6 +166,30 @@ const performSetup = async () => {
             {{ $t('setup.savedThemGoOn') }}
           </Button>
         </div>
+      </div>
+
+      <!-- 导入有失败/丢列 → 必须让人看见。后端返回了,前端不显示等于没返回。 -->
+      <div v-else-if="importProblems.length" class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-5">
+        <Message severity="warn" :closable="false" unstyled :pt="MESSAGE_PT">
+          <template #icon><LucideTriangleAlert :size="15" /></template>
+          {{ $t('setup.importReportTitle') }}
+        </Message>
+
+        <div class="border border-separator rounded-control divide-y divide-separator-weak max-h-64 overflow-y-auto">
+          <div v-for="p in importProblems" :key="p.table" class="flex flex-col gap-1 px-3 py-2">
+            <span class="text-body text-label font-mono">{{ p.table }}</span>
+            <span v-if="p.failed" class="text-small text-danger">{{ $t('setup.importRowsFailed', { n: p.failed }) }}</span>
+            <span v-if="p.droppedColumns?.length" :class="TEXT.caption">
+              {{ $t('setup.importColsDropped', { cols: p.droppedColumns.join(', ') }) }}
+            </span>
+          </div>
+        </div>
+
+        <p :class="TEXT.caption">{{ $t('setup.importReportHint') }}</p>
+
+        <Button unstyled @click="router.push('/login')" :class="BTN.secondary">
+          {{ $t('setup.importGoOn') }}
+        </Button>
       </div>
 
       <div v-else class="bg-white p-8 rounded-card shadow-xl flex flex-col gap-6">

@@ -1,6 +1,6 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 
 /**
@@ -8,7 +8,6 @@ import testContainer from "../containers/testContainer.js";
  * access: capability letters the grantee gets on that row, e.g. "R" or "R,U".
  */
 @CRUD("resource_grants")
-@PopTarget("uid")
 export default class ResourceGrantModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "resource_grants";

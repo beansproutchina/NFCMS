@@ -7,13 +7,31 @@
 # violation permanently, add it to frontend/scripts/lint-baseline.json instead: that file goes
 # through review, a `--no-verify` does not.
 set -e
+ROOT="$(git rev-parse --show-toplevel)"
+STAGED="$(git diff --cached --name-only)"
 
-# Nothing staged under frontend/ → nothing this gate can say anything about.
-if ! git diff --cached --name-only | grep -q '^frontend/'; then
+# ── backend ────────────────────────────────────────────────────────────────
+# dyapi 3.2 起模块清单是构建期产物(`app/_scanFiles.js`),必须跟着源文件一起提交。
+# 忘了重新生成的症状不是报错,而是**新加的 Model 静默不注册** —— 表不建、路由不挂,
+# 到运行时才以「404 / 找不到模型」的形式冒出来。这里重生成一遍,不一致就拦。
+if echo "$STAGED" | grep -q '^backend/'; then
+  cd "$ROOT/backend"
+  echo "→ dyapi 模块清单"
+  npx dyapi scan app >/dev/null
+  if ! git diff --quiet -- app/_scanFiles.js; then
+    echo "✗ app/_scanFiles.js 与源文件不一致(已就地重新生成)。git add 它再提交。" >&2
+    exit 1
+  fi
+  # TODO(dev-green): SSG 那轮转绿后在这里加 `bun test`。现在加会因为红-绿流程中
+  # 故意写红的用例挡住一切提交。
+fi
+
+# Nothing staged under frontend/ → nothing the rest of this gate can say anything about.
+if ! echo "$STAGED" | grep -q '^frontend/'; then
   exit 0
 fi
 
-cd "$(git rev-parse --show-toplevel)/frontend"
+cd "$ROOT/frontend"
 
 echo "→ design-system rules"
 node scripts/lint-admin.mjs

@@ -28,7 +28,9 @@ COPY backend/package*.json ./
 COPY vendor/dyapi/ /dyapi3/dyapi/
 # --install-links:把 file: 依赖装成真实目录而不是软链,否则下面跨 stage COPY node_modules
 # 拷过去的还是一条断链。
-RUN npm install --install-links
+# --omit=dev:运行时不需要 @types/bun 与 dyapi-cli。后者是 file:../../dyapi3/dyapi-cli,
+# 构建上下文里根本不存在,装进来只会多一条断链。
+RUN npm install --omit=dev --install-links
 # 把上面那种静默失败变成构建期失败
 RUN test -f node_modules/dyapi/package.json && test ! -L node_modules/dyapi \
     || (echo "!! dyapi 没被正确安装(断链或缺失),检查 vendor/dyapi 是否随包" && exit 1)
@@ -41,6 +43,12 @@ RUN apk add --no-cache nginx supervisor
 
 COPY backend/ ./backend/
 COPY --from=backend-deps /app/backend/node_modules ./backend/node_modules
+
+# dyapi 3.2 起模块清单由构建期生成(运行时扫目录在打包/分发场景下走不通),`app/_scanFiles.js`
+# 因此是**提交进仓库的产物**。这里只断言它在场 —— 少了它容器起来就是一句
+# 「找不到模块清单」。清单是否**陈旧**由 pre-commit 把关(那里才有 dyapi-cli)。
+RUN test -f /app/backend/app/_scanFiles.js \
+    || (echo "!! backend/app/_scanFiles.js 缺失,先在 backend/ 跑 npm run scan 并提交" && exit 1)
 
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 COPY docker/nginx.single.conf /etc/nginx/nginx.conf

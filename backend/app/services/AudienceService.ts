@@ -7,6 +7,7 @@ import {
     type AudienceLevel,
     type AccessEff,
 } from "../lib/audience.js";
+import { requireModelByTable } from "../lib/registry.js";
 
 /**
  * 受众轴派生值(`articles.access_eff`)的维护者。
@@ -26,19 +27,14 @@ class AudienceService {
     }
 
     /**
-     * 按 tablename 从容器取模型实例,**故意不 import 模型类**。
-     *
-     * ArticleModel / CategoryModel 都要调本服务(写入时盖章、栏目变更时重算),如果这里再 import
-     * 它们就成了 ESM 循环依赖 —— 实测会炸成 `Cannot access 'CMSModel' before initialization`
-     * (模型类在其基类初始化前被求值)。按 tablename 扫 instanceDict 是 ModelInjector 里已有的
-     * 做法,代价只是丢掉静态类型。
+     * 按 tablename 取模型实例,**故意不 import 模型类** —— 理由见 lib/registry.ts。
      */
     private model(tablename: string): any {
-        const dict = (this.app as any).instanceDict ?? {};
-        for (const inst of Object.values(dict) as any[]) {
-            if (inst?.tablename === tablename) return inst;
+        try {
+            return requireModelByTable(this.app, tablename);
+        } catch (e: any) {
+            throw new Error(`[audience] ${e.message}`);
         }
-        throw new Error(`[audience] model for table '${tablename}' not registered`);
     }
 
     private get categories() {

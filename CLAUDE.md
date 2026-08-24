@@ -12,14 +12,14 @@ NFCMS 是基于自研框架 **DYAPI** 的无头 CMS:Bun + SQLite 后端 + Vue3 �
 - 公开站页面权限「受众轴」设计(**已定稿未实现**) → [docs/public-access.md](docs/public-access.md)
 
 ## 技术栈
-- **后端**:Bun + DYAPI **3.1.0**(自研框架,`backend/package.json` 里以 `file:../../dyapi3/dyapi` 本地路径 pin)+ SQLite(`backend/data/test.db`)。
+- **后端**:Bun + Koa + DYAPI **3.3.1**(自研框架,`backend/package.json` 里以 `file:../../dyapi3/dyapi` 本地路径 pin)+ SQLite(`backend/data/test.db`)。3.2 起 DYApp **不再拥有 Koa 实例**(`index.ts` 自己 `new Koa()` → `app.bindKoa(koa)` → `koa.listen()`),模块清单也改成构建期产物,见下。
 - **前端**:Vue 3 + Vite 8(rolldown)+ PrimeVue(unstyled + Tailwind 4)+ vue-router 5 + **vue-i18n `^11`**(注意:不要升到 12-alpha,它需要 Vue 3.6)。
 - **部署**:Docker(单容器 `Dockerfile.single` + supervisor/nginx,推荐;或 `docker-compose.yml` 多容器)。交付运维用 `node pack.js`:按实例问一遍容器名/端口/数据库/密钥,存成 `.deploy/<实例>.json`(gitignore)复用,产出带 `.env` + `app.env` 的 `NFCMS-<实例>.tar.gz`。
 
 ## 跑起来(最常用)
 ```bash
 # 后端(必须先 cd,且 backend/.env 要有 JWT_SECRET 和 PASSWORD_SALT)
-cd backend && bun index.ts          # bun 在 ~/.bun/bin/bun
+cd backend && npm run scan && bun index.ts   # bun 在 ~/.bun/bin/bun
 # 前端(vite 已代理 /api、/static 到 :3000)
 cd frontend && npm run dev
 # 前端构建校验
@@ -35,6 +35,9 @@ cd frontend && npm run build        # = vue-tsc -b && vite build
 5. **公开站只能走 `/api/content/*`**,绝不要打 `/api/articles`(已被 RBAC 管控,匿名 403)。
 6. 改了 `dyapi3/dyapi` 源码后要在 `backend/` 重新 `bun install`(file: 依赖是拷贝,不是软链)。
 7. DYAPI 迁移是**只增不减**;改字段/删列时,dev 直接重置 `data/test.db` 重新 `/setup`(允许 breaking change)。
+8. **动了 `backend/app/` 下的文件就要重新 `npm run scan`**。dyapi 3.2 起模块清单是构建期产物 `app/_scanFiles.js`(提交进仓库),忘了重新生成的症状**不是报错,而是新加的 Model 静默不注册** —— 表不建、路由不挂。pre-commit 会拦。
+9. **`@PopTarget` 声明的是「别的模型用哪个字段名指向本模型」,不是本模型自己的字段。** 全库只有 `UserModel` 有一条(`author_id`)。同名在同一作用域只能有一个,3.3 起撞名直接启动报错。加之前先回答「谁会 `?pops=<字段名>` 指过来」。
+10. **别用 `Object.values(app.models)` / `app.instanceDict`**:3.3 起注册表是 `Map`,那么写会**静默拿到空数组**。按 tablename 找模型一律走 `app/lib/registry.ts`。
 
 ## 架构一句话
 ```

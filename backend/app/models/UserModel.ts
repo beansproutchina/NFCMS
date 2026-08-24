@@ -5,7 +5,7 @@ import testContainer from "../containers/testContainer.js";
 import { policy } from "../services/PolicyService.js";
 
 @CRUD("users")
-@PopTarget("uid")
+/** 别的模型用哪个字段名指向本模型。全库唯一的 pop:`articles.author_id` → 用户。 */
 @PopTarget("author_id")
 export default class UserModel extends Model {
     @Inject(testContainer) declare container;

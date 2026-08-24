@@ -1,13 +1,12 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 
 /**
  * RBAC Role. Managed by super_admin only.
  */
 @CRUD("roles")
-@PopTarget("uid")
 export default class RoleModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "roles";

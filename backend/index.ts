@@ -1,5 +1,6 @@
 import path from "path";
 import process from "process";
+import Koa from "koa";
 import { DYApp } from "dyapi/core/dyapiApp.js";
 import { scanFiles } from "dyapi/utils/scanFiles.js";
 import { hooks } from "./app/services/HookManager.js";
@@ -58,8 +59,14 @@ const start = async () => {
         catch (e) { console.log("[ModelInjector] live inject failed:", (e as any).message); }
     });
 
-    // 5. Bootstrap App (registers decorators, routers, etc)
-    app.koa.use(authMiddlewareFactory(app));
+    // 5. HTTP 装配。dyapi 3.2 起 DYApp 不再拥有 Koa 实例:它只是一个模块作用域,
+    //    HTTP 服务器由调用方创建并交给 `bindKoa`。自己的中间件必须放在 `bindKoa` **之前**
+    //    —— bindKoa 会把 static/body 反插到队首、把 logger/错误兜底/路由接在后面,
+    //    于是相对顺序仍是 static/body → 我们的鉴权 → 框架中间件 → 路由。
+    const koa = new Koa();
+    koa.use(authMiddlewareFactory(app));
+    app.bindKoa(koa);
+    // `bootstrap()` 现在只挂 SIGINT/SIGTERM/beforeExit 的优雅停机,不再建中间件也不再 listen。
     app.bootstrap();
     // 6. Post Bootstrap hook
     await hooks.doAction("app_ready");
@@ -100,5 +107,9 @@ const start = async () => {
             container.rawSQLQuery?.("SELECT 1;");
         } catch { /* ignore */ }
     }, 60 * 60 * 1000);
+
+    // 10. 起服务。listen 也归调用方了(见第 5 步)。
+    const port = Number(process.env.PORT) || app.settings.port;
+    koa.listen(port, () => console.log(`[nfcms] listening on http://localhost:${port}`));
 };
 start();
