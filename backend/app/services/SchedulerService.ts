@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { CMSModel } from "../lib/CMSModel.js";
 import { revisions } from "./RevisionService.js";
 import { hooks } from "./HookManager.js";
+import { isBlankDate } from "../utils/dates.js";
 
 /**
  * SchedulerService — flips `scheduled` content to `visible` once publish_at is due.
@@ -37,7 +38,8 @@ class SchedulerService {
                 });
                 for (const row of due) {
                     const update: any = { status: "visible", publish_at: null };
-                    if (model.datafields.some((f: any) => f.name === "published_at") && !row.published_at) {
+                    // 与 ContentLifecycleController 同一条规则:首次公开才盖章,空判走 isBlankDate。
+                    if (model.datafields.some((f: any) => f.name === "published_at") && isBlankDate(row.published_at)) {
                         update.published_at = new Date();
                     }
                     await model.update({ id: row.id }, update);

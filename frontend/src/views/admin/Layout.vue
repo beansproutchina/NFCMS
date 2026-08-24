@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import { BTN, NAV_ITEM, SECTION_TITLE, TEXT, TOPBAR_ICON } from '../../ui/presets';
 
 import { computed, ref, watch } from 'vue';
 import Button from 'primevue/button';
 import { useRouter, useRoute } from 'vue-router';
-import { LucideLogOut, LucideSettings, LucideFileText, LucideLayoutDashboard, LucideServer, LucideGlobe, LucideMenu, LucideUsers, LucideImage, LucideShieldCheck, LucideX } from 'lucide-vue-next';
+import { LucideFileText, LucideGlobe, LucideImage, LucideLayoutDashboard, LucideLogOut, LucideMenu, LucideServer, LucideSettings, LucideShieldCheck, LucideShieldOff, LucideUserCog, LucideUsers, LucideX } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../../stores/auth';
 import { authAPI } from '../../api';
+const { t } = useI18n();
 
 const router = useRouter();
 const route = useRoute();
@@ -21,7 +24,9 @@ const rawMenuGroups = [
   {
     title: 'system.dashboard',
     items: [
-      { label: 'system.dashboard', path: '/admin', icon: LucideLayoutDashboard, show: () => true }
+      // 仪表盘也要能力驱动:否则零权限账号(如受众轴的 `member`)登录后会看到一个"只有仪表盘"
+      // 的空壳。判据刻意复用其它菜单项的能力检查 —— 不在别处再维护一份"什么算后台权限"的清单。
+      { label: 'system.dashboard', path: '/admin', icon: LucideLayoutDashboard, show: () => hasAnyAdminNav() }
     ]
   },
   {
@@ -43,6 +48,11 @@ const rawMenuGroups = [
   }
 ];
 
+/** 除仪表盘本身之外,是否还有任何可见的后台菜单项。仪表盘的可见性与"无后台权限"提示都用它。 */
+function hasAnyAdminNav(): boolean {
+  return rawMenuGroups.some(g => g.title !== 'system.dashboard' && g.items.some(i => i.show()));
+}
+
 const menuGroups = computed(() => {
   return rawMenuGroups.map(group => ({
     ...group,
@@ -50,12 +60,19 @@ const menuGroups = computed(() => {
   })).filter(group => group.items.length > 0);
 });
 
+/**
+ * 零权限账号(受众轴的 `member` 就是这种)登录后不该看到一个空壳后台。
+ * 判据复用 menuGroups —— router 守卫刻意**不动**,它只管"是否登录":在守卫里再维护一份权限
+ * 清单会和这里的 nav 清单漂移。见 docs/public-access.md §2。
+ */
+const noAdminAccess = computed(() => menuGroups.value.length === 0);
+
 const logout = async () => {
   try {
     await authAPI.logout();
   } catch {}
   authStore.clearUser();
-  toast.add({ severity: 'success', summary: 'Success', detail: '退出登录成功', life: 3000 });
+  toast.add({ severity: 'success', summary: 'Success', detail: t('toast.loggedOut'), life: 3000 });
   router.push('/login');
 };
 
@@ -76,14 +93,14 @@ watch(() => route.path, () => {
 </script>
 
 <template>
-  <div class="h-screen w-full flex flex-col md:flex-row bg-[#ffffff] text-apple-text-dark font-text text-[14px]">
+  <div class="h-screen w-full flex flex-col md:flex-row bg-white text-label font-text text-body">
     
     <!-- Mobile Header Bar -->
-    <header class="md:hidden h-[48px] bg-[rgba(0,0,0,0.8)] backdrop-blur-[20px] flex items-center justify-between px-4 shrink-0 z-30" style="-webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);">
-      <span class="font-display font-semibold text-[17px] text-white flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
+    <header class="md:hidden h-[48px] bg-chrome backdrop-blur-[20px] flex items-center justify-between px-4 shrink-0 z-30" style="-webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);">
+      <span class="font-semibold text-title-item text-white flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
         <LucideSettings :size="18" /> {{ $t('system.title') }}
       </span>
-      <Button unstyled @click="sidebarVisible = !sidebarVisible" class="w-10 h-10 flex items-center justify-center text-white rounded-[8px] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer">
+      <Button unstyled @click="sidebarVisible = !sidebarVisible" :class="TOPBAR_ICON">
         <LucideMenu v-if="!sidebarVisible" :size="22" />
         <LucideX v-else :size="22" />
       </Button>
@@ -93,41 +110,40 @@ watch(() => route.path, () => {
     <Transition name="fade">
       <div 
         v-if="sidebarVisible" 
-        class="md:hidden fixed inset-0 bg-[rgba(0,0,0,0.5)] z-30 top-[48px]"
+        class="md:hidden fixed inset-0 bg-scrim z-30 top-[48px]"
         @click="sidebarVisible = false"
       ></div>
     </Transition>
 
     <!-- Sidebar -->
     <aside 
-      class="w-[260px] bg-[#f5f5f7] border-r border-[#e5e5e5] flex flex-col h-[calc(100vh-48px)] md:h-full shrink-0
+      class="w-[260px] bg-canvas border-r border-divider flex flex-col h-[calc(100vh-48px)] md:h-full shrink-0
              fixed md:relative top-[48px] md:top-0 left-0 z-40 md:z-auto
              transform transition-transform duration-300 ease-in-out
              -translate-x-full md:translate-x-0"
       :class="{ 'translate-x-0': sidebarVisible }"
     >
       <!-- Sidebar Header (desktop only, mobile has its own header) -->
-      <div class="hidden md:flex px-6 py-6 border-b border-[#e5e5e5] border-opacity-60 items-center justify-between">
-        <span class="font-display font-semibold text-[18px] flex items-center gap-2 cursor-pointer" @click="router.push('/admin')">
+      <div class="hidden md:flex px-6 py-6 border-b border-divider/60 items-center justify-between">
+        <span class="flex items-center gap-2 cursor-pointer" :class="SECTION_TITLE" @click="router.push('/admin')">
           <LucideSettings :size="20"/> {{ $t('system.title') }}
         </span>
       </div>
       
       <!-- Mobile sidebar header -->
-      <div class="md:hidden px-6 py-5 border-b border-[#e5e5e5] border-opacity-60">
-        <span class="font-display font-semibold text-[17px] flex items-center gap-2 text-[#1d1d1f]">
+      <div class="md:hidden px-6 py-5 border-b border-divider/60">
+        <span class="font-semibold text-title-item flex items-center gap-2 text-label">
           {{ $t('system.title') }}
         </span>
       </div>
 
       <div class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-6">
         <div v-for="(group, idx) in menuGroups" :key="idx" class="flex flex-col gap-1">
-          <div class="text-[12px] font-semibold text-[rgba(0,0,0,0.48)] uppercase tracking-wider mb-2 px-2">{{ $t(group.title) }}</div>
+          <div class="font-semibold uppercase tracking-wider mb-2 px-2" :class="TEXT.caption">{{ $t(group.title) }}</div>
           <Button unstyled 
             v-for="item in group.items" :key="item.path"
             @click="navigateTo(item.path)"
-            class="flex items-center gap-3 px-3 py-2 rounded-[8px] transition-colors w-full text-left"
-            :class="isCurrentPath(item.path) ? 'bg-[rgba(0,0,0,0.08)] text-black font-semibold' : 'text-[rgba(0,0,0,0.8)] hover:bg-[rgba(0,0,0,0.04)]'"
+            :class="[NAV_ITEM.base, isCurrentPath(item.path) ? NAV_ITEM.active : NAV_ITEM.idle]"
           >
             <component :is="item.icon" :size="18" :class="{'opacity-70': !isCurrentPath(item.path)}" />
             {{ $t(item.label) }}
@@ -135,11 +151,17 @@ watch(() => route.path, () => {
         </div>
       </div>
 
-      <div class="p-4 border-t border-[#e5e5e5] border-opacity-60 flex flex-col gap-1">
-        <Button unstyled @click="navigateTo('/')" class="flex items-center gap-3 w-full text-left px-3 py-2 text-[rgba(0,0,0,0.8)] hover:bg-[rgba(0,0,0,0.04)] rounded-[8px] transition-colors">
+      <div class="p-4 border-t border-divider/60 flex flex-col gap-1">
+        <!-- 我的资料刻意放在这一组(而不是 menuGroups):它对所有登录用户可见,若进了 menuGroups
+             就会让 noAdminAccess 永远为假,零权限账号的空壳提示随之失效。 -->
+        <Button unstyled @click="navigateTo('/admin/profile')"
+          :class="[NAV_ITEM.base, isCurrentPath('/admin/profile') ? NAV_ITEM.active : NAV_ITEM.idle]">
+            <LucideUserCog :size="18" class="opacity-70" /> {{ $t('profile.title') }}
+        </Button>
+        <Button unstyled @click="navigateTo('/')" :class="[NAV_ITEM.base, NAV_ITEM.idle]">
             <LucideGlobe :size="18" class="opacity-70" />  {{$t('system.visitSite')}}
         </Button>  
-        <Button unstyled @click="logout" class="flex items-center gap-3 w-full text-left px-3 py-2 text-[rgba(0,0,0,0.8)] hover:bg-[rgba(0,0,0,0.04)] rounded-[8px] transition-colors">
+        <Button unstyled @click="logout" :class="[NAV_ITEM.base, NAV_ITEM.idle]">
             <LucideLogOut :size="18" class="opacity-70" /> {{ $t('auth.logout') }}
         </Button>
       </div>
@@ -147,7 +169,15 @@ watch(() => route.path, () => {
 
     <!-- Main Content Area -->
     <main class="flex-1 h-full overflow-y-auto bg-white md:h-screen h-[calc(100vh-48px)]">
-      <router-view></router-view>
+      <!-- 零权限账号:不渲染任何后台页面,免得它们各自去打接口吃一串 403 toast。 -->
+      <!-- 「我的资料」是唯一放行的页面:一个能登录的人总该能改自己的密码。 -->
+      <div v-if="noAdminAccess && route.path !== '/admin/profile'" class="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
+        <LucideShieldOff :size="32" class="opacity-40" />
+        <p :class="SECTION_TITLE">{{ $t('system.noAdminAccess') }}</p>
+        <p :class="TEXT.caption" class="max-w-sm">{{ $t('system.noAdminAccessHint') }}</p>
+        <Button unstyled @click="navigateTo('/')" :class="BTN.secondary" class="mt-2">{{ $t('system.visitSite') }}</Button>
+      </div>
+      <router-view v-else></router-view>
     </main>
     
   </div>

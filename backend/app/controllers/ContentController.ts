@@ -5,6 +5,7 @@ import ArticleModel from "../models/ArticleModel.js";
 import CategoryModel from "../models/CategoryModel.js";
 import UserModel from "../models/UserModel.js";
 import { policy } from "../services/PolicyService.js";
+import { readPublic, readPublicOne } from "../utils/contentHelpers.js";
 
 @ControllerRoute("content")
 export default class ContentController extends Controller {
@@ -59,20 +60,25 @@ export default class ContentController extends Controller {
         return { article, category, breadcrumbs, template };
     }
 
-    /** Public homepage data: visible articles + categories. Raw reads (no RBAC), so anonymous visitors work. */
+    /**
+     * Public homepage data: visible articles + categories.
+     *
+     * 走 `readPublic`(裸读 + 受众轴 filter),不走 RBAC —— 公开访客没有 role_permission,走
+     * 管辖轴会全部 403。门禁由受众轴提供。见 docs/public-access.md。
+     */
     @Route("get", "/home")
-    async getHome() {
-        const articles = await this.articleModel.read({
-            filter: { status: "visible" },
+    async getHome(ctx: any) {
+        const articles = await readPublic(this.articleModel, ctx.state, {
             orderBy: "published_at",
             orderDesc: true,
-            fields: ["id", "title", "slug", "description", "thumbnail", "is_top", "published_at", "category_id"],
-        }) || [];
+            // access_eff 必须取出来:整形与排序之后前端还要靠 `locked` 渲染锁标记。
+            fields: ["id", "title", "slug", "description", "thumbnail", "is_top", "published_at", "category_id", "access_eff"],
+        });
         articles.sort((a: any, b: any) => {
             if (a.is_top !== b.is_top) return a.is_top ? -1 : 1;
             return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
         });
-        const categories = await this.categoryModel.read({}) || [];
+        const categories = await this.visibleCategories(ctx.state);
         return { code: 200, data: { articles, categories } };
     }
 
@@ -81,31 +87,37 @@ export default class ContentController extends Controller {
         const slug = ctx.request.query.slug;
         if (!slug) return { code: 400, message: "Slug is required" };
 
-        const rows = await this.articleModel.read({ filter: { slug, status: "visible" }, pops: ["author_id"] });
-        if (!rows || rows.length === 0) return { code: 404, message: "Article Not Found" };
+        const hit = await readPublicOne(this.articleModel, ctx.state, { filter: { slug }, pops: ["author_id"] });
+        // 不可见一律 404 而不是 403:403 等于承认"这里有东西"。teaser 内容不会走到这里 ——
+        // 它的可见性是 `locked`,readPublicOne 会带着剥好的行返回。
+        if (!hit) return { code: 404, message: "Article Not Found" };
 
         // Flat enriched shape (article + category/breadcrumbs/template/author), reusing the model's enrich.
-        const data = (await this.articleModel.enrichArticleData(rows))[0];
+        const data = (await this.articleModel.enrichArticleData([hit.row]))[0];
         return { code: 200, data };
     }
 
     /**
      * Public article list — same query format as the model CRUD (filter/orderBy/limit/page/fields),
-     * but status='visible' is forced server-side. Field-level PUBLIC perms guard columns.
+     * but status='visible' + the audience filter are forced server-side.
      */
     @Route("get", "/articles")
     async listArticles(ctx: any) {
         const q = ctx.request.query;
         const param: any = {
-            filter: { ...(q.filter || {}), status: "visible" }, // forced visible (non-overridable)
+            filter: { ...(q.filter || {}) },
             orderBy: q.orderBy || "published_at",
             orderDesc: q.orderDesc === undefined ? true : (q.orderDesc === "true" || q.orderDesc === true),
             limit: Math.min(q.limit ? parseInt(q.limit) : 20, 50),
             page: q.page ? parseInt(q.page) : 0,
             pops: ["author_id"],
         };
-        if (q.fields) param.fields = typeof q.fields === "string" ? q.fields.split(",") : q.fields;
-        const rows = await this.articleModel.read(param);
+        if (q.fields) {
+            const fields = typeof q.fields === "string" ? q.fields.split(",") : q.fields;
+            // access_eff 必须在结果里,否则整形拿不到判定依据(前端也读不到 locked)。
+            param.fields = fields.includes("access_eff") ? fields : [...fields, "access_eff"];
+        }
+        const rows = await readPublic(this.articleModel, ctx.state, param);
         const data = await this.articleModel.enrichArticleData(rows);
         return { code: 200, data, total: param.total, pages: param.pages };
     }
@@ -130,6 +142,9 @@ export default class ContentController extends Controller {
     /**
      * Render a draft/scheduled article via a valid preview token, bypassing the status filter.
      * Returns the same payload shape as getArticle, plus preview:true.
+     *
+     * **刻意不走 readPublic**:预览的授权凭据是那枚短期 token,而它是在 previewToken 里用
+     * `policy.can(R)` 签发的 —— 授权已经发生过。再叠一层受众轴会让作者预览不了自己的受限草稿。
      */
     @Route("get", "/preview")
     async preview(ctx: any) {
@@ -152,10 +167,36 @@ export default class ContentController extends Controller {
         if (!categories || categories.length === 0) return { code: 404, message: "Category Not Found" };
 
         const category = categories[0];
+        // 受众轴:此前这条路径**完全不校验可见性**(CategoryModel.enrichCategoryData 里那个
+        // ForbiddenError 根本没被这里用到)。hidden → 404,不泄露存在性;locked 则照常返回栏目
+        // 元信息(名字/描述),文章列表由 /content/articles 自己过滤 —— 那正是摘要墙的语义。
+        const visibility = await policy.canViewCategory(ctx.state, category.id);
+        if (visibility === "hidden") return { code: 404, message: "Category Not Found" };
+
         const breadcrumbs = await this.getBreadcrumbs(category.id);
-        const children = await this.categoryModel.read({ filter: { parent_id: category.id } }) || [];
+        const viewable = await policy.viewableCategoryIds(ctx.state);
+        const children = ((await this.categoryModel.read({ filter: { parent_id: category.id } })) || [])
+            .filter((c: any) => viewable.has(Number(c.id)));
         // Flat: category fields + children + breadcrumbs. The article list comes from the
         // /content/articles prefetch (theme.config), keeping the query format unified.
-        return { code: 200, data: { ...category, children, breadcrumbs } };
+        return { code: 200, data: { ...category, children, breadcrumbs, locked: visibility === "locked" } };
+    }
+
+    /**
+     * 公开分类树。此前主题走 `crudAPI.getList('categories')` 打 `/api/categories`,靠
+     * `CategoryModel.PUBLIC = "R"` 裸奔,把全部栏目(名字/slug/层级)泄漏给匿名访客。
+     * 现在 PUBLIC 已降为 `""`,公开侧统一走这里 —— api.ts 的 crudAPI shim 会把
+     * `getList('categories')` 重定向过来,4 个主题一行不用改。
+     */
+    @Route("get", "/categories")
+    async listCategories(ctx: any) {
+        return { code: 200, data: await this.visibleCategories(ctx.state) };
+    }
+
+    /** 受众轴过滤后的栏目列表(hidden 的移除,teaser 的保留 —— 它就是要露出来的)。 */
+    private async visibleCategories(state: any): Promise<any[]> {
+        const viewable = await policy.viewableCategoryIds(state);
+        const rows = (await this.categoryModel.read({ limit: 100000 })) || [];
+        return rows.filter((c: any) => viewable.has(Number(c.id)));
     }
 }

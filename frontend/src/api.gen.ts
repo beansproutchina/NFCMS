@@ -3,7 +3,7 @@
  *
  * Regenerate with:  dyapi gen <backend-dir> --out <this-file>
  *
- * Models: 11 · Controller routes: 27
+ * Models: 11 · Controller routes: 28
  */
 /* eslint-disable */
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
@@ -182,6 +182,9 @@ export interface Article {
   publish_at: string;
   rev_version: number;
   is_top: number;
+  audience: string;
+  teaser: number;
+  access_eff: string;
   category_id: number;
   published_at: string;
   created_at: string;
@@ -201,6 +204,9 @@ export interface ArticleCreateInput {
   publish_at?: string;
   rev_version?: number;
   is_top?: number;
+  audience?: string;
+  teaser?: number;
+  access_eff?: string;
   category_id: number;
   published_at?: string;
   created_at?: string;
@@ -220,6 +226,9 @@ export interface ArticleUpdateInput {
   publish_at?: string;
   rev_version?: number;
   is_top?: number;
+  audience?: string;
+  teaser?: number;
+  access_eff?: string;
   category_id?: number;
   published_at?: string;
   created_at?: string;
@@ -263,6 +272,7 @@ export interface Attachment {
   mime_type: string;
   size: number;
   storage_provider: string;
+  uploader_id: number;
 }
 
 export interface AttachmentCreateInput {
@@ -271,6 +281,7 @@ export interface AttachmentCreateInput {
   mime_type?: string;
   size?: number;
   storage_provider?: string;
+  uploader_id?: number;
 }
 
 export interface AttachmentUpdateInput {
@@ -279,6 +290,7 @@ export interface AttachmentUpdateInput {
   mime_type?: string;
   size?: number;
   storage_provider?: string;
+  uploader_id?: number;
 }
 
 /** GET /api/attachments — list Attachment records (paginated). */
@@ -318,7 +330,10 @@ export interface Category {
   list_template: string;
   content_template: string;
   weight: number;
+  audience: string;
+  teaser: number;
   article_data_fields: any;
+  editor_hint: string;
   data: any;
 }
 
@@ -329,7 +344,10 @@ export interface CategoryCreateInput {
   list_template?: string;
   content_template?: string;
   weight?: number;
+  audience?: string;
+  teaser?: number;
   article_data_fields?: any;
+  editor_hint?: string;
   data?: any;
 }
 
@@ -340,7 +358,10 @@ export interface CategoryUpdateInput {
   list_template?: string;
   content_template?: string;
   weight?: number;
+  audience?: string;
+  teaser?: number;
   article_data_fields?: any;
+  editor_hint?: string;
   data?: any;
 }
 
@@ -550,7 +571,6 @@ export interface Role {
   label: string;
   description: string;
   is_system: number;
-  weight: number;
 }
 
 export interface RoleCreateInput {
@@ -558,7 +578,6 @@ export interface RoleCreateInput {
   label?: string;
   description?: string;
   is_system?: number;
-  weight?: number;
 }
 
 export interface RoleUpdateInput {
@@ -566,7 +585,6 @@ export interface RoleUpdateInput {
   label?: string;
   description?: string;
   is_system?: number;
-  weight?: number;
 }
 
 /** GET /api/roles — list Role records (paginated). */
@@ -866,6 +884,12 @@ export function contentGetCategory(query?: { slug?: string }): Promise<{ code: n
 }
 
 
+/** GET /api/content/categories — ContentController.listCategories */
+export function contentListCategories(): Promise<{ code: number; data: any[]; }> {
+  return request({ method: "get", url: "/api/content/categories" });
+}
+
+
 export interface LifecycleTransitionBody {
   to?: any;
   publish_at?: any;
@@ -901,7 +925,7 @@ export function lifecycleManageableCategories(query?: { action?: string }): Prom
 
 
 /** GET /api/schematools/all — SchemaDevController.getAllSchemas */
-export function schematoolsGetAllSchemas(): Promise<{ code: number; data: { modelName: any; tableName: any; routePath: any; fields: any; }[]; }> {
+export function schematoolsGetAllSchemas(): Promise<{ code: number; data: { modelName: any; tableName: any; routePath: any; rbacActions: any; ownerField: any; fields: any; }[]; }> {
   return request({ method: "get", url: "/api/schematools/all" });
 }
 
@@ -938,13 +962,13 @@ export interface SystemSetupBody {
 }
 
 /** POST /api/system/setup — SystemController.setup */
-export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; }>; message: string; } | { code: number; message: string; }> {
+export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; }>; saltState: "match" | "mismatch" | "unknown"; resetCredentials: { username: string; password: string; }[]; message: string; } | { code: number; message: string; }> {
   return request({ method: "post", url: "/api/system/setup", data: body });
 }
 
 
 /** GET /api/system/export — SystemController.exportData */
-export function systemExportData(): Promise<{ code: number; data: { _meta: { version: string; exportedAt: string; generator: string; }; }; }> {
+export function systemExportData(): Promise<{ code: number; data: { _meta: { version: string; exportedAt: string; generator: string; saltFingerprint: string; }; }; }> {
   return request({ method: "get", url: "/api/system/export" });
 }
 

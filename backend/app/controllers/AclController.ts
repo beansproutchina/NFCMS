@@ -1,20 +1,26 @@
 import { ControllerRoute, Route } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
 import { CMSModel } from "../lib/CMSModel.js";
-import { policy, ARTICLES_CATEGORY } from "../services/PolicyService.js";
+import { policy, ARTICLES_CATEGORY, ARTICLES_AUDIENCE } from "../services/PolicyService.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
 
 /**
  * Generic resource-ACL management: list / grant / revoke access on a (model, resource) pair.
- * Consumed by the reusable frontend <AclEditor>. Two kinds of target:
- *   - a content row, e.g. model="articles", resourceId=<article id>  (owner-initiated sharing)
+ * Consumed by the reusable frontend <AclEditor>. Three kinds of target:
+ *   - a content row, e.g. model="articles", resourceId=<article id>  (owner-initiated sharing).
+ *     `access` may include the audience-axis letter `V` — that is a row-level "this visitor may
+ *     VIEW this one article" grant (see docs/public-access.md), so a single article can be shared
+ *     without carving out a category for it.
  *   - a category-scoped article grant, model="articles_category", resourceId=<category id>
- *     (RBAC-level; super_admin only) — see PolicyService.
+ *     (RBAC-level / 管辖轴; super_admin only) — see PolicyService.
+ *   - a category-scoped AUDIENCE grant, model="articles_audience", access="V" (受众轴;
+ *     super_admin only) — who may view restricted articles in that category subtree.
  *
  * Permission to manage grants:
  *   - super_admin: always.
- *   - articles_category grants: super_admin only.
- *   - a content row: whoever can update that row (policy.can 'U').
+ *   - articles_category / articles_audience grants: super_admin only.
+ *   - a content row: whoever can update that row (policy.can 'U'). Granting `V` on a row you can
+ *     already edit adds no reach — you could just as well set that article's audience to public.
  */
 @ControllerRoute("acl")
 export default class AclController extends Controller {
@@ -27,7 +33,9 @@ export default class AclController extends Controller {
     /** Whether the caller may view/modify grants for (model, resourceId). */
     private async canManage(state: any, model: string, resourceId: number): Promise<boolean> {
         if (policy.isSuper(state)) return true;
-        if (model === ARTICLES_CATEGORY) return false; // category grants are RBAC-level
+        // 两个合成 model 都是站点级授权,只有 super_admin 能改。显式写出来而不是依赖
+        // resolveModel 找不到就返回 false —— 后者是巧合,不是意图。
+        if (model === ARTICLES_CATEGORY || model === ARTICLES_AUDIENCE) return false;
         const m = this.resolveModel(model);
         if (!m) return false;
         const row = (await m.read({ id: resourceId }))[0];

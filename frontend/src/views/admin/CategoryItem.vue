@@ -1,17 +1,17 @@
 <template>
   <li class="mb-1">
-    <div class="flex items-center justify-between p-3 bg-[#f5f5f7] rounded-[8px] hover:bg-[#ebebeb] transition-colors group">
+    <div class="flex items-center justify-between p-3 bg-canvas rounded-control hover:bg-surface-hover transition-colors group">
       <div class="flex items-center gap-3">
-        <span class="font-medium text-[#1d1d1f]">{{ category.name }}</span>
-        <span class="text-[12px] text-[rgba(0,0,0,0.5)] font-mono">/{{ category.slug }}</span>
+        <span class="font-medium text-label">{{ category.name }}</span>
+        <span class="font-mono" :class="TEXT.caption">/{{ category.slug }}</span>
       </div>
       <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-        <Button unstyled @click="$emit('edit', category)" class="text-apple-link text-[14px] font-medium hover:underline cursor-pointer">{{$t("action.edit")}}</Button>
-        <Button unstyled @click="$emit('delete', category.id)" class="text-red-500 text-[14px] font-medium hover:underline ml-2 cursor-pointer">{{$t("action.delete")}}</Button>
+        <Button unstyled @click="$emit('edit', category)" :class="LINK.action">{{$t("action.edit")}}</Button>
+        <Button unstyled @click="$emit('delete', category.id)" :class="LINK.danger" class="ml-2">{{$t("action.delete")}}</Button>
       </div>
     </div>
     
-    <ul v-if="children.length" class="ml-6 mt-1 border-l-2 border-[rgba(0,0,0,0.05)] pl-4 space-y-1">
+    <ul v-if="children.length" class="ml-6 mt-1 border-l-2 border-separator-weak pl-4 space-y-1">
       <CategoryItem 
         v-for="child in children" 
         :key="child.id" 
@@ -25,9 +25,11 @@
 </template>
 
 <script setup lang="ts">
+import { LINK, TEXT } from '../../ui/presets';
 
 
 import { computed } from 'vue';
+import Button from 'primevue/button';
 
 const props = defineProps<{
   category: any;

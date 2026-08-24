@@ -6,14 +6,16 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import { listArticle, removeArticle, listCategory, lifecycleAPI } from '../../api';
-import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import { BTN, CHIP, INPUT_CLASS, LINK, PAGE, SEARCH, SELECT_PT, TEXT } from '../../ui/presets';
 import { LucidePlus, LucideSearch,  } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 
 const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
+const confirm = useConfirm();
 const articles = ref([]);
 const categories = ref<any[]>([]);
 const loading = ref(true);
@@ -72,12 +74,16 @@ const getCategoryName = (id: number) => {
 };
 
 const onPage = (event: any) => {
-    lazyParams.value = event;
+    // 只合并翻页字段。整体赋值会把 sortField/sortOrder 抹掉 —— PrimeVue 的 page 事件只带
+    // {first, rows, page, pageCount},于是点一下页码 orderBy/orderDesc 就没了,列表从
+    // 「id 倒序」退回数据库自然序。
+    lazyParams.value = { ...lazyParams.value, page: event.page, rows: event.rows };
     fetchArticles();
 };
 
 const onSort = (event: any) => {
-    lazyParams.value = event;
+    // 同理:sort 事件里没有 page。换排序回到第 1 页,否则会停在旧页码上看新排序。
+    lazyParams.value = { ...lazyParams.value, sortField: event.sortField, sortOrder: event.sortOrder, page: 0 };
     fetchArticles();
 };
 
@@ -102,32 +108,35 @@ const editArticle = (id: number) => {
 };
 
 const deleteArticle = async (id: number) => {
-    if(confirm(t('action.confirmDelete'))) {
+    confirm.require({
+        header: t('confirm.title'), message: t('action.confirmDelete'),
+        accept: async () => {
         try {
             await removeArticle(id);
-            toast.add({ severity: 'success', summary: 'Success', detail: '文章删除成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.articleDeleted'), life: 3000 });
             fetchArticles();
         } catch(e) {
             console.error(e);
         }
-    }
+        },
+    });
 };
 
 const STATUS_CLS: Record<string, string> = {
-    hidden: 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]',
-    scheduled: 'bg-[#fff7ed] text-[#c2410c]',
-    visible: 'bg-[#e0f2fe] text-[#0066cc]'
+    hidden: 'bg-canvas text-label-2',
+    scheduled: 'bg-warn-fill text-warn',
+    visible: 'bg-info-fill text-link'
 };
 const statusMeta = (s: string) => ({
     label: s ? t('contentStatus.' + s) : '-',
-    cls: STATUS_CLS[s] || 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]'
+    cls: STATUS_CLS[s] || 'bg-canvas text-label-2'
 });
 
 const toggleVisibility = async (data: any) => {
     try {
         const to = data.status === 'visible' ? 'hidden' : 'visible';
         await lifecycleAPI.transition('articles', data.id, { to });
-        toast.add({ severity: 'success', summary: 'Success', detail: to === 'visible' ? '已发布' : '已隐藏', life: 2500 });
+        toast.add({ severity: 'success', summary: 'Success', detail: to === 'visible' ? t('toast.published') : t('toast.hidden'), life: 2500 });
         fetchArticles();
     } catch(e) { console.error(e); }
 };
@@ -135,10 +144,10 @@ const toggleVisibility = async (data: any) => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.articles') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.articles') }}</h1>
             </div>
             <div class="flex flex-wrap gap-4 items-center">
                 <Select 
@@ -153,8 +162,8 @@ const toggleVisibility = async (data: any) => {
                     @change="onFilterChange"
                 />
                 <span class="relative">
-                    <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
-                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, 'pl-9']" />
+                    <LucideSearch :class="SEARCH.icon" :size="16" />
+                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, SEARCH.input]" />
                 </span>
                 <Button unstyled @click="router.push('/admin/articles/new')" :class="BTN.primary">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
@@ -183,31 +192,31 @@ const toggleVisibility = async (data: any) => {
             ]"
         >
             <template #title="{ data }">
-                <span class="font-semibold text-apple-text-dark text-[17px] tracking-tight">{{ data.title }}</span>
+                <span class="font-semibold text-label text-title-item tracking-tight">{{ data.title }}</span>
             </template>
             <template #category_id="{ data }">
-                <span class="text-[14px] text-[rgba(0,0,0,0.8)]">{{ getCategoryName(data.category_id) }}</span>
+                <span class="text-body text-label">{{ getCategoryName(data.category_id) }}</span>
             </template>
             <template #is_top="{ data }">
-                <span v-if="data.is_top" class="text-green-600 bg-green-100 px-2 py-1 rounded text-xs">TOP</span>
+                <span v-if="data.is_top" :class="CHIP.accent">TOP</span>
             </template>
             <template #status="{ data }">
-                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-[5px] text-[12px] font-medium uppercase tracking-wider">
+                <span :class="statusMeta(data.status).cls" class="px-2 py-1 rounded-control text-small font-medium uppercase tracking-wider">
                     {{ statusMeta(data.status).label }}
                 </span>
             </template>
             <template #published_at="{ data }">
-                <span class="text-[rgba(0,0,0,0.6)]">{{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}</span>
+                <span class="text-label-2">{{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}</span>
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
-                    <Button unstyled @click="editArticle(data.id)" class="text-apple-link hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="editArticle(data.id)" :class="LINK.action">
                         {{ $t('action.edit') }}
                     </Button>
-                    <Button unstyled @click="toggleVisibility(data)" class="text-[rgba(0,0,0,0.7)] hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="toggleVisibility(data)" class="hover:underline flex items-center cursor-pointer" :class="TEXT.muted">
                         {{ data.status === 'visible' ? $t('action.unpublish') : $t('action.publish') }}
                     </Button>
-                    <Button unstyled @click="deleteArticle(data.id)" class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">
+                    <Button unstyled @click="deleteArticle(data.id)" :class="LINK.danger">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>

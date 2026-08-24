@@ -1,8 +1,8 @@
 <template>
   <VueDraggableNext :list="items" class="space-y-2" handle=".handle" @change="emitUpdate">
-    <div v-for="(item, index) in items" :key="index" class="border border-[rgba(0,0,0,0.15)] rounded-[8px] bg-white overflow-hidden shadow-sm">
-        <div class="flex items-center gap-3 p-3 bg-[#fafafc] border-b border-[rgba(0,0,0,0.05)]">
-            <span class="handle cursor-move text-gray-400 hover:text-[rgba(0,0,0,0.8)] transition-colors">☰</span>
+    <div v-for="(item, index) in items" :key="index" class="border border-separator rounded-control bg-white overflow-hidden shadow-sm">
+        <div class="flex items-center gap-3 p-3 bg-surface border-b border-separator-weak">
+            <span class="handle cursor-move text-label-3 hover:text-label transition-colors">☰</span>
             <InputText unstyled v-model="item.label" :placeholder="$t('form.label') || 'Label'" :class="[INPUT_CLASS, 'flex-1 max-w-[200px]']" @input="emitUpdate"/>
 
             <Select v-model="item.type" :options="typeOptions" optionLabel="label" optionValue="value" @change="emitUpdate" unstyled :pt="SELECT_PT" class="w-[140px] shrink-0"/>
@@ -17,8 +17,8 @@
                  <InputText unstyled v-model="item.url" :placeholder="$t('form.url') || 'URL (e.g. /about)'" :class="[INPUT_CLASS, 'flex-1 min-w-[200px]']" @input="emitUpdate"/>
             </template>
 
-            <Button unstyled @click="addChild(item)" class="text-sm font-medium text-apple-blue whitespace-nowrap px-3 py-2 mx-1 hover:bg-[#e0f2fe] rounded-[8px] focus:outline-none transition-colors">+ {{ $t('action.addSub') || 'Sub' }}</Button>
-            <Button unstyled @click="removeItem(index)" class="text-red-500 hover:text-white hover:bg-red-500 px-3 py-2 rounded-[8px] transition-colors ml-auto focus:outline-none">✕</Button>
+            <Button unstyled @click="addChild(item)" class="mx-1" :class="BTN_SM.secondary">+ {{ $t('action.addSub') || 'Sub' }}</Button>
+            <Button unstyled @click="removeItem(index)" class="px-3 py-2 ml-auto" :class="BTN_REMOVE">✕</Button>
         </div>
         <div v-if="item.children && item.children.length" class="p-3 pl-10 bg-white">
             <MenuItemEditor :items="item.children" :categories="categories" :articles="articles" @update="emitUpdate" />
@@ -34,7 +34,7 @@ import { VueDraggableNext } from 'vue-draggable-next';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
-import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import { BTN_REMOVE, BTN_SM, INPUT_CLASS, SELECT_PT } from '../../ui/presets';
 
 const { t } = useI18n();
 const props = defineProps<{ items: any[], categories: any[], articles: any[] }>();

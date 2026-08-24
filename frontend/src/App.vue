@@ -3,6 +3,7 @@ import { getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import { CONFIRM_PT } from './ui/presets';
 
 
 const toast = useToast();
@@ -27,6 +28,7 @@ onUnmounted(() => {
 
 <template>
   <Toast />
-  <ConfirmDialog />
+  <!-- `unstyled` on purpose: opt out of Aura so the app's own tokens apply (see CONFIRM_PT). -->
+  <ConfirmDialog unstyled :pt="CONFIRM_PT" />
   <RouterView />
 </template>

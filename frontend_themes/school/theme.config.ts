@@ -30,15 +30,36 @@ export const configSchema: ThemeConfigSchema = [
     hint: '如「沪公网安备 31000000000000 号」。留空则不显示。' },
 ];
 
+/**
+ * The two main home-page panels are addressed by category slug, not by position in the root-category
+ * list. Position was fragile — a new category with a smaller `weight`, or a reorder in the admin,
+ * quietly moved a different section into the 新闻 panel — and, more importantly, an id that can only
+ * be found by SEARCHING a list cannot be used in a prefetch: `$data.x.y` is a plain key path with no
+ * predicate. Addressing them by slug lets both panels be prefetched, so the grid paints filled.
+ *
+ * Rename these if the site's categories are slugged differently; a slug that doesn't exist simply
+ * leaves its panel unrendered (DefaultHome.vue's `panel()` re-checks `category_id`).
+ */
+const HOME_NEWS_SLUG = 'news';
+const HOME_NOTICE_SLUG = 'notice';
+
 export const pages: ThemePages = {
   DefaultHome: {
     layout: 'Layout',
     title: '$data.config.site_name',
+    // Two waves, all before first paint: the getCategory calls go out together, and the two
+    // listArticles calls resolve as soon as their category lands (prefetch keys may depend on other
+    // prefetch keys — see router/index.ts). `categories` stays for the "more" strip below the fold,
+    // whose membership is data-dependent and so cannot be written out statically.
     prefetch: [
       { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
       // Featured (置顶) articles power the hero carousel; recent pool as fallback.
       { key: 'featured', api: 'contentAPI.listArticles', args: [{ filter: { is_top: 1 }, orderBy: 'published_at', orderDesc: true, limit: 6 }] },
-      { key: 'articles', api: 'contentAPI.listArticles', args: [{ orderBy: 'published_at', orderDesc: true, limit: 12 }] }
+      { key: 'articles', api: 'contentAPI.listArticles', args: [{ orderBy: 'published_at', orderDesc: true, limit: 12 }] },
+      { key: 'newsCat', api: 'contentAPI.getCategory', args: [HOME_NEWS_SLUG] },
+      { key: 'newsList', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.newsCat.id' }, orderBy: 'published_at', orderDesc: true, limit: 7 }] },
+      { key: 'noticeCat', api: 'contentAPI.getCategory', args: [HOME_NOTICE_SLUG] },
+      { key: 'noticeList', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.noticeCat.id' }, orderBy: 'published_at', orderDesc: true, limit: 8 }] }
     ]
   },
   // List templates: prefetch page 1 (+ total via $meta.articles), then paginate client-side.

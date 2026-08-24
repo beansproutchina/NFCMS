@@ -1,19 +1,19 @@
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex justify-between items-end mb-8">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.categories') }}
+                <h1 :class="PAGE.title">{{ $t('system.categories') }}
                 </h1>
             </div>
             <Button unstyled @click="openForm()"
-                class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                :class="BTN.primary">
                 <LucidePlus :size="16" /> {{ $t('action.new') }}
             </Button>
         </div>
 
         <div
-            class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] border border-[rgba(0,0,0,0.05)] p-6 flex-1 overflow-auto">
-            <div v-if="loading" class="text-center py-10 text-[rgba(0,0,0,0.5)]">{{ $t('system.loading') || 'Loading...'
+            class="p-6 flex-1 overflow-auto" :class="CARD">
+            <div v-if="loading" :class="EMPTY">{{ $t('system.loading') || 'Loading...'
             }}</div>
             <div v-else>
                 <!-- Simple custom tree implementation since PrimeVue TreeTable can be complex to setup perfectly -->
@@ -21,7 +21,7 @@
                     <CategoryItem v-for="cat in rootCategories" :key="cat.id" :category="cat"
                         :allCategories="categories" @edit="openForm" @delete="deleteCategory" />
                 </ul>
-                <div v-if="rootCategories.length === 0" class="text-center py-10 text-[rgba(0,0,0,0.5)]">{{
+                <div v-if="rootCategories.length === 0" :class="EMPTY">{{
                     $t('system.noEntries') || 'No entries found.' }}</div>
             </div>
         </div>
@@ -33,6 +33,7 @@
 </template>
 
 <script setup lang="ts">
+import { BTN, CARD, EMPTY, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 
@@ -42,9 +43,12 @@ import { listCategory, createCategory, updateCategory, removeCategory } from '..
 import CategoryItem from './CategoryItem.vue';
 import CategoryEditor from './CategoryEditor.vue';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import Button from 'primevue/button';
 
 const { t } = useI18n();
 const toast = useToast();
+const confirm = useConfirm();
 const categories = ref<any[]>([]);
 const loading = ref(true);
 
@@ -120,10 +124,10 @@ const saveCategory = async (emittedData: any) => {
 
     if (isEditing.value) {
         await updateCategory(payload.id, payload);
-        toast.add({ severity: 'success', summary: 'Success', detail: '分类更新成功', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryUpdated'), life: 3000 });
     } else {
         await createCategory(payload);
-        toast.add({ severity: 'success', summary: 'Success', detail: '分类创建成功', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryCreated'), life: 3000 });
     }
     showModal.value = false;
     fetchCategories();
@@ -131,14 +135,19 @@ const saveCategory = async (emittedData: any) => {
 };
 
 const deleteCategory = async (id: number) => {
-    if (!confirm(t('action.confirmDelete'))) return;
-    try {
-        await removeCategory(id);
-        toast.add({ severity: 'success', summary: 'Success', detail: '分类删除成功', life: 3000 });
-        fetchCategories();
-    } catch (err) {
-        alert("Failed to delete category");
-    }
+    confirm.require({
+        header: t('confirm.title'), message: t('action.confirmDelete'),
+        accept: async () => {
+            try {
+                await removeCategory(id);
+                toast.add({ severity: 'success', summary: 'Success', detail: t('toast.categoryDeleted'), life: 3000 });
+                fetchCategories();
+            } catch (err) {
+                // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+                console.error(err);
+            }
+        },
+    });
 };
 
 onMounted(fetchCategories);

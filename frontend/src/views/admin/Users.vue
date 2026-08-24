@@ -1,12 +1,12 @@
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="mb-8 flex justify-between items-end">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.users') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.users') }}</h1>
             </div>
             <div>
                 <Button unstyled v-if="isSuperAdmin" @click="openEditor()"
-                    class="bg-apple-blue hover:bg-[#0077ED] text-white flex items-center justify-center gap-2 px-4 py-2 rounded-[8px] text-[15px] font-medium transition-colors border border-transparent focus:outline-none cursor-pointer">
+                    :class="BTN.primary">
                     <LucidePlus :size="16" /> {{ $t('action.new') }}
                 </Button>
             </div>
@@ -17,23 +17,23 @@
             <template #role="{ data }">
                 <span
                     :class="{ 'bg-purple-100 text-purple-700': data.role === 'super_admin', 'bg-blue-100 text-blue-700': data.role !== 'super_admin' }"
-                    class="px-2 py-1 rounded-[5px] text-[12px] font-medium tracking-wider">
+                    class="px-2 py-1 rounded-control text-small font-medium tracking-wider">
                     {{ data.role === 'super_admin' ? $t('form.superadmin') : $t('form.admin') }}
                 </span>
             </template>
             <template #lastontime="{ data }">
-                <span class="text-[rgba(0,0,0,0.6)]">{{ data.lastontime ? new Date(data.lastontime).toLocaleString() :
+                <span class="text-label-2">{{ data.lastontime ? new Date(data.lastontime).toLocaleString() :
                     '-' }}</span>
             </template>
             <template #actions="{ data }">
                 <div class="flex gap-2">
                     <Button unstyled @click="openEditor(data)"
-                        class="text-apple-link hover:underline text-[14px] flex items-center cursor-pointer">
+                        :class="LINK.action">
                         {{ $t('action.edit') }}
                     </Button>
                     <Button unstyled v-if="isSuperAdmin && data.username !== currentUser.username"
                         @click="deleteUser(data.id)"
-                        class="text-red-500 hover:underline text-[14px] flex items-center cursor-pointer">
+                        :class="LINK.danger">
                         {{ $t('action.delete') }}
                     </Button>
                 </div>
@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { BTN, LINK, PAGE } from '../../ui/presets';
 import { LucidePlus } from 'lucide-vue-next';
 
 import { ref, computed, onMounted } from 'vue';
@@ -56,10 +57,12 @@ import { listUser, getUser, createUser, updateUser, removeUser,
          listUserRole, createUserRole, removeUserRole } from '../../api';
 import UserEditor from './UserEditor.vue';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '../../stores/auth';
 
 const { t } = useI18n();
 const toast = useToast();
+const confirm = useConfirm();
 const authStore = useAuthStore();
 const isSuperAdmin = authStore.isSuperAdmin;
 const currentUser = computed(() => authStore.user || { username: '' });
@@ -81,12 +84,16 @@ const editingItem = ref<any>(null);
 const lazyParams = ref({ page: 0, rows: 10, sortField: 'id', sortOrder: -1 });
 
 const onPage = (event: any) => {
-    lazyParams.value = event;
+    // 只合并翻页字段。整体赋值会把 sortField/sortOrder 抹掉 —— PrimeVue 的 page 事件只带
+    // {first, rows, page, pageCount},于是点一下页码 orderBy/orderDesc 就没了,列表从
+    // 「id 倒序」退回数据库自然序。
+    lazyParams.value = { ...lazyParams.value, page: event.page, rows: event.rows };
     fetchUsers();
 };
 
 const onSort = (event: any) => {
-    lazyParams.value = event;
+    // 同理:sort 事件里没有 page。换排序回到第 1 页,否则会停在旧页码上看新排序。
+    lazyParams.value = { ...lazyParams.value, sortField: event.sortField, sortOrder: event.sortOrder, page: 0 };
     fetchUsers();
 };
 
@@ -126,20 +133,23 @@ const openEditor = (item?: any) => {
     // If not super admin and trying to edit someone else, block it (UI should prevent this anyway)
     if (!isSuperAdmin && item && item.id !== currentUser.value.id) return;
 
-    editingItem.value = item ? { ...item } : { username: '', password: '', role: 'admin' };
+    editingItem.value = item ? { ...item } : { username: '', password: '', nickname: '', role: '' };  // 不预选角色,见 UserEditor
     showModal.value = true;
 };
 
 const deleteUser = async (id: number) => {
-    if (confirm(t('action.confirmDelete'))) {
+    confirm.require({
+        header: t('confirm.title'), message: t('action.confirmDelete'),
+        accept: async () => {
         try {
             await removeUser(id);
-            toast.add({ severity: 'success', summary: 'Success', detail: '用户删除成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.userDeleted'), life: 3000 });
             fetchUsers();
         } catch (e) {
             console.error('Delete failed', e);
         }
-    }
+        },
+    });
 };
 
 // Reconcile the user_roles table to match the desired additional-role id set.
@@ -156,7 +166,16 @@ const syncUserRoles = async (userId: number, desiredRoleIds: number[]) => {
     }
 };
 
+/**
+ * 单飞守卫。保存有两条触发路径(footer 的保存按钮、表单自身的 submit),再加上双击,
+ * 同一次提交可能进来两次 —— 表现就是两个一模一样的「用户更新成功」,以及两次 PUT。
+ * 守卫放在这里(唯一发请求 + 唯一弹 toast 的地方),不管上游怎么重复都只执行一次。
+ */
+const saving = ref(false);
+
 const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
+    if (saving.value) return;
+    saving.value = true;
     try {
         // Prevent password update if left empty during edit
         if (formData.id && !formData.password) {
@@ -166,7 +185,7 @@ const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
         let userId = formData.id;
         if (formData.id) {
             await updateUser(formData.id, formData);
-            toast.add({ severity: 'success', summary: 'Success', detail: '用户更新成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.userUpdated'), life: 3000 });
             // If they changed their own name, reflect it in the auth store.
             if (formData.id === currentUser.value.id && formData.username) {
                 authStore.setUser({ ...currentUser.value, username: formData.username });
@@ -174,14 +193,16 @@ const handleSave = async (formData: any, additionalRoleIds: number[] = []) => {
         } else {
             const res = await createUser(formData);
             userId = res.id;   // HTTPCreate returns { code, id }
-            toast.add({ severity: 'success', summary: 'Success', detail: '用户创建成功', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.userCreated'), life: 3000 });
         }
         await syncUserRoles(userId, additionalRoleIds);
         showModal.value = false;
         fetchUsers();
     } catch (e) {
+        // 不弹 toast:api.ts 的拦截器已经把后端的具体消息弹出来了(见 App.vue 的 app-error)
         console.error('Save failed', e);
-        alert('Save failed. Check console.');
+    } finally {
+        saving.value = false;
     }
 };
 </script>

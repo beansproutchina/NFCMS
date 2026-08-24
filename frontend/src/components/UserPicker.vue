@@ -4,7 +4,7 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import { listUser } from '../api';
 import { LucideSearch, LucideX, LucideUser } from 'lucide-vue-next';
-import { INPUT_CLASS } from '../ui/presets';
+import { BTN_SM, DIALOG_CLOSE, EMPTY, INPUT_CLASS, ROW, SEARCH, SECTION_TITLE, TEXT } from '../ui/presets';
 
 const props = defineProps<{ visible: boolean }>();
 const emit = defineEmits<{ (e: 'update:visible', v: boolean): void; (e: 'select', user: any): void }>();
@@ -41,37 +41,37 @@ watch(() => props.visible, (v) => { if (v) { q.value = ''; page.value = 0; load(
 </script>
 
 <template>
-    <div v-if="visible" class="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(0,0,0,0.4)] backdrop-blur-sm p-4" @click.self="close">
-        <div class="bg-white rounded-[12px] w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
-            <div class="p-5 border-b border-[rgba(0,0,0,0.06)] flex items-center justify-between">
-                <h2 class="text-[18px] font-display font-semibold">{{ $t('userPicker.title') }}</h2>
-                <Button unstyled @click="close" class="text-gray-400 hover:text-black cursor-pointer"><LucideX :size="18" /></Button>
+    <div v-if="visible" class="fixed inset-0 z-60 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" @click.self="close">
+        <div class="bg-white rounded-card w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+            <div class="p-5 border-b border-separator-weak flex items-center justify-between">
+                <h2 :class="SECTION_TITLE">{{ $t('userPicker.title') }}</h2>
+                <Button unstyled @click="close" :class="DIALOG_CLOSE"><LucideX :size="18" /></Button>
             </div>
 
             <div class="p-5 flex flex-col gap-3">
                 <div class="relative">
-                    <LucideSearch :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-                    <InputText v-model="q" unstyled :placeholder="$t('userPicker.search')" :class="[INPUT_CLASS, 'pl-9']" @keyup.enter="search" @input="search" />
+                    <LucideSearch :size="16" :class="SEARCH.icon" />
+                    <InputText v-model="q" unstyled :placeholder="$t('userPicker.search')" :class="[INPUT_CLASS, SEARCH.input]" @keyup.enter="search" @input="search" />
                 </div>
 
                 <ul class="flex flex-col gap-1 min-h-[280px]">
-                    <li v-if="loading" class="text-[14px] text-[rgba(0,0,0,0.4)] py-4 text-center">{{ $t('system.loading') }}</li>
-                    <li v-else-if="!users.length" class="text-[14px] text-[rgba(0,0,0,0.4)] py-4 text-center">{{ $t('userPicker.empty') }}</li>
+                    <li v-if="loading" :class="EMPTY">{{ $t('system.loading') }}</li>
+                    <li v-else-if="!users.length" :class="EMPTY">{{ $t('userPicker.empty') }}</li>
                     <li v-for="u in users" :key="u.id">
-                        <button @click="pick(u)" class="w-full flex items-center gap-3 px-3 py-2 rounded-[8px] text-left hover:bg-[#f5f5f7] transition-colors cursor-pointer">
-                            <span class="w-8 h-8 rounded-full bg-[#eef2ff] text-[#3730a3] flex items-center justify-center shrink-0"><LucideUser :size="16" /></span>
+                        <button @click="pick(u)" :class="[ROW.base, ROW.idle]">
+                            <span class="w-8 h-8 rounded-full bg-indigo-fill text-indigo flex items-center justify-center shrink-0"><LucideUser :size="16" /></span>
                             <span class="min-w-0">
-                                <span class="block text-[14px] font-medium truncate">{{ u.nickname || u.username }}</span>
-                                <span class="block text-[12px] text-[rgba(0,0,0,0.45)] truncate">{{ u.username }} · #{{ u.id }}</span>
+                                <span class="block text-body font-medium truncate">{{ u.nickname || u.username }}</span>
+                                <span class="block truncate" :class="TEXT.caption">{{ u.username }} · #{{ u.id }}</span>
                             </span>
                         </button>
                     </li>
                 </ul>
 
                 <div class="flex items-center justify-between pt-1">
-                    <Button unstyled @click="prev" :disabled="page === 0" class="text-[13px] px-3 h-8 rounded-[8px] border border-[rgba(0,0,0,0.12)] hover:bg-[#f5f5f7] disabled:opacity-40 cursor-pointer">{{ $t('common.prev') }}</Button>
-                    <span class="text-[12px] text-[rgba(0,0,0,0.5)]">{{ page + 1 }} / {{ pages() }}</span>
-                    <Button unstyled @click="next" :disabled="page >= pages() - 1" class="text-[13px] px-3 h-8 rounded-[8px] border border-[rgba(0,0,0,0.12)] hover:bg-[#f5f5f7] disabled:opacity-40 cursor-pointer">{{ $t('common.next') }}</Button>
+                    <Button unstyled @click="prev" :disabled="page === 0" :class="BTN_SM.secondary">{{ $t('common.prev') }}</Button>
+                    <span :class="TEXT.caption">{{ page + 1 }} / {{ pages() }}</span>
+                    <Button unstyled @click="next" :disabled="page >= pages() - 1" :class="BTN_SM.secondary">{{ $t('common.next') }}</Button>
                 </div>
             </div>
         </div>

@@ -6,7 +6,7 @@
                 &copy; {{ new Date().getFullYear() }} {{ config?.site_name || 'NFCMS' }}. All rights reserved.
             </div>
             <div class="flex gap-4 items-center">
-                <span>Proudly powered by <a href="https://github.com/dyas-dev/NFCMS" target="_blank" class="text-[#424245] hover:text-[#000000] hover:underline transition-colors">NFCMS</a></span>
+                <span>Proudly powered by <a href="https://github.com/beansproutchina/NFCMS" target="_blank" class="text-[#424245] hover:text-[#000000] hover:underline transition-colors">NFCMS</a></span>
                 <span v-if="config?.icp_record" class="border-l border-[#d2d2d7] pl-4">
                     <a href="https://beian.miit.gov.cn/" target="_blank" class="hover:text-[#000000] hover:underline transition-colors">{{ config.icp_record }}</a>
                 </span>

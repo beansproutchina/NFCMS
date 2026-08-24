@@ -8,7 +8,7 @@
       <div class="footer-info">
         <span>© {{ new Date().getFullYear() }} {{ config?.site_name }}</span>
         <span class="dot">·</span>
-        <a href="https://github.com/dyas-dev/NFCMS" target="_blank">NFCMS</a>
+        <a href="https://github.com/beansproutchina/NFCMS" target="_blank">NFCMS</a>
         <template v-if="config?.icp_record">
           <span class="dot">·</span>
           <a href="https://beian.miit.gov.cn/" target="_blank">{{ config.icp_record }}</a>

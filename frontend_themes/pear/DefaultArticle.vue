@@ -93,7 +93,7 @@ const renderedContent = computed(() => {
 }
 
 .apple-md-content a {
-    color: var(--color-apple-link);
+    color: var(--color-link);
     text-decoration: none;
 }
 .apple-md-content a:hover {

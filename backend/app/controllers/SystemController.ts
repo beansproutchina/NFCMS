@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import { ControllerRoute, Route, Inject } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
 import UserModel from "../models/UserModel.js";
@@ -7,9 +8,8 @@ import ArticleModel from "../models/ArticleModel.js";
 import MenuModel from "../models/MenuModel.js";
 import RoleModel from "../models/RoleModel.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
-import * as crypto from "crypto";
-import { staticgen } from "../services/StaticGenService.js";
-import { ARTICLES_CATEGORY } from "../services/PolicyService.js";
+import { ARTICLES_CATEGORY, policy } from "../services/PolicyService.js";
+import { seedDefaultRbac } from "../services/RbacSeedService.js";
 
 
 @ControllerRoute("system")
@@ -20,18 +20,31 @@ export default class SystemController extends Controller {
     @Inject(ArticleModel) declare articleModel: ArticleModel;
     @Inject(MenuModel) declare menuModel: MenuModel;
 
-    // AES-256-CBC symmetric encryption key & IV (fixed for export/import portability)
-    private readonly CRYPTO_KEY = crypto.createHash("sha256").update("NFCMS-EXPORT-KEY-2024").digest();
-    private readonly CRYPTO_IV = Buffer.alloc(16, 0); // Fixed IV for deterministic encryption
+    /**
+     * salt 指纹(KCV):用于判断一份导出数据里的密码哈希在本机**是否还能用**。
+     *
+     * 存的密码是 `HMAC-SHA256(env PASSWORD_SALT, 明文)`。所以一旦 salt 变了(换机器、轮换密钥、
+     * 从别的站点搬数据),那些哈希就永久失效 —— 现象是"导入成功、数据齐全、**没有一个人能登录**",
+     * 而且没有任何东西提示你为什么。这正是需要确定性判断、而不是靠猜的地方。
+     *
+     * 指纹就是"用本机的 salt 去哈希一个固定串"。它证明 salt 身份,却不泄露 salt 本身。
+     *
+     * 已知代价(明确接受):导出文件因此带上了一个 **salt 预言机** —— 攻击者拿到文件可以离线爆破
+     * salt(而只有哈希时,他还得先知道某个用户的明文密码才能做同样的事)。前提是 salt 足够强;
+     * `.env.example` 要求的是随机长值。
+     */
+    private static readonly SALT_FINGERPRINT_INPUT = "nfcms-salt-fingerprint-v1";
 
-    private encrypt(text: string): string {
-        const cipher = crypto.createCipheriv("aes-256-cbc", this.CRYPTO_KEY, this.CRYPTO_IV);
-        return cipher.update(text, "utf8", "hex") + cipher.final("hex");
+    private saltFingerprint(): string {
+        return this._app.settings.passwordHash(SystemController.SALT_FINGERPRINT_INPUT);
     }
 
-    private decrypt(encrypted: string): string {
-        const decipher = crypto.createDecipheriv("aes-256-cbc", this.CRYPTO_KEY, this.CRYPTO_IV);
-        return decipher.update(encrypted, "hex", "utf8") + decipher.final("utf8");
+    /**
+     * 生成一个可打字的随机密码。用于 salt 不一致时重置账号 —— 那些哈希已经废了,留着只会让人
+     * 以为"密码还在"。96 位熵,base64url 无填充。
+     */
+    private randomPassword(): string {
+        return crypto.randomBytes(12).toString("base64url");
     }
 
     /**
@@ -60,7 +73,7 @@ export default class SystemController extends Controller {
 
     @Route("post", "/config")
     async updateConfig(ctx) {
-        if (ctx.state.user?.role !== "super_admin") {
+        if (!policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
         
@@ -90,7 +103,7 @@ export default class SystemController extends Controller {
     }
     @Route("post", "/restart")
     async restart(ctx) {
-        if (ctx.state.user?.role !== "super_admin") {
+        if (!policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
         
@@ -116,8 +129,12 @@ export default class SystemController extends Controller {
                 modelMap.set(model.tablename, model);
             }
 
-            // Determine import order
-            const priorityOrder = ["system_config", "categories", "users", "menus", "attachments", "schemas"];
+            // Determine import order. RBAC tables come last of the pinned ones and in dependency
+            // order (roles → rows referencing role ids): `schemas` must precede `roles` so the
+            // dynamic-model injection it triggers finds no `admin` role and skips seeding perms —
+            // the dump's own role_permissions are authoritative.
+            const priorityOrder = ["system_config", "categories", "users", "menus", "attachments", "schemas",
+                                   "roles", "role_permissions", "user_roles", "resource_grants"];
             const orderedKeys: string[] = [];
             for (const key of priorityOrder) {
                 if (importData[key] !== undefined) orderedKeys.push(key);
@@ -134,6 +151,22 @@ export default class SystemController extends Controller {
             }
 
             const results: Record<string, { imported: number, failed: number }> = {};
+
+            /**
+             * 这份数据的密码哈希在本机还能不能用?
+             *
+             * - 指纹一致 → 能用,原样搬运。
+             * - 指纹不同 → **一个都不能用**(salt 变了)。此时给每个账号生成随机密码,并把明文
+             *   一次性返回给正在初始化的人 —— 否则导入模式下不创建新管理员,重置完就**没人能登录**了。
+             * - 指纹缺失(本次改动之前导出的旧文件)→ 无法证明,也不敢销毁数据:**原样保留 + 警告**。
+             *   "没有证据"不等于"证据表明不行",而重置密码是不可逆的。
+             */
+            const localFp = this.saltFingerprint();
+            const exportedFp = importData._meta?.saltFingerprint;
+            const saltState: "match" | "mismatch" | "unknown" =
+                !exportedFp ? "unknown" : (exportedFp === localFp ? "match" : "mismatch");
+            /** salt 不一致时重置出来的凭据,仅在本次响应里返回一次,不落库、不写日志。 */
+            const resetCredentials: { username: string; password: string }[] = [];
 
             for (const key of orderedKeys) {
                 const items = importData[key];
@@ -154,16 +187,50 @@ export default class SystemController extends Controller {
 
                 for (const item of items) {
                     try {
-                        const { id, ...data } = item;
-                        // Decrypt user passwords
-                        if (key === "users" && data.password) {
-                            try {
-                                data.password = this.decrypt(data.password);
-                            } catch {
-                                // If decryption fails, keep as-is
-                            }
+                        /**
+                         * **保留原 id**(`model.restore` 而不是 `model.create`)。
+                         *
+                         * 从前这里是 `const { id, ...data } = item` —— 剥掉 id 让它重新自增。那只在
+                         * "源库 id 连续 + 目标库为空"时碰巧对:源库删过任何一条就有空洞,重新编号后
+                         * **所有按 id 的交叉引用同时错位** —— articles.category_id / author_id、
+                         * categories.parent_id、role_permissions.role_id、user_roles.*、
+                         * resource_grants.grantee_id 与 resource_id、revisions.content_id,
+                         * 还有藏在 JSON 里的 menus.items[].refId。而且一声不响。
+                         *
+                         * 保 id 是唯一**不需要穷举引用关系图**就正确的做法:每条记录还在原来的编号上,
+                         * 所有指针自动有效。(本次会话开头那个"角色重复"就是这个病的一个症状。)
+                         */
+                        const data = { ...item };
+                        /**
+                         * 历史脏数据兜底:dyapi 的写入路径曾把真正的 `null` 当对象 JSON.stringify,
+                         * 于是可空的 Date / Object 列里存的是**4 个字符的文本 `"null"`**(根因已在
+                         * 容器里修掉)。这类值读出来是字符串,`process()` 会把它变成 Invalid Date,
+                         * 插入时炸成一句莫名的 "Invalid Date" —— 老库因此整表导不进来。
+                         * 恢复要能吃下已经存在的坏数据,所以在这里归一成真 null。
+                         */
+                        for (const k of Object.keys(data)) {
+                            if (data[k] === "null") data[k] = null;
                         }
-                        await model.create(data);
+                        /**
+                         * 密码**原样搬运**,不做任何加解密。
+                         *
+                         * 导出里存的已经是 `HMAC-SHA256(env PASSWORD_SALT, 明文)` 的哈希,而这里走的是
+                         * **裸 `create()`**(不是 `HTTPCreate`)—— 裸路径不碰 password,所以哈希直接落库,
+                         * 不会被二次哈希。"绕过加哈希的前置步骤直接插哈希"本来就成立,不需要额外手段。
+                         *
+                         * ⚠️ 别把这里改成 `HTTPCreate`:那条路会对 password 再哈希一次
+                         * (UserModel.HTTPCreate),导入后全站登录失效,现象是"密码就是不对"。
+                         *
+                         * 也**不做**"这值像不像哈希"的形状校验:导入数据只可能来自本系统的导出,
+                         * 明文密码不可能出现在这里。形状检查除了给人"校验过了"的错觉,什么也查不到 ——
+                         * 真正会出事的是 salt 变了,那由上面的指纹判定负责。
+                         */
+                        if (key === "users" && saltState === "mismatch") {
+                            const plain = this.randomPassword();
+                            data.password = this._app.settings.passwordHash(plain);
+                            resetCredentials.push({ username: String(data.username ?? item.id), password: plain });
+                        }
+                        await model.restore(data);
                         imported++;
                     } catch (e: any) {
                         console.warn(`Import failed [${key}] id=${item.id}:`, e.message);
@@ -174,20 +241,43 @@ export default class SystemController extends Controller {
                 results[key] = { imported, failed };
             }
 
+            // Safety net for dumps that carry no `roles` rows (partial/legacy export): without
+            // this the site would have zero roles and only super_admin (hard-allowed in
+            // PolicyService) could do anything. No-op when the import brought its own roles.
+            await seedDefaultRbac(this._app);
+
             // Mark system as initialized. NOTE: system_config columns are configkey/configvalue
             // (not key/value); go through SetConfig so the write + cache stay consistent even when
             // the imported data already contained an is_initialized row.
             this.configModel.ClearCache();
             await this.configModel.SetConfig("is_initialized", "true");
 
-            return { code: 200, data: results, message: "Setup completed with imported data." };
+            // 日志只写**发生了什么**和**多少个**,绝不写明文密码 —— 日志会被转存、留存、翻阅。
+            if (saltState === "mismatch") {
+                console.warn(`[setup] PASSWORD_SALT differs from the export's; reset ${resetCredentials.length} ` +
+                    `account password(s). The one-time credentials are in the HTTP response only.`);
+            } else if (saltState === "unknown") {
+                console.warn("[setup] export has no salt fingerprint (pre-fingerprint dump); password hashes were " +
+                    "kept as-is. If nobody can sign in, PASSWORD_SALT differs from the source site.");
+            }
+            return {
+                code: 200,
+                data: results,
+                saltState,
+                /** 仅此一次:重置出来的明文凭据。前端必须显示,否则导入模式下没人能登录。 */
+                resetCredentials,
+                message: "Setup completed with imported data.",
+            };
         }
 
         // ── Default cold-start seed: demonstrate every feature with usable examples ──
         const hash = this._app.settings.passwordHash;
 
+        // RBAC first: the demo users below reference role names, and the demo category grant
+        // below needs the `editor` role's id.
+        await seedDefaultRbac(this._app);
+
         // Users: the super admin (from the wizard) + a demo editor to show RBAC "own" scope.
-        // Roles themselves (super_admin/admin/editor/author) are seeded at boot by seedRbac().
         await this.userModel.create({ nickname: adminUsername, username: adminUsername, password: hash(adminPassword), role: "super_admin" }); // id 1
         await this.userModel.create({ nickname: "Demo Editor", username: "editor", password: hash("editor123"), role: "editor" });          // id 2
 
@@ -248,15 +338,16 @@ export default class SystemController extends Controller {
             ]
         });
 
-        // Seed content was created via raw model calls (no content hooks) — build the static site now.
-        await staticgen.regenerateAll();
+        // SSG is currently unwired (see index.ts step 8) — nothing to build here. When it comes
+        // back, this seed content is created via raw model calls (no content hooks), so setup has
+        // to kick off the initial build itself: `await staticgen.regenerateAll();`
 
         return { code: 200, message: "Setup completed successfully." };
     }
 
     @Route("get", "/export")
     async exportData(ctx) {
-        if (ctx.state.user?.role !== "super_admin") {
+        if (!policy.isSuper(ctx.state)) {
             return { code: 403, message: "Permission Denied. super_admin required." };
         }
 
@@ -267,16 +358,18 @@ export default class SystemController extends Controller {
         await Promise.all(allModels.map(async (model) => {
             const key = model.tablename;
             try {
-                const records = await model.read({});
-                // Special handling: encrypt user passwords
-                if (key === "users") {
-                    exportData[key] = records.map(u => ({
-                        ...u,
-                        password: u.password ? this.encrypt(u.password) : "",
-                    }));
-                } else {
-                    exportData[key] = records;
-                }
+                /**
+                 * 全表原样导出,**密码也原样** —— 存的本来就是 `HMAC-SHA256(env PASSWORD_SALT)` 的
+                 * 哈希,不是明文。
+                 *
+                 * 从前这里把哈希再用 AES-256-CBC 加密一层,密钥是源码里的字面量、IV 全零。那不是保护,
+                 * 是伪装:任何拿到源码的人都能解开,而它却让人以为"密码被加密了"。真正的保护在于
+                 * salt 只在 `.env` 里、**不在导出文件里** —— 拿到文件也无法离线爆破。
+                 *
+                 * 结论:导出哈希是正常做法(`mysqldump` 也如此),那层 AES 是纯粹的复杂度。
+                 * 但导出文件仍应按敏感文件对待:它 + `.env` 一起泄漏 = 可离线爆破。
+                 */
+                exportData[key] = await model.read({});
             } catch (e: any) {
                 console.warn(`Export read failed for [${key}]:`, e.message);
                 exportData[key] = [];
@@ -287,9 +380,11 @@ export default class SystemController extends Controller {
             code: 200,
             data: {
                 _meta: {
-                    version: "1.0",
+                    version: "1.1",   // 1.1 起带 saltFingerprint
                     exportedAt: new Date().toISOString(),
                     generator: "NFCMS",
+                    /** 见 saltFingerprint():证明这些密码哈希是用哪个 salt 算的,不泄露 salt。 */
+                    saltFingerprint: this.saltFingerprint(),
                 },
                 ...exportData,
             }

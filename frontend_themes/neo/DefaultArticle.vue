@@ -1,29 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { marked } from 'marked';
+import { scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
-const { config, article, breadcrumbs } = props.context || {};
-const router = useRouter();
+scrollToTopOnEnter();
+const { article, breadcrumbs } = props.context || {};
 
 const renderedContent = computed(() => {
   if (!article?.content) return '';
-  return marked.parse(article.content);
+  return marked.parse(article.content) as string;
 });
 </script>
 
 <template>
   <main class="article-main">
-    <div class="breadcrumbs">
-      <span @click="router.push('/')">首页</span>
+    <nav class="breadcrumbs">
+      <a href="/">首页</a>
       <template v-for="crumb in breadcrumbs" :key="crumb.id">
         <span class="sep">/</span>
-        <span @click="router.push(`/a/${crumb.slug}`)">{{ crumb.name }}</span>
+        <a :href="`/a/${crumb.slug}`">{{ crumb.name }}</a>
       </template>
       <span class="sep">/</span>
       <span class="current">{{ article?.title }}</span>
-    </div>
+    </nav>
 
     <article class="article-body">
       <header class="article-header">
@@ -39,7 +39,7 @@ const renderedContent = computed(() => {
         <img :src="article.thumbnail" alt="">
       </div>
 
-      <div class="content" v-html="renderedContent"></div>
+      <div class="content neo-prose" v-html="renderedContent"></div>
     </article>
   </main>
 </template>
@@ -51,6 +51,11 @@ const renderedContent = computed(() => {
   padding: 3rem 2rem;
   width: 100%;
 }
+.breadcrumbs { font-family: 'Space Mono', monospace; font-size: 0.85rem; }
+.breadcrumbs a { color: var(--ink); text-decoration: underline wavy var(--accent) 1px; text-underline-offset: 3px; }
+.breadcrumbs a:hover { color: var(--accent); }
+.breadcrumbs .sep { margin: 0 8px; color: var(--border-light); }
+.breadcrumbs .current { color: rgba(28,28,28,.6); }
 .article-header h1 {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-size: 4.5rem;
@@ -71,18 +76,10 @@ const renderedContent = computed(() => {
   border-bottom: 3px solid var(--ink);
 }
 .featured-image img { width: 100%; display: block; }
+/* 外观全在 prose.css 的 .neo-prose 里;这里只定尺度(行宽 / 基准字号)。 */
 .content {
-  max-width: 680px;
+  --prose-measure: 680px;
+  --prose-size: 1.2rem;
   margin-left: 0; /* 偏左不对称 */
-  font-size: 1.2rem;
-  line-height: 1.6;
-}
-.content :deep(h2) { font-family: 'Bricolage Grotesque'; margin-top: 3rem; }
-.content :deep(blockquote) {
-  border-left: 12px solid var(--accent);
-  background: var(--surface);
-  padding: 1.5rem;
-  box-shadow: 6px 6px 0 var(--ink);
-  margin: 2rem 0;
 }
 </style>

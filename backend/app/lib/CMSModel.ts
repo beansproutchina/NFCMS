@@ -3,6 +3,7 @@ import { assert, ForbiddenError, BadRequestError } from "dyapi/utils/error.js";
 import { policy } from "../services/PolicyService.js";
 import { revisions } from "../services/RevisionService.js";
 import { hooks } from "../services/HookManager.js";
+import { mergeFilter } from "../utils/filters.js";
 
 /**
  * Base class for CMS content models. RBAC (PolicyService) is the SOLE authority here:
@@ -24,9 +25,31 @@ export class CMSModel extends Model {
      *  (PolicyService cascades a category grant to that category's article subtree). */
     categoryField: string | null = null;
 
+    /**
+     * 这个模型上**真的会被 RBAC 判定**的动作 —— 权限矩阵只该列出这些。
+     *
+     * 存在的理由:后台的权限面板过去把所有注册模型、所有动作、两种 scope 都列出来,而引擎只认
+     * CMSModel;给 `users`、`menus` 配一行权限写了等于没写,给没有 `ownerField` 的模型配 `own`
+     * 也是静默无效。判据必须由模型自己给出(它才知道自己有没有生命周期字段、有没有属主列),
+     * 不能靠面板去猜、更不能靠读源码才知道的规则。
+     *
+     * `publish` 只在有生命周期字段的模型上有意义(附件没有 status,发布无从谈起)。
+     */
+    get rbacActions(): string[] {
+        const base = ["C", "R", "U", "D"];
+        const hasLifecycle = this.datafields?.some?.((f: any) => f.name === "status");
+        return hasLifecycle ? [...base, "publish"] : base;
+    }
+
     /** Lifecycle-managed fields: never writable via generic CRUD; only the lifecycle
-     *  controller / scheduler may change them (via raw update). */
-    lifecycleFields: string[] = ["status", "publish_at", "rev_version"];
+     *  controller / scheduler may change them (via raw update).
+     *
+     *  `access_eff` is the受众轴 derived value (see docs/public-access.md): it is computed from
+     *  the row's own `audience`/`teaser` plus its category chain, so accepting it from a request
+     *  body would let a client hand itself visibility. Author intent (`audience`/`teaser`) stays
+     *  writable — only the derivation is protected. Listing a field a subclass doesn't declare is
+     *  harmless (writableKeys filters over `datafields`). */
+    lifecycleFields: string[] = ["status", "publish_at", "rev_version", "access_eff"];
 
     private writableKeys(): string[] {
         return this.datafields
@@ -61,7 +84,16 @@ export class CMSModel extends Model {
         for (const raw of items) {
             const item: any = {};
             for (const k of this.writableKeys()) if (raw[k] !== undefined) item[k] = raw[k];
-            if (forceOwner) item[this.ownerField as string] = state.user?.id;
+            /**
+             * 属主列**一律**落到创建者身上:受限创建者是强制(不许伪造他人),全站创建者是
+             * 缺省(没显式给就是自己)。
+             *
+             * 以前只有 `forceOwner` 那一支写属主,于是站点级创建者建的行属主为空 —— 谁的
+             * `own` 都匹配不上。"own 只对一部分行生效"比"own 不生效"更难查。
+             */
+            if (this.ownerField && (forceOwner || item[this.ownerField] === undefined)) {
+                item[this.ownerField as string] = state.user?.id;
+            }
             // Re-check with the concrete item so category-scoped users can only create in a
             // category they're granted (no-op for "any"/"own"-owner creators).
             assert(await policy.can(state, "C", this, item), ForbiddenError, "没有该分类的权限");
@@ -96,12 +128,4 @@ export class CMSModel extends Model {
         await this.remove({ id });
         return { code: 200 };
     }
-}
-
-/** AND two filter objects. Uses $and1/$and2 so keys never collide. */
-function mergeFilter(a: any, b: any): any {
-    const ae = a && Object.keys(a).length > 0;
-    const be = b && Object.keys(b).length > 0;
-    if (ae && be) return { $and1: a, $and2: b };
-    return ae ? a : be ? b : {};
 }

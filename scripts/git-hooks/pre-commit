@@ -1,0 +1,30 @@
+#!/bin/sh
+# Commit gate. Install with: git config core.hooksPath scripts/git-hooks
+# (frontend/package.json's `prepare` script does this on `npm install`.)
+#
+# Bypass with `git commit --no-verify` — that is git's own escape hatch and deliberately left open.
+# The gate's job is to make bypassing an explicit choice, not to be impossible to bypass. To accept a
+# violation permanently, add it to frontend/scripts/lint-baseline.json instead: that file goes
+# through review, a `--no-verify` does not.
+set -e
+
+# Nothing staged under frontend/ → nothing this gate can say anything about.
+if ! git diff --cached --name-only | grep -q '^frontend/'; then
+  exit 0
+fi
+
+cd "$(git rev-parse --show-toplevel)/frontend"
+
+echo "→ design-system rules"
+node scripts/lint-admin.mjs
+
+echo "→ types"
+npx vue-tsc --noEmit -p tsconfig.app.json --noCheck false
+
+# `vue-tsc` is not enough on its own: it accepted a malformed `<Checkbox … //>` and a duplicate
+# `:class` that only the Vue template compiler rejects, so the build is a separate gate, not a
+# duplicate of the type check.
+echo "→ build"
+npm run build --silent >/dev/null
+
+echo "✓ gate passed"

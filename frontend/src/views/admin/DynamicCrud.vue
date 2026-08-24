@@ -1,11 +1,11 @@
 <template>
-  <div class="max-w-7xl mx-auto py-10 w-full px-6">
-    <div class="flex justify-between items-end mb-8">
+  <div :class="PAGE.container">
+    <div :class="PAGE.header">
       <div>
-        <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ schemaName }} Management</h1>
-        <p class="text-[rgba(0,0,0,0.5)]">Managing records dynamically.</p>
+        <h1 :class="PAGE.title">{{ schemaName }} Management</h1>
+        <p class="text-label-3">Managing records dynamically.</p>
       </div>
-      <Button unstyled @click="openForm()" class="bg-apple-blue hover:bg-[#0066cc] text-white px-5 py-2.5 rounded-[980px] font-medium transition-colors">
+      <Button unstyled @click="openForm()" :class="BTN.primary">
         New Record
       </Button>
     </div>
@@ -22,26 +22,26 @@
       <!-- Dynamic rendering based on field arrays -->
       <template v-for="f in displayFields" :key="f.name" #[f.name]="{ data }">
           <span class="truncate max-w-[200px] block" v-if="f.type !== 'boolean'">{{ data[f.name] }}</span>
-          <span v-else class="px-2 py-1 rounded text-[12px] uppercase font-medium bg-gray-100">{{ data[f.name] ? 'Yes' : 'No' }}</span>
+          <span v-else class="px-2 py-1 rounded-chip text-small uppercase font-medium bg-canvas">{{ data[f.name] ? 'Yes' : 'No' }}</span>
       </template>
 
       <template #actions="{ data }">
-        <div class="flex justify-end gap-3 text-[14px]">
-          <Button unstyled @click="openForm(data)" class="text-apple-blue hover:underline">Edit</Button>
-          <Button unstyled @click="deleteRecord(data)" class="text-red-500 hover:underline">Delete</Button>
+        <div class="flex justify-end gap-3 text-body">
+          <Button unstyled @click="openForm(data)" :class="LINK.action">Edit</Button>
+          <Button unstyled @click="deleteRecord(data)" :class="LINK.danger">Delete</Button>
         </div>
       </template>
     </SmartTable>
 
 
     <!-- Modal Form -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(0,0,0,0.4)] backdrop-blur-sm overflow-y-auto pt-20 pb-20">
-      <div class="bg-white rounded-[12px] w-full max-w-2xl shadow-2xl p-8 relative">
-        <h2 class="text-[28px] font-display font-semibold mb-6 tracking-tight">{{ isEditing ? 'Edit Record' : 'New Record' }}</h2>
+    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim backdrop-blur-sm overflow-y-auto pt-20 pb-20">
+      <div class="bg-white rounded-card w-full max-w-2xl shadow-2xl p-8 relative">
+        <h2 class="text-[28px] font-semibold mb-6 tracking-tight">{{ isEditing ? 'Edit Record' : 'New Record' }}</h2>
         
         <form @submit.prevent="saveRecord" class="space-y-5">
           <div v-for="field in currentSchema?.fields || []" :key="field.name">
-            <label class="block text-[15px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ field.name }} <span v-if="field.type" class="text-[12px] text-gray-400">({{ field.type }})</span></label>
+            <label :class="LABEL">{{ field.name }} <span v-if="field.type" :class="TEXT.caption">({{ field.type }})</span></label>
             
             <InputText unstyled v-if="field.type === 'string' || field.type === 'date'"
                    v-model="formData[field.name]"
@@ -52,19 +52,19 @@
                    :class="INPUT_CLASS" />
                    
             <label v-else-if="field.type === 'boolean'" class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" v-model="formData[field.name]" class="w-5 h-5 accent-apple-blue text-apple-blue border-gray-300 rounded focus:ring-2 focus:ring-apple-blue">
-              <span class="text-[15px] text-[#1d1d1f]">Enabled/True</span>
+              <Checkbox unstyled v-model="formData[field.name]" binary :pt="CHECKBOX_PT"/>
+              <span class="text-body text-label">Enabled/True</span>
             </label>
 
             <Textarea unstyled v-else-if="field.type === 'object'" 
                       v-model="formData[field.name]" 
-                      class="w-full min-h-[120px] p-4 border border-[#d2d2d7] rounded-[8px] focus:border-apple-blue focus:ring-1 font-mono text-[13px]"
+                      :class="TEXTAREA_CLASS_MONO"
                       placeholder="{}"></Textarea>
           </div>
           
-          <div class="flex justify-end gap-3 pt-6 mt-8 border-t border-[rgba(0,0,0,0.05)]">
-            <Button unstyled type="button" @click="showModal = false" class="px-6 py-2.5 rounded-[980px] hover:bg-[#f5f5f7] text-[#1d1d1f] transition-colors font-medium">Cancel</Button>
-            <Button unstyled type="submit" class="bg-apple-blue hover:bg-[#0066cc] text-white px-6 py-2.5 rounded-[980px] transition-colors font-medium">Save Record</Button>
+          <div class="flex justify-end gap-3 pt-6 mt-8 border-t border-separator-weak">
+            <Button unstyled type="button" @click="showModal = false" :class="BTN.secondary">Cancel</Button>
+            <Button unstyled type="submit" :class="BTN.primary">Save Record</Button>
           </div>
         </form>
       </div>
@@ -73,12 +73,19 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import { useConfirm } from 'primevue/useconfirm';
 
 
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { schemaAPI, crud } from '../../api';
-import { INPUT_CLASS } from '../../ui/presets';
+import { BTN, CHECKBOX_PT, INPUT_CLASS, LABEL, LINK, PAGE, TEXT, TEXTAREA_CLASS_MONO } from '../../ui/presets';
+import Checkbox from 'primevue/checkbox';
+import Button from 'primevue/button';
+import SmartTable from '../../components/SmartTable.vue';
+const confirm = useConfirm();
+const { t } = useI18n();
 
 const route = useRoute();
 const schemaName = computed(() => route.params.modelName as string);
@@ -155,18 +162,24 @@ const saveRecord = async () => {
         showModal.value = false;
         fetchSchemaAndData();
     } catch (e) {
-        alert('Save failed');
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
         console.error(e);
     }
 };
 
 const deleteRecord = async (id: string|number) => {
-    if (!confirm('Delete this record forever?')) return;
-    try {
-        await crud(currentSchema.value.routePath).remove(id);
-        fetchSchemaAndData();
-    } catch (e) {
-        alert('Delete failed');
-    }
+    confirm.require({
+        header: t('confirm.title'), message: t('confirm.deleteRecord'),
+        accept: async () => {
+            try {
+                await crud(currentSchema.value.routePath).remove(id);
+                fetchSchemaAndData();
+            } catch (e) {
+                // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+                console.error(e);
+            }
+        },
+    });
 };
 </script>

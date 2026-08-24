@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LINK, PAGE, TEXT } from '../../ui/presets';
 import { ref, onMounted } from 'vue';
 import SmartTable from '../../components/SmartTable.vue';
 import { schemaAPI } from '../../api';
@@ -25,10 +26,10 @@ onMounted(fetchSchemas);
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex justify-between items-end mb-8">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.schemas') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.schemas') }}</h1>
             </div>
         </div>
 
@@ -44,16 +45,16 @@ onMounted(fetchSchemas);
             ]"
         >
             <template #modelName="{ data }">
-                <span class="font-semibold text-apple-text-dark text-[17px] tracking-tight">{{ data.modelName }}</span>
+                <span class="font-semibold text-label text-title-item tracking-tight">{{ data.modelName }}</span>
             </template>
             <template #routePath="{ data }">
-                <span class="text-gray-500 font-mono text-[14px]">/api/{{ data.routePath }}</span>
+                <span class="font-mono" :class="TEXT.muted">/api/{{ data.routePath }}</span>
             </template>
             <template #fields="{ data }">
-                <span class="bg-[#f5f5f7] px-3 py-1 rounded-[6px] text-[13px] font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
+                <span class="bg-canvas px-3 py-1 rounded-control text-small font-medium">{{ data.fields.length }} <span class="opacity-50">fields</span></span>
             </template>
             <template #actions="{ data }">
-                <router-link :to="`/admin/crud/${data.routePath}`" class="text-apple-blue hover:underline font-medium text-[14px]">
+                <router-link :to="`/admin/crud/${data.routePath}`" class="font-medium" :class="LINK.action">
                     Manage Data
                 </router-link>
             </template>

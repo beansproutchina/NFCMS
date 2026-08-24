@@ -18,6 +18,9 @@ import { useAuthStore } from '../../stores/auth';
 import DefaultHome from './templates/DefaultHome.vue';
 import DefaultCategory from './templates/DefaultCategory.vue';
 import DefaultArticle from './templates/DefaultArticle.vue';
+// 框架兜底的 gate 页。刻意放在 templates/ 之外 —— 那个目录会被主题整体覆盖(Dockerfile.single)。
+import BuiltinAccessGate from './AccessGate.vue';
+import { info as themeInfo } from './templates/theme.config';
 
 const NestedLayouts = defineComponent({
   props: ['layouts', 'context'],
@@ -70,6 +73,9 @@ const defaultTemplates: Record<string, any> = {
   category: DefaultCategory,
   article: DefaultArticle,
 };
+
+/** 受众轴的 gate 页模板名(主题可用 `info.accessGate` 换名)。 */
+const isAccessGate = (name: string) => name === ((themeInfo as any)?.accessGate || 'AccessGate');
 
 // 从 fetchedData 构建 context
 const context = computed(() => {
@@ -132,7 +138,11 @@ async function resolveTemplate() {
   const viewType = route.meta.viewType as string;
   const templateName = fetchedData.templateName || 'DefaultHome';
   const layouts = fetchedData.layouts || [];
-  const defaultTemplate = defaultTemplates[viewType] || DefaultHome;
+  // 受众轴的 gate 页有专属兜底:回落到 DefaultArticle 会渲染一个没有正文的空文章页,而这里
+  // 需要的是登录引导。主题在自己目录里放 AccessGate.vue 即可覆盖(loadComponent 优先用主题的)。
+  const defaultTemplate = isAccessGate(templateName)
+    ? BuiltinAccessGate
+    : (defaultTemplates[viewType] || DefaultHome);
 
   // Only (re)build the layout chain when it changes between navigations. Rebuilding it every time
   // would remount the layout — and with it the header + logo <img> — causing a visible flash.

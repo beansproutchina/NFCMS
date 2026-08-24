@@ -11,8 +11,14 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import { systemAPI, contentAPI, crud, listMenu } from '../api';
-import { pages } from '../views/front/templates/theme.config';
+import { pages, info as themeInfo } from '../views/front/templates/theme.config';
 import { useAuthStore } from '../stores/auth';
+
+/**
+ * 受众轴的 gate 页模板名。主题可用 `info.accessGate` 指定自己的实现;缺省走约定名
+ * `AccessGate`,而主题若没提供该文件,DynamicView 的 loadComponent 会回落到框架内置的兜底组件。
+ */
+const accessGateTemplate = () => (themeInfo as any)?.accessGate || 'AccessGate';
 
 NProgress.configure({ showSpinner: false, speed: 400 });
 
@@ -36,6 +42,14 @@ const PREFETCH_APIS: Record<string, (...args: any[]) => Promise<any>> = {
 
 /** Themes may abbreviate the namespace: `crud.getList` == `crudAPI.getList`. */
 const PREFETCH_ALIASES: Record<string, string> = { crud: 'crudAPI', content: 'contentAPI', system: 'systemAPI' };
+
+/**
+ * How long a prefetch may wait for a `$data.x` value that another prefetch still has to publish.
+ * Only ever spent when a dependency is genuinely in flight: a waiter bails out early once every
+ * remaining prefetch is also waiting, so a mistyped key costs no wall-clock time at all.
+ */
+const PREFETCH_WAIT_MS = 3000;
+const PREFETCH_POLL_MS = 5;
 
 function resolvePrefetchApi(name: string): ((...args: any[]) => Promise<any>) | undefined {
     const [ns, method] = String(name).split('.');
@@ -85,7 +99,10 @@ const fetchContentData = async (to: any) => {
     // 1. 根据viewType获取基础内容并确定需要的模板
     try {
         if (viewType === 'home') {
-            templateName = baseData.config.home_template || 'DefaultHome';
+            // 模板入口由**主题**声明(theme.config 的 `info.home`),不再读站点配置 `home_template`:
+            // 站点配置跨主题存活,而模板名是主题的内部资产 —— 换主题后旧值就悬空了。
+            // 见 docs/public-access.md §6「模板入口声明归主题」。
+            templateName = themeInfo.home || 'DefaultHome';
         } else if (viewType === 'category') {
             templateName = 'DefaultCategory';
             const slug = to.params.category_slug as string;
@@ -108,6 +125,11 @@ const fetchContentData = async (to: any) => {
                 if (res.data.template) {
                     templateName = res.data.template;
                 }
+                // 受众轴:后端判定为 `locked` 的内容会带着摘要 + `locked:true` 返回 200(不是 403 ——
+                // 那样会触发全局错误 toast,而这里要的是页面内的登录引导)。整条渲染通路不变,
+                // 只把模板换成 gate 页,于是它照常套主题的 layout 链与标题解析。
+                // 见 docs/public-access.md §6。
+                if (res.data.locked) templateName = accessGateTemplate();
             } else {
                 to.meta.fetchedData = { ...baseData, success: false, error: res.message || 'Error loading article' };
                 return;
@@ -140,9 +162,34 @@ const fetchContentData = async (to: any) => {
         }
     }
     
+    /**
+     * Live view of prefetch results, published the moment each one lands.
+     *
+     * This is what makes a prefetch able to depend on an earlier prefetch's output — e.g. fetch a
+     * category by slug, then list articles with `filter: { category_id: '$data.thatKey.id' }`.
+     * `extraData` cannot serve that purpose: it is only filled after `Promise.all` below, so a
+     * waiter reading it would block on a result that, in turn, waits for the waiter.
+     *
+     * `PREFETCH_DEPTH_LIMIT` bounds how long a dependent may wait. `blocked` / `pending` let a
+     * waiter give up the instant no runnable prefetch is left, so a bad key costs nothing instead
+     * of burning the whole budget.
+     */
+    const live: Record<string, any> = {};
+    const liveOwner: Record<string, number> = {};   // fetchQueue index that published each key
+    const blocked = new Map<number, number>();      // fetchQueue index → how many of its args wait
+    let pending = fetchQueue.length;
+
+    const publish = (key: string, data: any, idx: number) => {
+        if (data === undefined || data === null) return;
+        // fetchQueue runs child → parent, so the lower index (child) wins — the same precedence the
+        // final merge into `extraData` applies. Without this, whichever request happened to finish
+        // last would win, making a duplicated key resolve differently run to run.
+        if (!(key in live) || idx < liveOwner[key]) { live[key] = data; liveOwner[key] = idx; }
+    };
+
     // Execute all prefetches in parallel. Since queue goes from child to parent,
     // later items (parent) shouldn't override earlier items (child) if they share a key.
-    const promises = fetchQueue.map(async (fetchInfo: any) => {
+    const promises = fetchQueue.map(async (fetchInfo: any, fetchIndex: number) => {
         try {
             const apiFn = resolvePrefetchApi(fetchInfo.api);
             if (!apiFn) console.warn(`[prefetch] unknown api "${fetchInfo.api}" — see PREFETCH_APIS in router/index.ts`);
@@ -155,29 +202,33 @@ const fetchContentData = async (to: any) => {
                         if (arg.startsWith('$params.')) return to.params[arg.split('.')[1]];
                         if (arg.startsWith('$data.')) {
                             const path = arg.split('.').slice(1);
-                            
-                            // Polling for the data resolution 
-                            let maxWait = 5000; // 5x1000ms max
-                            let waited = 0;
-                            while (waited < maxWait) {
-                                let val: any = { ...entityData, ...extraData };
-                                let valid = true;
-                                for (const k of path) {
-                                    if (val && typeof val === 'object' && k in val) {
-                                        val = val[k];
-                                    } else {
-                                        valid = false;
-                                        break;
-                                    }
+                            // `live` last: an already-published prefetch key beats a stale entity key.
+                            const scope = () => ({ ...entityData, ...extraData, ...live });
+
+                            let val = getByPath(scope(), path);
+                            if (val !== undefined) return val;
+
+                            // Not there yet — it may be another prefetch's output still in flight.
+                            const deadline = Date.now() + PREFETCH_WAIT_MS;
+                            blocked.set(fetchIndex, (blocked.get(fetchIndex) || 0) + 1);
+                            try {
+                                while (Date.now() < deadline) {
+                                    // Every prefetch still running is itself waiting → nobody can
+                                    // publish anything more. Give up now rather than at the deadline.
+                                    if (blocked.size >= pending) break;
+                                    await new Promise(r => setTimeout(r, PREFETCH_POLL_MS));
+                                    val = getByPath(scope(), path);
+                                    if (val !== undefined) return val;
                                 }
-                                if (valid && val !== undefined) return val;
-                                await new Promise(r => setTimeout(r, 1));
-                                waited += 1;
+                            } finally {
+                                const n = (blocked.get(fetchIndex) || 1) - 1;
+                                if (n > 0) blocked.set(fetchIndex, n); else blocked.delete(fetchIndex);
                             }
-                            // Default fallback if timeout
-                            let fallback: any = { ...entityData, ...extraData };
-                            for (const k of path) fallback = fallback ? fallback[k] : undefined;
-                            return fallback;
+                            // Deliberately loud: silently returning undefined drops the key from the
+                            // request (JSON.stringify omits it), which for a filter means "no filter"
+                            // — i.e. a page quietly showing everything instead of one category.
+                            console.warn(`[prefetch] "${arg}" never resolved for key "${fetchInfo.key}" — check the key name and that whatever provides it is prefetched too`);
+                            return undefined;
                         }
                     } else if (Array.isArray(arg)) {
                         return Promise.all(arg.map(resolveArgAsync));
@@ -198,10 +249,15 @@ const fetchContentData = async (to: any) => {
                 const meta = (res && (res.total !== undefined || res.pages !== undefined))
                     ? { total: res.total, pages: res.pages }
                     : undefined;
+                publish(fetchInfo.key, res.data, fetchIndex);   // let dependents proceed immediately
                 return { key: fetchInfo.key, data: res.data, meta };
             }
         } catch (e) {
             console.error('Prefetch error for', fetchInfo.key, e);
+        } finally {
+            // Whether it succeeded, failed or was skipped, this one can no longer publish anything —
+            // which is how a waiter learns that nothing runnable is left.
+            pending -= 1;
         }
         return { key: fetchInfo.key, data: null, meta: undefined };
     });
@@ -252,7 +308,6 @@ const routes: RouteRecordRaw[] = [
   { path: '/', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'home' } },
   { path: '/a/:category_slug/:article_slug', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'article' } },
   { path: '/a/:category_slug', component: () => import('../views/front/DynamicView.vue'), meta: { fetch: fetchContentData, viewType: 'category' } },
-  { path: '/preview', component: () => import('../views/front/Preview.vue') },
   ...customRoutes,
   
   // Setup & Auth
@@ -276,14 +331,24 @@ const routes: RouteRecordRaw[] = [
       { path: 'schemas', component: () => import('../views/admin/Schemas.vue') },
       { path: 'crud/:modelName', component: () => import('../views/admin/DynamicCrud.vue') },
       { path: 'files', component: () => import('../views/admin/Files.vue') },
-      { path: 'settings', component: () => import('../views/admin/Settings.vue') }
+      { path: 'settings', component: () => import('../views/admin/Settings.vue') },
+      // 我的资料:任何登录用户都能进(后端把读写锁在本人),不需要任何后台能力
+      { path: 'profile', component: () => import('../views/admin/Profile.vue') }
     ]
   }
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  // Without this, Vue Router keeps the previous page's scroll position on every navigation.
+  // New navigations start at the top; back/forward restore the saved position (delayed a little
+  // so the async-rendered content has height before we scroll to it); #hash jumps to the anchor.
+  scrollBehavior(to, _from, savedPosition) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth' };
+    if (savedPosition) return new Promise((resolve) => setTimeout(() => resolve(savedPosition), 300));
+    return { top: 0 };
+  },
 });
 
 router.beforeEach(async (to, from, next) => {
@@ -325,7 +390,9 @@ router.beforeEach(async (to, from, next) => {
     next('/login?redirect=' + encodeURIComponent(to.path));
   } else if (to.meta.requiresAuth && authStore.isAuthenticated) {
     const isSuper = authStore.isSuperAdmin;
-    const adminAllowedPaths = ['/admin', '/admin/articles', '/admin/articles/new', '/admin/files'];
+    // '/admin/profile' 必须在列:它是给**非超管**用的(改自己的用户名/昵称/密码),
+    // 漏了就会被下面这条重定向打回 /admin —— 需要它的人恰好一个都进不去。
+    const adminAllowedPaths = ['/admin', '/admin/articles', '/admin/articles/new', '/admin/files', '/admin/profile'];
     
     const isEditingArticle = to.path.startsWith('/admin/articles/edit/');
     const isAllowedForAdmin = adminAllowedPaths.includes(to.path) || isEditingArticle;

@@ -34,5 +34,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 NFCMS.tar.gz
+NFCMS-*.tar.gz
 .pack_filelist.tmp
 backend/static/ssg/*
+
+# pack.js 的部署实例配置(含明文密钥)+ 打包中间产物
+/.deploy/
+# pack.js 打包时快照进来的 dyapi 源码(随包发布,不进版本库)
+/vendor/

@@ -2,31 +2,38 @@
   <AdminModal :title="isEditing ? $t('action.edit') : $t('user.new')" widthClass="max-w-lg" @close="emit('close')" @save="save" :disableSave="!formData.username || (!isEditing && !formData.password)">
     <form @submit.prevent="save" class="space-y-5" id="user-form">
       <div>
-        <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.username') }} <span class="text-red-500">*</span></label>
+        <label :class="LABEL">{{ $t('form.username') }} <span class="text-danger">*</span></label>
         <InputText v-model="formData.username" unstyled :class="INPUT_CLASS" required/>
       </div>
       
       <div>
-        <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">
-            {{ $t('form.password') }} <span v-if="!isEditing" class="text-red-500">*</span>
-        </label>
-        <Password v-model="formData.password" unstyled :feedback="false" toggleMask fluid :inputProps="{ class: INPUT_CLASS, placeholder: isEditing ? $t('form.leaveBlankToKeep') : '', autocomplete: 'current-password' }" :pt="{ root: 'relative w-full', maskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4', unmaskIcon: 'absolute right-3 top-1/2 -translate-y-1/2 opacity-50 cursor-pointer w-4 h-4' }" />
+        <label :class="LABEL">{{ $t('form.nickname') }}</label>
+        <InputText v-model="formData.nickname" unstyled :class="INPUT_CLASS" />
       </div>
 
       <div>
-        <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('form.role') }} <span class="text-[12px] text-[rgba(0,0,0,0.45)]">({{ $t('roles.primaryRole') }})</span></label>
+        <label :class="LABEL">
+            {{ $t('form.password') }} <span v-if="!isEditing" class="text-danger">*</span>
+        </label>
+        <Password v-model="formData.password" unstyled :feedback="false" toggleMask fluid
+          :inputProps="{ class: PASSWORD_PT.inputClass, placeholder: isEditing ? $t('form.leaveBlankToKeep') : '', autocomplete: 'current-password' }"
+          :pt="PASSWORD_PT.pt" />
+      </div>
+
+      <div>
+        <label :class="LABEL">{{ $t('form.role') }} <span :class="TEXT.caption">({{ $t('roles.primaryRole') }})</span></label>
         <Select v-model="formData.role" :options="roleOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
       </div>
 
       <div>
-        <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-1">{{ $t('roles.additionalRoles') }} <span class="text-[12px] text-[rgba(0,0,0,0.45)]">({{ $t('roles.additionalHint') }})</span></label>
+        <label :class="LABEL">{{ $t('roles.additionalRoles') }} <span :class="TEXT.caption">({{ $t('roles.additionalHint') }})</span></label>
         <div class="flex flex-wrap gap-2">
-          <label v-for="r in roles.filter(x => x.name !== formData.role)" :key="r.id" class="flex items-center gap-1.5 px-2.5 py-1.5 border rounded-[8px] text-[13px] cursor-pointer transition-colors"
-            :class="additionalRoleIds.includes(r.id) ? 'bg-apple-blue text-white border-apple-blue' : 'border-[rgba(0,0,0,0.15)] hover:bg-[#f5f5f7]'">
+          <label v-for="r in roles.filter(x => x.name !== formData.role)" :key="r.id" class="flex items-center gap-1.5 px-2.5 py-1.5 border rounded-control text-small cursor-pointer transition-colors"
+            :class="additionalRoleIds.includes(r.id) ? 'bg-accent text-white border-accent' : 'border-separator hover:bg-canvas'">
             <input type="checkbox" :value="r.id" v-model="additionalRoleIds" class="hidden" />
             {{ r.label || r.name }}
           </label>
-          <span v-if="!roles.filter(x => x.name !== formData.role).length" class="text-[13px] text-[rgba(0,0,0,0.4)]">{{ $t('roles.noOtherRoles') }}</span>
+          <span v-if="!roles.filter(x => x.name !== formData.role).length" :class="TEXT.caption">{{ $t('roles.noOtherRoles') }}</span>
         </div>
       </div>
       <button type="submit" class="hidden"></button>
@@ -42,7 +49,7 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Select from 'primevue/select';
 import { listRole, listUserRole } from '../../api';
-import { SELECT_PT, INPUT_CLASS } from '../../ui/presets';
+import { INPUT_CLASS, LABEL, PASSWORD_PT, SELECT_PT, TEXT } from '../../ui/presets';
 
 const { t } = useI18n();
 
@@ -54,7 +61,9 @@ const props = defineProps<{
 
 const emit = defineEmits(['save', 'close']);
 
-const formData = ref<any>({ role: 'admin' });
+// 新建用户**不预选角色**:预选 admin 等于"点两下就建出一个管理员",是提权方向的默认值。
+// 由创建者显式选一个(后端 users.role 的字段默认值也已改成空串)。
+const formData = ref<any>({ role: '', nickname: '' });
 
 // Roles are loaded from the RBAC roles table so any defined role can be assigned.
 const roles = ref<any[]>([]);
@@ -62,12 +71,13 @@ const additionalRoleIds = ref<number[]>([]);   // user_roles beyond the primary
 const roleOptions = computed(() =>
     roles.value.length
         ? roles.value.map((r: any) => ({ label: r.label || r.name, value: r.name }))
-        : [{ label: t('role.admin') || 'Admin', value: 'admin' }, { label: t('role.super_admin') || 'Super Admin', value: 'super_admin' }]
+        // roles 表读不到时的兜底:只给 super_admin(唯一被代码硬依赖的角色名),不猜其它。
+        : [{ label: t('role.super_admin') || 'Super Admin', value: 'super_admin' }]
 );
 
 onMounted(async () => {
     try {
-        const res = await listRole({ limit: 999, orderBy: 'weight', orderDesc: true });
+        const res = await listRole({ limit: 999, orderBy: 'id' });
         roles.value = res.data || [];
     } catch (e) { console.error(e); }
     // Load this user's additional roles (user_roles) when editing.

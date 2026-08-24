@@ -1,18 +1,22 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.4)] backdrop-blur-sm p-4">
-    <div class="bg-white rounded-[12px] w-full shadow-2xl flex flex-col max-h-[90vh] relative" :class="widthClass">
-      <div class="p-6 border-b border-[rgba(0,0,0,0.05)] flex justify-between items-center">
-        <h2 class="text-[21px] font-display font-semibold">{{ title }}</h2>
-        <Button unstyled @click="$emit('close')" class="text-gray-400 hover:text-black focus:outline-none transition-colors">✕</Button>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm p-4">
+    <div class="bg-white rounded-card w-full shadow-2xl flex flex-col max-h-[90vh] relative" :class="widthClass">
+      <div class="p-6 border-b border-separator-weak flex justify-between items-center">
+        <h2 :class="SECTION_TITLE">{{ title }}</h2>
+        <Button unstyled @click="$emit('close')" :class="DIALOG_CLOSE">✕</Button>
       </div>
 
-      <div class="p-6 overflow-y-auto flex-1 bg-[#fafafc]">
+      <div class="p-6 overflow-y-auto flex-1 bg-surface">
         <slot></slot>
       </div>
 
-      <div class="p-6 border-t border-[rgba(0,0,0,0.05)] bg-white rounded-b-[12px] flex justify-end gap-3">
-        <Button @click="$emit('close')" unstyled class="px-5 py-2 border border-[rgba(0,0,0,0.15)] text-[rgba(0,0,0,0.8)] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)] focus:outline-none transition-colors font-medium border-transparent">{{ $t('action.cancel') || 'Cancel' }}</Button>
-        <Button @click="$emit('save')" unstyled class="px-5 py-2 bg-apple-blue text-white rounded-[8px] hover:bg-[#0077ED] disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors font-medium flex items-center justify-center gap-2" :disabled="disableSave">{{ saveText || $t('action.save') }}</Button>
+      <!-- Buttons come from BTN, never hand-written: this footer having its own padding and its own
+           borderless cancel is exactly why the two dialogs stopped matching. -->
+      <div class="p-6 border-t border-separator-weak bg-white rounded-b-card flex justify-end gap-3">
+        <Button @click="$emit('close')" unstyled :class="BTN.secondary">{{ cancelText || $t('action.cancel') || 'Cancel' }}</Button>
+        <!-- `hideSave` 给那些**动作不止一个**的对话框用(如定时发布:立即/更新/取消),它们把动作
+             放在正文里,footer 只留一个关闭。 -->
+        <Button v-if="!hideSave" @click="$emit('save')" unstyled :class="BTN.primary" :disabled="disableSave">{{ saveText || $t('action.save') }}</Button>
       </div>
     </div>
   </div>
@@ -20,6 +24,7 @@
 
 <script setup lang="ts">
 import Button from 'primevue/button';
+import { BTN, DIALOG_CLOSE, SECTION_TITLE } from '../ui/presets';
 
 defineProps({
   title: {
@@ -35,6 +40,16 @@ defineProps({
     default: false
   },
   saveText: {
+    type: String,
+    default: ''
+  },
+  /** 隐藏 footer 的主按钮 —— 正文里自带多个动作时用。 */
+  hideSave: {
+    type: Boolean,
+    default: false
+  },
+  /** 覆盖 footer 取消按钮的文字(如改成「关闭」,免得和「取消定时」撞车)。 */
+  cancelText: {
     type: String,
     default: ''
   }

@@ -62,7 +62,7 @@ const router = useRouter();
                 <span class="text-[12px] text-[rgba(0,0,0,0.48)] font-medium tracking-wide">
                     {{ item.published_at ? new Date(item.published_at).toLocaleDateString() : '-' }}
                 </span>
-                <Button unstyled class="bg-transparent text-apple-link rounded-[980px] border border-apple-link px-[15px] py-[8px] text-[14px] leading-[1.43] tracking-[-0.224px] cursor-pointer">
+                <Button unstyled class="bg-transparent text-link rounded-[980px] border border-link px-[15px] py-[8px] text-[14px] leading-[1.43] tracking-[-0.224px] cursor-pointer">
                     {{$t('front.readMore') }} &gt;
                 </Button>
             </div>

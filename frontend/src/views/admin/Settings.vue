@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted, watch } from 'vue';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Button from 'primevue/button';
+import Textarea from 'primevue/textarea';
 import { systemAPI, uploadAPI } from '../../api';
 import { LucideSave, LucideRefreshCw, LucideDownload, LucidePlug, LucideCheck, LucideX, LucideLoader, LucidePalette } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
-import { SELECT_PT, INPUT_CLASS, BTN } from '../../ui/presets';
+import { useConfirm } from 'primevue/useconfirm';
+import { BTN, CARD, FIELD_GROUP, INPUT_CLASS, LABEL_BARE, PAGE, SECTION_TITLE, SELECT_PT, TEXT, TEXTAREA_CLASS } from '../../ui/presets';
+import FileUploader from '../../components/FileUploader.vue';
 import * as activeTheme from '../front/templates/theme.config';
 import type { ThemeConfigField } from '../front/theme-runtime';
+const { t } = useI18n();
 
 // ─── Active theme's own config fields (theme_<name>_* keys) ──────────
 // The active theme declares these via `export const configSchema`; we render an editor for
@@ -34,7 +39,6 @@ const configsMap = ref<Record<string, string>>({
     subtitle: '',
     icp_record: '',
     mourning_mode: '0',
-    home_template: 'DefaultHome'
 });
 
 const loading = ref(true);
@@ -42,6 +46,7 @@ const saving = ref(false);
 const restarting = ref(false);
 const exporting = ref(false);
 const toast = useToast();
+const confirm = useConfirm();
 
 // ─── Storage Config ──────────────────────────────────────────────────
 // Stored as a single JSON key "storage_config" in system_config:
@@ -183,27 +188,33 @@ const saveSettings = async () => {
         };
         await systemAPI.saveConfig(payload);
         await fetchSettings();
-        toast.add({ severity: 'success', summary: 'Success', detail: '站点配置已保存', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.savedSettings'), life: 3000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '保存失败', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         saving.value = false;
     }
 };
 
 const restartBackend = async () => {
-    if (!confirm('确定要重启后端吗？')) return;
+    confirm.require({
+        header: t('confirm.title'), message: t('confirm.restartBackend'),
+        accept: async () => {
     restarting.value = true;
     try {
         await systemAPI.restart();
-        toast.add({ severity: 'success', summary: 'Success', detail: '后端正在重启，请稍后刷新页面', life: 5000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.restarting'), life: 5000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '重启失败', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         restarting.value = false;
     }
+        },
+    });
 };
 
 const handleExport = async () => {
@@ -222,10 +233,11 @@ const handleExport = async () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        toast.add({ severity: 'success', summary: 'Success', detail: '数据已导出', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Success', detail: t('toast.exported'), life: 3000 });
     } catch (e) {
         console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '导出失败', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         exporting.value = false;
     }
@@ -239,17 +251,18 @@ const testStorageConnection = async () => {
         const data = res.data;
         // The backend only returns a message on the 500 branch, which rejects into catch below;
         // a 2xx with success:false carries no detail, so fall back to a generic message here.
-        const error = data.success ? undefined : '连接测试未通过';
+        const error = data.success ? undefined : t('toast.connectionNotPassed');
         testResult.value = { success: data.success, error };
         toast.add({
             severity: data.success ? 'success' : 'error',
             summary: data.success ? 'Success' : 'Error',
-            detail: data.success ? '连接测试成功' : `连接失败: ${error}`,
+            detail: data.success ? t('toast.connectionOk') : `连接失败: ${error}`,
             life: 3000
         });
     } catch (e: any) {
         testResult.value = { success: false, error: e.message || 'Test failed' };
-        toast.add({ severity: 'error', summary: 'Error', detail: '连接测试失败', life: 3000 });
+        // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+        console.error(e);
     } finally {
         testing.value = false;
     }
@@ -268,12 +281,12 @@ onMounted(() => {
 
 <template>
     <div class="max-w-4xl mx-auto py-10 w-full px-6">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.settings') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.settings') }}</h1>
             </div>
             <div class="flex gap-4 items-center">
-                <Button :disabled="restarting" unstyled @click="restartBackend" :class="BTN.ghost">
+                <Button :disabled="restarting" unstyled @click="restartBackend" :class="BTN.secondary">
                     <LucideRefreshCw :size="16" :class="{'animate-spin': restarting}" /> {{ $t('action.restart')  }}
                 </Button>
                 <Button :disabled="saving" unstyled @click="saveSettings" :class="BTN.primary">
@@ -283,87 +296,84 @@ onMounted(() => {
         </div>
 
         <!-- General Site Config -->
-        <div class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
+        <div class="p-8 mb-6" :class="CARD">
             <div class="flex flex-col gap-6 mb-6" v-if="!loading">
 
-                <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.site_name') }}</label>
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.site_name') }}</label>
                     <InputText v-model="configsMap.site_name" unstyled placeholder="..." :class="INPUT_CLASS" />
                 </div>
 
-                <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.subtitle')}}</label>
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.subtitle')}}</label>
                     <InputText v-model="configsMap.subtitle" unstyled placeholder="..." :class="INPUT_CLASS" />
                 </div>
 
-                <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.icp_record') }}</label>
-                    <InputText v-model="configsMap.icp_record" unstyled placeholder="e.g. 京ICP备xxxxxxx号" :class="INPUT_CLASS" />
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.icp_record') }}</label>
+                    <InputText v-model="configsMap.icp_record" unstyled :placeholder="$t('form.icpPlaceholder')" :class="INPUT_CLASS" />
                 </div>
 
-                <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.mourning_mode')}}</label>
-                    <Select v-model="configsMap.mourning_mode" :options="[{label: '关闭', value: '0'}, {label: '开启 (全站置灰)', value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
+                <div class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">{{ $t('form.mourning_mode')}}</label>
+                    <Select v-model="configsMap.mourning_mode" :options="[{label: $t('form.mourningOff'), value: '0'}, {label: $t('form.mourningOn'), value: '1'}]" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
                 </div>
 
-                <div class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">前台首页渲染模版</label>
-                    <InputText v-model="configsMap.home_template" unstyled placeholder="DefaultHome" :class="INPUT_CLASS" />
-                </div>
 
             </div>
-            <div v-else class="text-[14px] opacity-60">Loading...</div>
+            <div v-else class="text-body opacity-60">Loading...</div>
         </div>
 
         <!-- Active Theme Config (theme_<name>_* keys declared by the theme) -->
-        <div v-if="!loading && themeConfigSchema.length" class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6">
+        <div v-if="!loading && themeConfigSchema.length" class="p-8 mb-6" :class="CARD">
             <div class="flex items-center gap-3 mb-2">
                 <LucidePalette :size="20" class="text-rose-500" />
-                <h2 class="text-[20px] font-semibold">{{ $t('form.themeSettings') }}</h2>
+                <h2 :class="SECTION_TITLE">{{ $t('form.themeSettings') }}</h2>
             </div>
-            <p class="text-[14px] text-[rgba(0,0,0,0.5)] mb-6">
+            <p class="mb-6" :class="TEXT.hint">
                 {{ $t('form.themeSettingsDesc') }}<span v-if="themeInfo.name"> · {{ themeInfo.name }}</span>
             </p>
 
             <div v-for="grp in themeConfigGroups" :key="grp.name" class="mb-6 last:mb-0">
-                <h3 v-if="grp.name" class="text-[15px] font-medium text-[rgba(0,0,0,0.7)] mb-3 pb-2 border-b border-[rgba(0,0,0,0.06)]">{{ grp.name }}</h3>
+                <h3 v-if="grp.name" class="font-medium mb-3 pb-2 border-b border-separator-weak" :class="TEXT.muted">{{ grp.name }}</h3>
                 <div class="flex flex-col gap-6">
-                    <div v-for="f in grp.fields" :key="f.key" class="flex flex-col gap-2 max-w-lg">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ f.label }}</label>
-                        <textarea v-if="f.type === 'textarea'" v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="INPUT_CLASS" rows="3"></textarea>
+                    <div v-for="f in grp.fields" :key="f.key" class="max-w-lg" :class="FIELD_GROUP">
+                        <label :class="LABEL_BARE">{{ f.label }}</label>
+                        <Textarea v-if="f.type === 'textarea'" unstyled v-model="themeConfig[f.key]" :placeholder="f.placeholder" :class="TEXTAREA_CLASS" />
+                        <!-- `image` gets a real uploader + library picker (it carries its own preview). -->
+                        <FileUploader v-else-if="f.type === 'image'" v-model="themeConfig[f.key]" accept="image/*" size="md" />
                         <InputText v-else v-model="themeConfig[f.key]" :type="f.type === 'number' ? 'number' : 'text'" unstyled :placeholder="f.placeholder" :class="INPUT_CLASS" />
-                        <img v-if="f.type === 'image' && themeConfig[f.key]" :src="themeConfig[f.key]" alt="preview" class="mt-1 max-h-16 w-auto rounded border border-[rgba(0,0,0,0.08)] bg-[#fafafa] object-contain" />
-                        <span v-if="f.hint" class="text-[12px] text-[rgba(0,0,0,0.45)]">{{ f.hint }}</span>
+                        <span v-if="f.hint" :class="TEXT.caption">{{ f.hint }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Storage Configuration -->
-        <div class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8 mb-6" v-if="!loading">
+        <div class="p-8 mb-6" :class="CARD" v-if="!loading">
             <div class="flex items-center gap-3 mb-2">
                 <LucidePlug :size="20" class="text-indigo-500" />
-                <h2 class="text-[20px] font-semibold">{{ $t('form.storageConfig')  }}</h2>
+                <h2 :class="SECTION_TITLE">{{ $t('form.storageConfig')  }}</h2>
             </div>
-            <p class="text-[14px] text-[rgba(0,0,0,0.5)] mb-6">{{ $t('form.storageConfigDesc') }}</p>
+            <p class="mb-6" :class="TEXT.hint">{{ $t('form.storageConfigDesc') }}</p>
 
             <!-- Provider Selector -->
-            <div class="flex flex-col gap-2 max-w-lg ">
-                <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.storageProvider')  }}</label>
+            <div class="max-w-lg" :class="FIELD_GROUP">
+                <label :class="LABEL_BARE">{{ $t('form.storageProvider')  }}</label>
                 <Select v-model="activeProvider" :options="storageProviders.map(p => ({ label: p.label, value: p.name }))" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
             </div>
 
             <!-- Current provider description -->
-            <div v-if="currentProviderMeta" class="text-[13px] text-[rgba(0,0,0,0.45)] mb-2 max-w-lg">
+            <div v-if="currentProviderMeta" class="mb-2 max-w-lg" :class="TEXT.caption">
                 {{ currentProviderMeta.description }}
             </div>
 
             <!-- Dynamic config fields for selected provider -->
             <div class="flex flex-col gap-5" v-if="currentFields.length > 0">
-                <div v-for="field in currentFields" :key="field.key" class="flex flex-col gap-2 max-w-lg">
-                    <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">
+                <div v-for="field in currentFields" :key="field.key" class="max-w-lg" :class="FIELD_GROUP">
+                    <label :class="LABEL_BARE">
                         {{ field.label }}
-                        <span v-if="field.required" class="text-red-400 ml-0.5">*</span>
+                        <span v-if="field.required" class="text-danger ml-0.5">*</span>
                     </label>
 
                     <!-- Select type -->
@@ -382,26 +392,26 @@ onMounted(() => {
 
             <!-- Test Connection Button -->
             <div class="flex items-center gap-3 mt-6">
-                <Button :disabled="testing" unstyled @click="testStorageConnection" :class="BTN.ghost">
+                <Button :disabled="testing" unstyled @click="testStorageConnection" :class="BTN.secondary">
                     <LucideLoader v-if="testing" :size="16" class="animate-spin" />
                     <LucidePlug v-else :size="16" />
                     {{ testing ? ($t('form.testing') ) : ($t('form.testConnection') ) }}
                 </Button>
-                <div v-if="testResult" class="flex items-center gap-1.5 text-[14px]">
+                <div v-if="testResult" class="flex items-center gap-1.5 text-body">
                     <LucideCheck v-if="testResult.success" :size="16" class="text-emerald-500" />
-                    <LucideX v-else :size="16" class="text-red-500" />
-                    <span :class="testResult.success ? 'text-emerald-600' : 'text-red-600'">
+                    <LucideX v-else :size="16" class="text-danger" />
+                    <span :class="testResult.success ? 'text-emerald-600' : 'text-danger'">
                         {{ testResult.success ? ($t('form.testSuccess') ) : ($t('form.testFailed') ) }}
                     </span>
-                    <span v-if="testResult.error" class="text-[rgba(0,0,0,0.4)] ml-1">- {{ testResult.error }}</span>
+                    <span v-if="testResult.error" class="text-label-3 ml-1">- {{ testResult.error }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Export Section -->
-        <div class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] p-8">
-            <h2 class="text-[20px] font-semibold mb-2">{{ $t('form.exportTitle')  }}</h2>
-            <p class="text-[14px] text-[rgba(0,0,0,0.6)] mb-6">{{ $t('form.exportDesc')  }}</p>
+        <div class="p-8" :class="CARD">
+            <h2 class="mb-2" :class="SECTION_TITLE">{{ $t('form.exportTitle')  }}</h2>
+            <p class="mb-6" :class="TEXT.muted">{{ $t('form.exportDesc')  }}</p>
 
             <div class="flex gap-4 items-start">
                 <Button :disabled="exporting" unstyled @click="handleExport" :class="BTN.primary">

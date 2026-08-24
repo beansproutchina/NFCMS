@@ -4,17 +4,20 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 
 import { uploadAPI } from '../../api';
-import { LucideUpload, LucideTrash, LucideFile, LucideEye, LucideSearch } from 'lucide-vue-next';
+import { LucideTrash, LucideFile, LucideEye, LucideSearch, LucideLink } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import { useI18n } from 'vue-i18n';
 import CustomPaginator from '../../components/CustomPaginator.vue';
-import { INPUT_CLASS, BTN } from '../../ui/presets';
+import FileUploader from '../../components/FileUploader.vue';
+import { BTN_ICON, BTN_SM, CARD, INPUT_CLASS, LABEL_BARE, PAGE, SEARCH, TEXT } from '../../ui/presets';
 
 const files = ref<any[]>([]);
 const totalRecords = ref(0);
 const loading = ref(true);
-const uploading = ref(false);
 const toast = useToast();
-const fileInput = ref<HTMLInputElement | null>(null);
+const confirm = useConfirm();
+const { t } = useI18n();
 
 const globalFilter = ref('');
 const lazyParams = ref({ page: 0, rows: 20 }); // Show 20 files per page
@@ -66,99 +69,106 @@ const onFilterChange = () => {
 
 watch(globalFilter, onFilterChange);
 
-const handleUpload = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-    
-    uploading.value = true;
-    const formData = new FormData();
-    for(let i=0; i<target.files.length; i++) {
-        formData.append('file', target.files[i]);
-    }
-
-    try {
-        await uploadAPI.upload(formData);
-        toast.add({ severity: 'success', summary: 'Success', detail: '文件上传成功', life: 3000 });
-        lazyParams.value.page = 0;
-        await fetchFiles();
-    } catch(e) {
-        console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '文件上传失败', life: 3000 });
-    } finally {
-        uploading.value = false;
-        if(fileInput.value) fileInput.value.value = '';
-    }
+// FileUploader owns the input + FormData + error toast; we only refresh the listing.
+const onUploaded = async () => {
+    lazyParams.value.page = 0;
+    await fetchFiles();
 };
 
-const deleteFile = async (id: number) => {
-    if(!confirm('确定要彻底删除该文件吗？')) return;
-    try {
-        await uploadAPI.remove(id);
-        toast.add({ severity: 'success', summary: 'Success', detail: '文件删除成功', life: 3000 });
-        await fetchFiles();
-    } catch(e) {
-        console.error(e);
-        toast.add({ severity: 'error', summary: 'Error', detail: '文件删除失败', life: 3000 });
-    }
-};
-
-const triggerUpload = () => {
-    fileInput.value?.click();
+const deleteFile = (id: number) => {
+    confirm.require({
+        header: t('confirm.title'),
+        message: t('action.confirmDelete'),
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: t('confirm.accept'),
+        rejectLabel: t('confirm.reject'),
+        accept: async () => {
+            try {
+                await uploadAPI.remove(id);
+                toast.add({ severity: 'success', summary: 'Success', detail: t('toast.fileDeleted'), life: 3000 });
+                await fetchFiles();
+            } catch(e) {
+                console.error(e);
+                // 错误提示统一由 api.ts 拦截器 → App.vue 的 app-error 弹出(后端消息比通用文案更有信息量)
+                console.error(e);
+            }
+        }
+    });
 };
 
 const openUrl = (url: string) => {
     window.open(url, '_blank');
 };
 
+// Copying needs a secure context (https / localhost); when it is unavailable we surface the
+// URL in a read-only field so it can still be selected by hand.
+const fallbackUrl = ref('');
+const copyLink = async (url: string) => {
+    try {
+        await navigator.clipboard.writeText(url);
+        fallbackUrl.value = '';
+        toast.add({ severity: 'success', summary: t('fileUploader.copied'), detail: url, life: 2500 });
+    } catch (e) {
+        console.error(e);
+        fallbackUrl.value = url;
+        toast.add({ severity: 'warn', summary: t('fileUploader.copyFailed'), life: 4000 });
+    }
+};
+
 onMounted(fetchFiles);
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto py-10 w-full px-6">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+    <div :class="PAGE.container">
+        <div :class="PAGE.header">
             <div>
-                <h1 class="text-[40px] font-semibold leading-[1.1] tracking-tight mb-2">{{ $t('system.files', '文件库') }}</h1>
+                <h1 :class="PAGE.title">{{ $t('system.files', '文件库') }}</h1>
             </div>
             
             <div class="flex gap-3 items-center">
                 <span class="relative">
-                    <LucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" :size="16" />
-                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, 'pl-9']" />
+                    <LucideSearch :class="SEARCH.icon" :size="16" />
+                    <InputText unstyled v-model="globalFilter" :placeholder="$t('action.search')" :class="[INPUT_CLASS, SEARCH.input]" />
                 </span>
-                <input type="file" ref="fileInput" @change="handleUpload" class="hidden" multiple />
-                <Button unstyled @click="triggerUpload" :disabled="uploading" :class="[BTN.primary, 'min-w-max']">
-                    <LucideUpload :size="16" /> {{ uploading ? '...' : $t('action.upload', '上传文件') }}
-                </Button>
+                <!-- This page *is* the library, so the "choose from library" path would be circular. -->
+                <FileUploader mode="button" multiple :library="false" @uploaded="onUploaded" />
             </div>
         </div>
 
-        <div v-if="loading && files.length === 0" class="text-[14px] opacity-60">Loading...</div>
+        <div v-if="fallbackUrl" class="mb-6 flex items-center gap-3 max-w-2xl">
+            <InputText unstyled readonly :model-value="fallbackUrl" :class="INPUT_CLASS" @focus="($event.target as HTMLInputElement).select()" />
+        </div>
+
+        <div v-if="loading && files.length === 0" class="text-body opacity-60">Loading...</div>
         
-        <div v-else-if="files.length === 0" class="text-center py-20 text-[rgba(0,0,0,0.5)] bg-white rounded-[12px] border border-[rgba(0,0,0,0.05)] shadow-[0px_5px_30px_rgba(0,0,0,0.06)]">
+        <div v-else-if="files.length === 0" class="text-center py-20 text-label-3" :class="CARD">
             {{ $t('system.noEntries', 'No entries found.') }}
         </div>
 
         <div v-else>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6 mb-6">
-                <div v-for="file in files" :key="file.id" class="bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)] group relative">
+                <div v-for="file in files" :key="file.id" class="group relative" :class="CARD">
                     
-                    <div class="h-40 bg-[#f5f5f7] flex items-center justify-center relative overflow-hidden">
+                    <div class="h-40 bg-canvas flex items-center justify-center relative overflow-hidden">
                         <img v-if="file.mime_type?.startsWith('image/')" :src="file.url" class="object-cover w-full h-full" />
-                        <LucideFile v-else :size="48" class="text-[rgba(0,0,0,0.2)]" />
+                        <LucideFile v-else :size="48" class="text-label-4" />
                         
-                        <div class="absolute inset-0 bg-[rgba(0,0,0,0.5)] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                            <Button unstyled @click.stop="openUrl(file.url)" class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-apple-blue hover:scale-110 transition-transform cursor-pointer" title="新窗口打开">
+                        <div class="absolute inset-0 bg-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                            <Button unstyled @click.stop="openUrl(file.url)" :class="BTN_ICON.plain" :title="$t('action.openInNewWindow')">
                                 <LucideEye :size="18" />
                             </Button>
-                            <Button unstyled @click.stop="deleteFile(file.id)" class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer" title="删除">
+                            <Button unstyled @click.stop="copyLink(file.url)" :class="BTN_ICON.plain" :title="$t('fileUploader.copyLink')">
+                                <LucideLink :size="18" />
+                            </Button>
+                            <Button unstyled @click.stop="deleteFile(file.id)" :class="BTN_ICON.danger" :title="$t('action.delete')">
                                 <LucideTrash :size="18" />
                             </Button>
                         </div>
                     </div>
                     
-                    <div class="p-4 border-t border-[rgba(0,0,0,0.05)]">
-                        <div class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] truncate" :title="file.filename">{{ file.filename }}</div>
-                        <div class="text-[12px] text-[rgba(0,0,0,0.5)] mt-1">{{ (file.size / 1024).toFixed(2) }} KB</div>
+                    <div class="p-4 border-t border-separator-weak">
+                        <div class="truncate" :class="LABEL_BARE" :title="file.filename">{{ file.filename }}</div>
+                        <div class="mt-1" :class="TEXT.caption">{{ (file.size / 1024).toFixed(2) }} KB</div>
                     </div>
                 </div>
             </div>

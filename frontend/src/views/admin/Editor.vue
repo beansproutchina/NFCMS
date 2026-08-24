@@ -1,21 +1,21 @@
 <script setup lang="ts">
 
-import { ref, onMounted, computed } from 'vue';
-import Textarea from 'primevue/textarea';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { getArticle, createArticle, updateArticle, lifecycleAPI, contentAPI, uploadAPI } from '../../api';
+import { marked } from 'marked';
+import { getArticle, createArticle, updateArticle, lifecycleAPI, uploadAPI } from '../../api';
 import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import DatePicker from 'primevue/datepicker';
 import Button from 'primevue/button';
-import { LucideChevronLeft, LucideEye, LucideSave, LucideCheck, LucideImage, LucideEyeOff, LucideClock, LucideRotateCcw } from 'lucide-vue-next';
+import { LucideChevronLeft, LucideSave, LucideLock, LucideRotateCcw, LucideSettings, LucideX } from 'lucide-vue-next';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useI18n } from 'vue-i18n';
-import { SELECT_PT, DATEPICKER_PT, INPUT_CLASS, BTN } from '../../ui/presets';
-import AclEditor from '../../components/AclEditor.vue';
+import { BTN, BTN_ICON, CARD, FIELD_GROUP, LABEL_BARE, LINK } from '../../ui/presets';
+import EditorPanel from './EditorPanel.vue';
+import ArticlePublishButton from './ArticlePublishButton.vue';
+import ArticleAccessPanel from './ArticleAccessPanel.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -29,21 +29,82 @@ const articleId = ref<string | number | null>(route.params.id ? (route.params.id
 // Content fields only. status/publish_at are lifecycle-managed on the backend (not sent here).
 const form = ref({
     category_id: 0, content_template: "", is_top: 0,
-    title: '', slug: '', description: '', thumbnail: '', content: ''
+    // 受众轴:'' = 继承栏目,-1 = teaser 继承栏目(见 docs/public-access.md §2)
+    audience: "", teaser: -1,
+    title: '', slug: '', description: '', thumbnail: '', content: '',
+    // 发布日期。**新建态必须留空** —— 留空 = 首次发布时由后端盖章;填了 = 作者补录旧文章的日期,
+    // 后端的 isBlankDate 守卫会保留它不覆盖。预填"今天"就等于把"发布时间=创建时间"那个 bug
+    // 从后端搬到前端。
+    published_at: null as Date | null,
+    data: {} as Record<string, any>   // custom fields declared by the category (article_data_fields)
 });
 const status = ref<string>('hidden');       // hidden | scheduled | visible
 const publishAt = ref<Date | null>(null);    // scheduled publish time
+const articleAuthorId = ref<any>(null);      // 只用于权限面板里的作者行
+
+/**
+ * DYAPI 会把空的 Date 列返回成**字符串 `"null"`**(和 `data` 字段返回 `'null'` 是同一个毛病),
+ * 而 `new Date("null")` 是 Invalid Date —— 直接喂给 DatePicker 就是满屏 NaN。
+ * 所以日期一律在边界处归一:非法值统一收成 `null`。
+ */
+const toDate = (v: any): Date | null => {
+    if (v == null || v === '' || v === 'null') return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+};
 const revisions = ref<any[]>([]);
+/** 「权限」面板 —— 独立弹窗,改动立即生效(见 docs/editor-access-panel.md)。 */
+const accessOpen = ref(false);
 
 const loading = ref(false);
 const categories = ref<any[]>([]);
 const categoryOptions = computed(() => { const opts = [{ label: '-', value: 0 }]; categories.value.forEach(c => opts.push({ label: c.name, value: c.id })); return opts; });
 
-const statusCls = computed(() => ({
-    hidden: 'bg-[#f3f4f6] text-[rgba(0,0,0,0.6)]',
-    scheduled: 'bg-[#fff7ed] text-[#c2410c]',
-    visible: 'bg-[#e0f2fe] text-[#0066cc]'
-}[status.value] || 'bg-gray-100'));
+// Custom field definitions for the selected category, derived from the categories we already
+// loaded — `manageableCategories` returns whole rows, so no extra request is needed.
+// article_data_fields arrives normalised by DYAPI as object | null | '' — collapse all three.
+// Being a computed, it also re-derives when the user switches category, without touching form.data.
+/** 当前分类行(带后端算好的 audience_eff / audience_from),权限面板据此禁用更宽松的档位。 */
+const currentCategory = computed(() =>
+    categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id)));
+
+/** 当前分类的祖先链 id(root→parent),用于展示级联下来的受众授权。 */
+const ancestorCategoryIds = computed(() => {
+    const byId = new Map(categories.value.map((c: any) => [Number(c.id), c]));
+    const out: number[] = [];
+    const seen = new Set<number>();
+    let id = Number(currentCategory.value?.parent_id) || 0;
+    while (id > 0 && byId.has(id) && !seen.has(id)) {
+        seen.add(id);
+        out.unshift(id);
+        id = Number(byId.get(id)!.parent_id) || 0;
+    }
+    return out;
+});
+
+/**
+ * 分类给作者的正文格式说明(`categories.editor_hint`),渲染在正文编辑器上方。
+ *
+ * 自定义字段靠 title 自解释,而"正文里该按什么格式写"以前没有任何地方能说 —— 比如 neo 主题的
+ * 成员页要求正文里有一个 `:::works` 块。内容由 super_admin 在分类里维护,和正文一样走 marked
+ * (同一处 v-html 风险面,已记在 CLAUDE.md 的待硬化清单)。为空时整块不渲染,不占位。
+ */
+const editorHint = computed(() => {
+    const cat = categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id));
+    const raw = String(cat?.editor_hint || '').trim();
+    return raw ? (marked.parse(raw) as string) : '';
+});
+
+const articleDataFields = computed(() => {
+    const cat = categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id));
+    const raw = cat?.article_data_fields;
+    const obj = (raw && typeof raw === 'object') ? raw as Record<string, any> : {};
+    return Object.entries(obj).map(([key, def]: [string, any]) => ({
+        key,
+        title: def?.title || key,
+        type: def?.type || 'text',
+    }));
+});
 
 onMounted(async () => {
     try {
@@ -61,9 +122,17 @@ const loadArticle = async () => {
     form.value = {
         title: item.title || '', slug: item.slug || '', description: item.description || '',
         thumbnail: item.thumbnail || '', content: item.content || '',
-        category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0
+        category_id: item.category_id || 0, content_template: item.content_template || '', is_top: item.is_top || 0,
+        audience: item.audience || '', teaser: item.teaser === undefined ? -1 : Number(item.teaser),
+        published_at: toDate(item.published_at),   // 未发布过 → null(库里也可能是文本 "null")
+        // `data` comes back as object | null | '' (DYAPI JSON.parse with a swallowed error) — normalise.
+        data: (item.data && typeof item.data === 'object') ? item.data : {}
     };
     status.value = item.status || 'hidden';
+    // 权限面板要显示"作者 · 始终可编辑"那一行(作者靠 own scope 生效,不在 resource_grants 里),
+    // 且 publish_at 决定定时按钮显示什么时间 —— 两者都不是表单字段,单独存。
+    articleAuthorId.value = item.author_id ?? null;
+    publishAt.value = toDate(item.publish_at);
 };
 
 const loadRevisions = async () => {
@@ -80,18 +149,30 @@ onMounted(async () => {
 
 const refresh = async () => { await loadArticle(); await loadRevisions(); };
 
+/**
+ * 出网前把 `published_at` 从 Date 归一成 ISO 串 / `null`。
+ *
+ * `null` 是这个字段的**合法值**(清空 = 退回"未发布",由首次发布重新盖章),但生成的输入类型
+ * 把日期列写成 `published_at?: string`,表达不了它 —— 而 `api.gen.ts` 是生成物,不能手改。
+ * 所以只对这一个字段做窄化断言,其余字段照旧受类型检查。
+ */
+const outbound = () => ({
+    ...form.value,
+    published_at: (form.value.published_at ? form.value.published_at.toISOString() : null) as unknown as string | undefined,
+});
+
 // Persist content fields (create or update). Returns the article id, or null on validation failure.
 const persist = async (): Promise<string | number | null> => {
     if (Number(form.value.category_id) === 0) {
-        toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择一个分类', life: 3000 });
+        toast.add({ severity: 'warn', summary: 'Warning', detail: t('validate.selectCategory'), life: 3000 });
         return null;
     }
     loading.value = true;
     try {
         if (articleId.value) {
-            await updateArticle(articleId.value, { ...form.value });
+            await updateArticle(articleId.value, outbound());
         } else {
-            const res = await createArticle({ ...form.value }); // author_id set server-side
+            const res = await createArticle(outbound()); // author_id set server-side
             articleId.value = res.id ?? null;         // HTTPCreate returns { code, id }
         }
         return articleId.value;
@@ -102,7 +183,7 @@ const persist = async (): Promise<string | number | null> => {
 
 const saveDraft = async () => {
     const id = await persist();
-    if (id) { toast.add({ severity: 'success', summary: 'Success', detail: '已保存', life: 2500 }); await loadRevisions(); }
+    if (id) { toast.add({ severity: 'success', summary: 'Success', detail: t('toast.saved'), life: 2500 }); await loadRevisions(); }
 };
 
 const publish = async () => {
@@ -110,7 +191,7 @@ const publish = async () => {
     if (!id) return;
     await lifecycleAPI.transition('articles', id, { to: 'visible' });
     status.value = 'visible';
-    toast.add({ severity: 'success', summary: 'Success', detail: '已发布', life: 2500 });
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.published'), life: 2500 });
     await refresh();
 };
 
@@ -118,28 +199,30 @@ const unpublish = async () => {
     if (!articleId.value) return;
     await lifecycleAPI.transition('articles', articleId.value, { to: 'hidden' });
     status.value = 'hidden';
-    toast.add({ severity: 'info', summary: 'Info', detail: '已隐藏', life: 2500 });
+    toast.add({ severity: 'info', summary: 'Info', detail: t('toast.hidden'), life: 2500 });
     await refresh();
 };
 
-const schedule = async () => {
-    if (!publishAt.value) { toast.add({ severity: 'warn', summary: 'Warning', detail: '请选择发布时间', life: 3000 }); return; }
+/** 时间由头部的发布按钮组件给(它自带选时间的对话框),这里只负责落库。 */
+const schedule = async (when: Date) => {
+    if (!when) return;
     const id = await persist();
     if (!id) return;
-    await lifecycleAPI.transition('articles', id, { to: 'scheduled', publish_at: publishAt.value.toISOString() });
+    await lifecycleAPI.transition('articles', id, { to: 'scheduled', publish_at: when.toISOString() });
     status.value = 'scheduled';
-    toast.add({ severity: 'success', summary: 'Success', detail: '已设为定时发布', life: 2500 });
+    publishAt.value = when;
+    toast.add({ severity: 'success', summary: 'Success', detail: t('toast.scheduled'), life: 2500 });
     await refresh();
 };
 
-const doPreview = async () => {
-    const id = await persist();
-    if (!id) return;
-    try {
-        const res = await contentAPI.previewToken(id);
-        const token = res.data?.token;
-        if (token) window.open(`/preview?id=${id}&pt=${encodeURIComponent(token)}`, '_blank');
-    } catch (e) { console.error(e); }
+/** 取消定时 = 退回草稿(同一个 transition 接口)。 */
+const cancelSchedule = async () => {
+    if (!articleId.value) return;
+    await lifecycleAPI.transition('articles', articleId.value, { to: 'hidden' });
+    status.value = 'hidden';
+    publishAt.value = null;
+    toast.add({ severity: 'info', summary: 'Info', detail: t('toast.scheduleCancelled'), life: 2500 });
+    await refresh();
 };
 
 const rollback = (versionNo: number) => {
@@ -152,7 +235,7 @@ const rollback = (versionNo: number) => {
         rejectLabel: t('confirm.reject'),
         accept: async () => {
             await lifecycleAPI.rollback('articles', articleId.value, versionNo);
-            toast.add({ severity: 'success', summary: 'Success', detail: `已回滚到 v${versionNo}`, life: 2500 });
+            toast.add({ severity: 'success', summary: 'Success', detail: t('toast.rolledBack', { v: versionNo }), life: 2500 });
             await refresh();
         }
     });
@@ -165,154 +248,156 @@ const autoSlug = () => {
     }
 };
 
+// md-editor-v3's upload contract (a callback, not a UI control) — kept, but sharing the
+// same multipart helper as everything else. All other file inputs live in FileUploader.
 const onUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
-    const formData = new FormData();
-    files.forEach((file) => {
-        formData.append('file', file);
-    });
-    
-    const res = await uploadAPI.upload(formData);
-    
-    if (res?.data) {
-        callback(res.data.map((item: any) => item.url));
-    }
+    const res = await uploadAPI.uploadFiles(files);
+    if (res?.data) callback(res.data.map((item: any) => item.url));
 };
 
-const thumbnailInput = ref<HTMLInputElement | null>(null);
-const onThumbnailSelected = async (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (!target.files || target.files.length === 0) return;
-    const file = target.files[0];
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-        const res = await uploadAPI.upload(formData);
-        
-        if (res?.data?.length > 0) {
-            form.value.thumbnail = res.data[0].url;
-            toast.add({ severity: 'success', summary: 'Success', detail: '缩略图上传成功', life: 3000 });
-        }
-    } finally {
-        if (thumbnailInput.value) {
-            thumbnailInput.value.value = '';
-        }
-    }
-};
+// The property panel is a `hidden lg:block` sidebar on wide screens; below lg it is the only
+// way to reach category_id (a save-blocking required field), so it also mounts in a drawer.
+const isMobile = ref(false);
+const showMobilePanel = ref(false);
+const checkMobile = () => { isMobile.value = window.innerWidth < 1024; };
+onMounted(() => { checkMobile(); window.addEventListener('resize', checkMobile); });
+onBeforeUnmount(() => { window.removeEventListener('resize', checkMobile); });
 </script>
 
 <template>
     <div class="h-full flex flex-col pt-6 pb-0 px-6 max-w-screen-2xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-4">
-                <Button unstyled @click="router.push('/admin/articles')" class="w-10 h-10 rounded-full bg-[rgba(210,210,215,0.64)] flex items-center justify-center text-[rgba(0,0,0,0.48)] hover:bg-white hover:border-2 hover:border-apple-blue hover:text-black transition-all cursor-pointer">
+                <Button unstyled @click="router.push('/admin/articles')" :class="BTN_ICON.nav">
                     <LucideChevronLeft :size="20" />
                 </Button>
                 <div>
-                    <h1 class="text-[28px] font-display font-semibold leading-[1.14] tracking-[0.196px]">{{ isEdit ? $t('action.edit') : $t('action.new') }}</h1>
+                    <h1 class="text-[28px] font-semibold leading-[1.14] tracking-[0.196px]">{{ isEdit ? $t('action.edit') : $t('action.new') }}</h1>
                 </div>
             </div>
 
+            <!-- 三个按钮:保存 / 权限 / 发布▼。状态由第三个按钮自己表达,不再有单独的状态 chip。
+                 见 docs/editor-access-panel.md §4。 -->
             <div class="flex gap-2 items-center">
-                <span :class="statusCls" class="px-2.5 h-9 inline-flex items-center rounded-lg text-[12px] font-medium uppercase tracking-wider">{{ $t('contentStatus.' + status) }}</span>
-                <Button unstyled @click="doPreview" :disabled="loading" :class="BTN.ghost">
-                    <LucideEye :size="16" /> {{ $t('action.preview') }}
+                <Button unstyled @click="saveDraft" :disabled="loading" :class="BTN.secondary">
+                    <LucideSave :size="16" /> <span class="hidden sm:inline">{{ $t('action.save') }}</span>
                 </Button>
-                <Button unstyled @click="saveDraft" :disabled="loading" :class="BTN.ghost">
-                    <LucideSave :size="16" /> {{ $t('action.save') }}
+                <!-- 立即生效需要文章 id,所以新建态禁用并解释。 -->
+                <Button unstyled @click="accessOpen = true" :disabled="!isEdit || loading"
+                    :title="!isEdit ? $t('access.newArticleHint') : ''" :class="BTN.secondary">
+                    <LucideLock :size="16" /> <span class="hidden sm:inline">{{ $t('access.title') }}</span>
                 </Button>
-                <Button v-if="status === 'visible'" unstyled @click="unpublish" :disabled="loading" :class="BTN.danger">
-                    <LucideEyeOff :size="16" /> {{ $t('action.unpublish') }}
-                </Button>
-                <Button v-else unstyled @click="publish" :disabled="loading" :class="BTN.primary">
-                    <LucideCheck :size="16" /> {{ $t('action.publish') }}
-                </Button>
+                <ArticlePublishButton :status="(status as any)" :publish-at="publishAt" :loading="loading"
+                    :is-mobile="isMobile" @publish="publish" @unpublish="unpublish"
+                    @schedule="schedule" @cancel-schedule="cancelSchedule" />
             </div>
         </div>
 
         <div class="flex-1 flex gap-6 pb-6 h-[calc(100vh-140px)]">
-            <div class="flex-1 flex flex-col bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-hidden border border-[rgba(0,0,0,0.05)]">
-                <div class="px-6 py-4 border-b border-[rgba(0,0,0,0.05)] flex flex-col gap-2">
-                    <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-[40px] font-display font-semibold outline-none placeholder:opacity-30" />
+            <div class="flex-1 flex flex-col overflow-hidden" :class="CARD">
+                <div class="px-6 py-4 border-b border-separator-weak flex flex-col gap-2">
+                    <InputText unstyled v-model="form.title" @blur="autoSlug" :placeholder="$t('form.title')" class="w-full text-title-page font-semibold outline-none placeholder:opacity-30" />
                 </div>
+                <!-- 分类给作者的正文格式说明。为空时整块不存在,不占位。 -->
+                <div v-if="editorHint" class="editor-hint px-6 py-3 border-b border-separator-weak bg-info-fill text-body text-label"
+                    v-html="editorHint"></div>
                 <div class="flex-1 overflow-hidden" style="--md-bk-color: transparent;">
-                    <MdEditor v-model="form.content" @onUploadImg="onUploadImg" :language="$i18n.locale === 'zh' ? 'zh-CN' : 'en-US'" class="h-full !border-none" previewTheme="github" />
+                    <MdEditor v-model="form.content" @onUploadImg="onUploadImg" :language="$i18n.locale === 'zh' ? 'zh-CN' : 'en-US'" class="h-full border-none!" previewTheme="github" />
                 </div>
             </div>
 
-            <div class="w-[320px] bg-white rounded-[12px] shadow-[0px_5px_30px_rgba(0,0,0,0.06)] overflow-y-auto p-6 hidden lg:block border border-[rgba(0,0,0,0.05)]">
-                <h3 class="text-[21px] font-display font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
-                <div class="mt-4">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ $t('form.category_id') || 'Category ID' }} <span class="text-red-500">*</span></label>
-                    <Select v-model.number="form.category_id" :options="categoryOptions" optionLabel="label" optionValue="value" unstyled :pt="SELECT_PT" class="w-full" />
-                </div>
-                
-                <div class="mt-4">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2">{{ $t('form.content_template') || 'Local Template' }}</label>
-                    <InputText unstyled v-model="form.content_template" placeholder="e.g. DefaultArticle" :class="INPUT_CLASS" />
-                </div>
+            <div class="w-[320px] shrink-0 overflow-y-auto p-6 hidden lg:block" :class="CARD">
+                <h3 class="text-title-section font-medium tracking-[0.231px] mb-6">{{ $t('article.properties') }}</h3>
 
-                <div class="mt-4">
-                    <label class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-2 flex items-center gap-1"><LucideClock :size="14" /> {{ $t('article.schedule') }}</label>
-                    <div class="flex gap-2">
-                        <DatePicker v-model="publishAt" showTime hourFormat="24" dateFormat="yy-mm-dd" unstyled :pt="DATEPICKER_PT" class="flex-1" />
-                        <Button unstyled @click="schedule" :disabled="loading" :class="BTN.ghost">{{ $t('action.schedule') }}</Button>
-                    </div>
-                </div>
+                <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" :categories="categories" />
 
-                <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
-                    <label class="text-[14px] font-medium text-[rgba(0,0,0,0.8)] mb-3 flex items-center gap-1"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
-                    <ul class="flex flex-col gap-2 max-h-[220px] overflow-y-auto">
-                        <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-[12px] bg-[#f9f9fb] rounded-[8px] px-3 py-2">
+                <div v-if="isEdit && revisions.length" class="mt-6 pt-4 border-t border-separator-weak">
+                    <label class="mb-3 flex items-center gap-1" :class="LABEL_BARE"><LucideRotateCcw :size="14" /> {{ $t('article.history') }}</label>
+                    <ul class="max-h-[220px] overflow-y-auto" :class="FIELD_GROUP">
+                        <li v-for="rev in revisions" :key="rev.version_no" class="flex items-center justify-between text-small bg-surface rounded-control px-3 py-2">
                             <div class="min-w-0">
-                                <div class="font-medium text-[rgba(0,0,0,0.8)]">v{{ rev.version_no }} · {{ rev.note }}</div>
-                                <div class="text-[rgba(0,0,0,0.45)] truncate">{{ rev.created_at ? new Date(rev.created_at).toLocaleString() : '' }}</div>
+                                <div class="font-medium text-label">v{{ rev.version_no }} · {{ rev.note }}</div>
+                                <div class="text-label-3 truncate">{{ rev.created_at ? new Date(rev.created_at).toLocaleString() : '' }}</div>
                             </div>
-                            <button @click="rollback(rev.version_no)" class="text-[#0066cc] hover:underline shrink-0 ml-2 cursor-pointer">{{ $t('action.rollback') }}</button>
+                            <button @click="rollback(rev.version_no)" class="shrink-0 ml-2" :class="LINK.small">{{ $t('action.rollback') }}</button>
                         </li>
                     </ul>
                 </div>
 
-                <div v-if="isEdit" class="mt-6 pt-4 border-t border-[rgba(0,0,0,0.06)]">
-                    <AclEditor model="articles" :resource-id="articleId" :actions="['R', 'U', 'D', 'publish']" :title="$t('article.sharing')" />
-                </div>
-
-                <div class="mt-4 flex items-center justify-between">
-                    <label class="block text-[14px] font-medium text-[rgba(0,0,0,0.8)]">{{ $t('form.is_top') || 'Is Top' }}</label>
-                    <input v-model="form.is_top" type="checkbox" :true-value="1" :false-value="0" class="h-5 w-5 rounded border-[rgba(0,0,0,0.15)]" />
-                </div>
-
-                <div class="mt-4 flex flex-col gap-6">
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.thumbnail') || 'Thumbnail' }}</label>
-                        <div 
-                            class="relative w-full aspect-video border-2 border-dashed border-[rgba(0,0,0,0.15)] rounded-[12px] flex items-center justify-center overflow-hidden hover:border-apple-blue transition-colors cursor-pointer group" 
-                            @click="thumbnailInput?.click()"
-                        >
-                            <input type="file" ref="thumbnailInput" class="hidden" accept="image/*" @change="onThumbnailSelected" />
-                            <img v-if="form.thumbnail" :src="form.thumbnail" class="w-full h-full object-cover" />
-                            <div v-else class="text-center text-[rgba(0,0,0,0.4)] group-hover:text-apple-blue transition-colors flex flex-col items-center">
-                                <LucideImage :size="24" class="mb-2 opacity-50 group-hover:opacity-100" />
-                                <span class="text-[13px] font-medium">{{ $t('action.upload') || 'Click to Upload' }}</span>
-                            </div>
-                        </div>
-                        <div v-if="form.thumbnail" class="text-right">
-                             <span @click.stop="form.thumbnail = ''" class="text-[12px] text-red-500 cursor-pointer hover:underline">{{ $t('action.remove') || 'Remove' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.urlSlug') }}</label>
-                        <InputText unstyled v-model="form.slug" placeholder="my-awesome-post" class="w-full h-10 px-3 border border-[rgba(0,0,0,0.15)] rounded-[8px] focus:outline-none focus:border-apple-blue focus:ring-1 focus:ring-apple-blue transition-shadow" />
-                    </div>
-                    
-                    <div class="flex flex-col gap-2">
-                        <label class="text-[14px] text-[rgba(0,0,0,0.8)] font-medium">{{ $t('form.description') || 'Description' }}</label>
-                        <Textarea unstyled v-model="form.description" rows="4" placeholder="..." class="w-full border border-[rgba(0,0,0,0.04)] py-2 px-3 rounded-[11px] text-[14px] focus:outline-none focus:border-apple-blue transition-colors resize-none"></Textarea>
-                    </div>
-                </div>
             </div>
         </div>
+
+        <ArticleAccessPanel v-if="accessOpen && articleId" :article-id="articleId"
+            :audience="form.audience" :teaser="form.teaser" :status="status" :publish-at="publishAt"
+            :author-id="articleAuthorId"
+            :category="currentCategory" :ancestor-ids="ancestorCategoryIds" :categories="categories"
+            @close="accessOpen = false"
+            @changed="(patch) => { form.audience = patch.audience; form.teaser = patch.teaser; }" />
+
+        <!-- Below lg the sidebar is hidden, so the same panel opens as a drawer. -->
+        <button v-if="isMobile" @click="showMobilePanel = true"
+            class="fixed right-4 bottom-6 z-40 w-14 h-14 rounded-full bg-accent text-white shadow-lg flex items-center justify-center hover:bg-accent-hover transition-colors cursor-pointer">
+            <LucideSettings :size="22" />
+        </button>
+
+        <Teleport to="body">
+            <Transition name="fade">
+                <div v-if="showMobilePanel && isMobile" class="fixed inset-0 z-50 bg-label/40" @click="showMobilePanel = false"></div>
+            </Transition>
+            <Transition name="slide">
+                <div v-if="showMobilePanel && isMobile"
+                    class="fixed right-0 top-0 bottom-0 z-50 w-[85vw] max-w-[380px] bg-white shadow-2xl overflow-y-auto p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-title-section font-medium tracking-[0.231px]">{{ $t('article.properties') }}</h3>
+                        <button @click="showMobilePanel = false" :class="BTN_ICON.subtle">
+                            <LucideX :size="16" />
+                        </button>
+                    </div>
+                    <EditorPanel :form="form" :category-options="categoryOptions" :article-data-fields="articleDataFields" :categories="categories" />
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from,
+.fade-leave-to { opacity: 0; }
+
+.slide-enter-active,
+.slide-leave-active { transition: transform 0.25s ease; }
+.slide-enter-from,
+.slide-leave-to { transform: translateX(100%); }
+
+/**
+ * 分类提示的最小排版。必须用 `:deep()` —— 内容来自 `v-html`,那些节点没有 scoped 属性,
+ * 普通选择器一条都不生效(主题那边踩过同一个坑,见 frontend_themes/neo/prose.css 顶部注释)。
+ * 后台没有 prose 层,所以这里只补最少的几条:段距、列表、行内码、可点的链接。
+ */
+.editor-hint :deep(p) { margin: 0 0 0.4em; }
+.editor-hint :deep(p:last-child) { margin-bottom: 0; }
+.editor-hint :deep(ul),
+.editor-hint :deep(ol) { margin: 0.3em 0; padding-left: 1.3em; list-style: disc; }
+.editor-hint :deep(ol) { list-style: decimal; }
+.editor-hint :deep(code) {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  padding: 0.05em 0.3em;
+  background: var(--color-white);
+  border: 1px solid var(--color-separator);
+  border-radius: var(--radius-chip);
+}
+.editor-hint :deep(pre) {
+  margin: 0.4em 0;
+  padding: 0.6em 0.8em;
+  background: var(--color-white);
+  border: 1px solid var(--color-separator);
+  border-radius: var(--radius-control);
+  overflow-x: auto;
+}
+.editor-hint :deep(pre code) { border: 0; padding: 0; background: none; }
+.editor-hint :deep(a) { color: var(--color-link); text-decoration: underline; }
+.editor-hint :deep(strong) { font-weight: 600; }
+</style>

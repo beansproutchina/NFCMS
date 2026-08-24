@@ -1,30 +1,43 @@
+# 单容器部署。可变项全部来自同目录这几个由 pack.js 生成的文件,勿在本文件里写死值:
+#   .env                        容器名/镜像/端口/主题 + COMPOSE_FILE(compose 插值用)
+#   app.env                     密钥与数据库配置(env_file 原样注入容器,不经 compose 插值)
+#   docker-compose.network.yml  仅当选了外部网络时才有,由 COMPOSE_FILE 自动叠加
+# 起服务:cd 到该目录后 `docker compose up -d --build` —— 别带 -f,否则会漏掉上面那个覆盖文件。
 services:
   nfcms:
     build:
       context: .
       dockerfile: Dockerfile.single
       args:
-        THEME: school
-    image: nfcms-allinone:latest
-    container_name: nfcms-allinone
+        THEME: ${NFCMS_THEME:-pear}
+    image: ${NFCMS_IMAGE:-nfcms-allinone:latest}
+    container_name: ${NFCMS_CONTAINER_NAME:-nfcms-allinone}
     ports:
-      - "54380:80"
+      - "${NFCMS_HTTP_PORT:-54380}:80"
+    # JWT_SECRET / PASSWORD_SALT / SITE_URL / DB_DRIVER / MYSQL_* 都在这里
+    # (缺文件 compose 会直接报错,正好当成"忘了带部署配置"的守卫)
+    env_file:
+      - app.env
     environment:
       - NODE_ENV=production
       - BUN_ENV=production
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=nfcms
-      - MYSQL_PASSWORD=PYX2KdkMM6pXGh5X
-      - MYSQL_DATABASE=nfcms
+    # 让容器里的 host.docker.internal 指向宿主机(Linux 上默认没有),外部 MySQL 常用
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
-      - ./backend/data:/app/backend/app/data
-      - ./backend/static:/app/backend/app/static
-      - ./upload:/app/backend/app/upload
+      # 后端 cwd 是 /app/backend:sqlite 在 data/test.db,上传在 static/uploads
+      - ./data/db:/app/backend/data
+      - ./data/uploads:/app/backend/static/uploads
     restart: always
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      # 两个坑都在这一行里:
+      #  1) 必须用 127.0.0.1 —— nginx 只 `listen 80`(IPv4),而 alpine 的 /etc/hosts 里
+      #     localhost 同时解析到 ::1,busybox wget 挑到 ::1 就 connection refused → unhealthy。
+      #  2) 探 /api/system/status 而不是 nginx 那个 `return 200` 的 /health —— 后者由 nginx
+      #     直接应答,后端崩成重启循环它照样"healthy"。这个路由要穿到 bun 并读一次 DB,
+      #     且在 /setup 之前也返回 200,所以全新部署不会卡在 unhealthy。
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/api/system/status"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 40s

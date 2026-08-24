@@ -1,0 +1,1292 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "exportedAt": "2026-07-29T00:00:00.000Z",
+    "generator": "NFCMS",
+    "saltNote": "本文件 users[].password 是占位值(160 位,不是真实的 64 位 HMAC-SHA256),任何 PASSWORD_SALT 都对不上。下面这个指纹故意不可能与本机指纹相等,好让 /system/setup 走 saltState=mismatch 分支:重置这些账号并把一次性明文凭据返回给导入者(SetupWizard 会显示)。缺了它就是 saltState=unknown —— 哈希原样保留、只打一条警告,结果没人能登录。",
+    "saltFingerprint": "demo-data-placeholder-hashes-not-usable"
+  },
+  "system_config": [
+    {
+      "id": 1,
+      "configkey": "is_initialized",
+      "configvalue": "true"
+    },
+    {
+      "id": 2,
+      "configkey": "site_name",
+      "configvalue": "ORBIT STUDIO"
+    },
+    {
+      "id": 3,
+      "configkey": "subtitle",
+      "configvalue": "一间做数字产品的小工作室 —— 品牌、网站、应用,从想法到上线。"
+    },
+    {
+      "id": 4,
+      "configkey": "icp_record",
+      "configvalue": "沪ICP备00000000号-1"
+    },
+    {
+      "id": 5,
+      "configkey": "home_template",
+      "configvalue": "DefaultHome"
+    },
+    {
+      "id": 6,
+      "configkey": "storage_config",
+      "configvalue": "{\"provider\":\"local\",\"local\":{\"upload_dir\":\"static/uploads\"}}"
+    },
+    {
+      "id": 7,
+      "configkey": "theme_neo_hero_cta_text",
+      "configvalue": "查看作品"
+    },
+    {
+      "id": 8,
+      "configkey": "theme_neo_hero_cta_link",
+      "configvalue": "/a/works"
+    },
+    {
+      "id": 9,
+      "configkey": "theme_neo_nav_cta_text",
+      "configvalue": "合作咨询"
+    },
+    {
+      "id": 10,
+      "configkey": "theme_neo_nav_cta_link",
+      "configvalue": "/contact"
+    },
+    {
+      "id": 11,
+      "configkey": "theme_neo_avatar",
+      "configvalue": ""
+    },
+    {
+      "id": 12,
+      "configkey": "theme_neo_about_slug",
+      "configvalue": "about"
+    },
+    {
+      "id": 13,
+      "configkey": "theme_neo_contact_email",
+      "configvalue": "hello@orbit.studio"
+    },
+    {
+      "id": 14,
+      "configkey": "theme_neo_contact_phone",
+      "configvalue": "+86 138 0000 0000"
+    },
+    {
+      "id": 15,
+      "configkey": "theme_neo_contact_location",
+      "configvalue": "上海 · 远程协作"
+    },
+    {
+      "id": 16,
+      "configkey": "theme_neo_social_github",
+      "configvalue": "https://github.com/orbit-studio"
+    },
+    {
+      "id": 17,
+      "configkey": "theme_neo_social_bilibili",
+      "configvalue": "https://space.bilibili.com/100000000"
+    },
+    {
+      "id": 18,
+      "configkey": "theme_neo_social_douyin",
+      "configvalue": ""
+    },
+    {
+      "id": 19,
+      "configkey": "theme_neo_social_xiaohongshu",
+      "configvalue": ""
+    },
+    {
+      "id": 20,
+      "configkey": "theme_neo_social_zhihu",
+      "configvalue": "https://www.zhihu.com/people/orbit-studio"
+    },
+    {
+      "id": 21,
+      "configkey": "theme_neo_social_wechat_qr",
+      "configvalue": ""
+    },
+    {
+      "id": 22,
+      "configkey": "theme_neo_footer_note",
+      "configvalue": "用心做好每一个像素。"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "作品",
+      "slug": "works",
+      "parent_id": 0,
+      "list_template": "WorkGrid",
+      "content_template": "ProjectArticle",
+      "weight": 10,
+      "article_data_fields": {
+        "client": {
+          "title": "客户",
+          "type": "text"
+        },
+        "year": {
+          "title": "年份",
+          "type": "text"
+        },
+        "role": {
+          "title": "承担角色",
+          "type": "text"
+        },
+        "tech": {
+          "title": "技术栈",
+          "type": "text"
+        },
+        "link_live": {
+          "title": "在线预览",
+          "type": "text"
+        },
+        "link_source": {
+          "title": "源码地址",
+          "type": "text"
+        },
+        "gallery": {
+          "title": "图集(图片 URL,英文逗号分隔)",
+          "type": "textarea"
+        },
+        "members": {
+          "title": "参与成员(成员文章 slug,英文逗号分隔,如 member-1,member-2)",
+          "type": "text"
+        }
+      },
+      "data": {
+        "description": "我们最近交付的一些项目。"
+      }
+    },
+    {
+      "id": 2,
+      "name": "服务",
+      "slug": "services",
+      "parent_id": 0,
+      "list_template": "ServiceList",
+      "content_template": "DefaultArticle",
+      "weight": 20,
+      "article_data_fields": {
+        "icon": {
+          "title": "图标 Emoji(留空显示 ✦)",
+          "type": "text"
+        }
+      },
+      "data": {
+        "description": "从 0 到 1,我们能帮你做这些。"
+      }
+    },
+    {
+      "id": 3,
+      "name": "团队",
+      "slug": "team",
+      "parent_id": 0,
+      "list_template": "TeamGrid",
+      "content_template": "MemberPage",
+      "weight": 30,
+      "article_data_fields": {
+        "sort": {
+          "title": "排序(数字小的在前,留空排最后)",
+          "type": "number"
+        },
+        "role": {
+          "title": "职位",
+          "type": "text"
+        },
+        "skills": {
+          "title": "技能标签(英文逗号分隔)",
+          "type": "text"
+        },
+        "social_github": {
+          "title": "GitHub 链接",
+          "type": "text"
+        },
+        "social_bilibili": {
+          "title": "哔哩哔哩链接",
+          "type": "text"
+        },
+        "social_douyin": {
+          "title": "抖音链接",
+          "type": "text"
+        },
+        "social_xiaohongshu": {
+          "title": "小红书链接",
+          "type": "text"
+        },
+        "social_zhihu": {
+          "title": "知乎链接",
+          "type": "text"
+        },
+        "social_email": {
+          "title": "邮箱",
+          "type": "text"
+        },
+        "social_wechat_qr": {
+          "title": "微信二维码图片",
+          "type": "attachment"
+        }
+      },
+      "data": {
+        "description": "一支小而全的远程团队。"
+      },
+      "editor_hint": "**参与作品**写在正文里的 `:::works` 块中(顺序即展示顺序)。每行一条,用 `|` 分隔:\n\n```\n:::works\n/a/works/work-1 | 品牌视觉、包装延展\nhttps://behance.net/xxx | 咖啡海报系列 | 主视觉 | 2025-03 | https://图片地址.jpg\n | 未公开的内部项目 | 交互设计 | 2024 | \n:::\n```\n\n- **站内作品**:第一列写站内地址(`/a/...` 开头),后面只写你自己的贡献 —— 标题、封面、客户年份由作品页自动带出,不用抄。\n- **站外作品**:第一列写完整链接,依次补 `标题 | 贡献 | 时间 | 图片`。\n- **不想给链接**:第一列留空,其余四列照写,该条目就只展示、不可点。\n- 同一个作品在不同人的页面上贡献可以不同 —— 这段话就是为此存在的。\n- ⚠ `:::works` 是本主题的约定,不是 markdown 标准语法。换成不解析它的主题时,这段会**原样显示**在正文里。"
+    },
+    {
+      "id": 4,
+      "name": "动态",
+      "slug": "journal",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 40,
+      "article_data_fields": null,
+      "data": {
+        "description": "工作室的思考与记录。"
+      }
+    },
+    {
+      "id": 5,
+      "name": "关于",
+      "slug": "about",
+      "parent_id": 0,
+      "list_template": "DefaultCategory",
+      "content_template": "DefaultArticle",
+      "weight": 50,
+      "article_data_fields": null,
+      "data": null
+    }
+  ],
+  "menus": [
+    {
+      "id": 1,
+      "name": "主导航",
+      "location": "header",
+      "items": [
+        {
+          "label": "作品",
+          "url": "/a/works",
+          "type": "category",
+          "refId": 1,
+          "children": []
+        },
+        {
+          "label": "服务",
+          "url": "/a/services",
+          "type": "category",
+          "refId": 2,
+          "children": []
+        },
+        {
+          "label": "团队",
+          "url": "/a/team",
+          "type": "category",
+          "refId": 3,
+          "children": []
+        },
+        {
+          "label": "动态",
+          "url": "/a/journal",
+          "type": "category",
+          "refId": 4,
+          "children": []
+        },
+        {
+          "label": "关于",
+          "url": "/about",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "联系",
+          "url": "/contact",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "页脚",
+      "location": "footer",
+      "items": [
+        {
+          "label": "作品",
+          "url": "/a/works",
+          "type": "category",
+          "refId": 1,
+          "children": []
+        },
+        {
+          "label": "服务",
+          "url": "/a/services",
+          "type": "category",
+          "refId": 2,
+          "children": []
+        },
+        {
+          "label": "关于",
+          "url": "/about",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        },
+        {
+          "label": "联系",
+          "url": "/contact",
+          "type": "custom",
+          "refId": 0,
+          "children": []
+        }
+      ]
+    }
+  ],
+  "articles": [
+    {
+      "id": 1,
+      "title": "Aurora 品牌重塑",
+      "slug": "work-1",
+      "author_id": "1",
+      "description": "从一杯咖啡的气味出发,重做一整套品牌视觉。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n客户在三年里开了 12 家门店,视觉却停留在第一家店的样子。我们从门店动线与顾客拍照习惯入手,重新梳理了品牌的语气与用色。\n\n## 我们做了什么\n\n- 品牌标志与字体系统\n- 杯型、包装与门店物料\n- 门店招牌的落地施工图\n\n> 门店拍照分享率明显上升(演示数据)。\n\n## 结果\n\n新视觉先在两家旗舰店试点,三个月后全店推开。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2026-06-15T01:00:00.000Z",
+      "created_at": "2026-06-15T01:00:00.000Z",
+      "updated_at": "2026-06-15T01:00:00.000Z",
+      "data": {
+        "client": "Aurora 咖啡",
+        "year": "2026",
+        "role": "品牌设计 / 视觉系统",
+        "tech": "Figma, Illustrator",
+        "link_live": "https://example.com",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-1,member-3"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Nimbus 云控制台",
+      "slug": "work-2",
+      "author_id": "1",
+      "description": "把一个只有工程师看得懂的后台,做成人人能用的控制台。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n老控制台把 40 多个功能平铺在一级菜单里,新同事上手要一周。我们做了一轮任务频次统计,按\"每天用/每月用/几乎不用\"重排了信息架构。\n\n## 我们做了什么\n\n- 信息架构与导航重排\n- 资源列表与详情页的组件库\n- 暗色模式与键盘操作\n\n> 新人首次完成部署的时间从两天缩短到半小时(演示数据)。\n\n## 结果\n\n组件库沉淀下来,后续三个内部系统直接复用。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2026-04-15T01:00:00.000Z",
+      "created_at": "2026-04-15T01:00:00.000Z",
+      "updated_at": "2026-04-15T01:00:00.000Z",
+      "data": {
+        "client": "Nimbus Tech",
+        "year": "2026",
+        "role": "产品设计 / 前端",
+        "tech": "Vue, TypeScript, Tailwind",
+        "link_live": "https://example.com",
+        "link_source": "https://github.com/orbit-studio",
+        "gallery": "",
+        "members": "member-2,member-3"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Pebble 电商小程序",
+      "slug": "work-3",
+      "author_id": "1",
+      "description": "一个把下单路径压到三步的微信小程序。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n客户的主力客群在微信里,却一直靠人工在群里接单。我们先把接单流程搬进小程序,再逐步补上库存与优惠。\n\n## 我们做了什么\n\n- 商品、购物车与下单闭环\n- 微信支付与售后流程\n- 后台的订单看板\n\n> 大促当天的人工客单录入量降到零(演示数据)。\n\n## 结果\n\n上线半年后,小程序承接了七成以上订单。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2026-02-15T01:00:00.000Z",
+      "created_at": "2026-02-15T01:00:00.000Z",
+      "updated_at": "2026-02-15T01:00:00.000Z",
+      "data": {
+        "client": "Pebble",
+        "year": "2026",
+        "role": "小程序 / 全栈",
+        "tech": "Taro, Node",
+        "link_live": "",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-2"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Field 摄影作品集",
+      "slug": "work-4",
+      "author_id": "1",
+      "description": "让照片自己说话的一个安静的站点。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n摄影师原来的站点套用了现成模板,照片被压得很糊。我们做的第一件事是把图片管线重写。\n\n## 我们做了什么\n\n- 按屏宽分级的图片管线\n- 横竖幅混排的画廊布局\n- 滚动节奏与转场动效\n\n> 首屏图片体积降到原来的三分之一(演示数据)。\n\n## 结果\n\n站点成了他接单的主要入口。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 1,
+      "published_at": "2025-11-15T01:00:00.000Z",
+      "created_at": "2025-11-15T01:00:00.000Z",
+      "updated_at": "2025-11-15T01:00:00.000Z",
+      "data": {
+        "client": "独立摄影师",
+        "year": "2025",
+        "role": "网站开发",
+        "tech": "Nuxt, GSAP",
+        "link_live": "https://example.com",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-1"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Loop 音乐 App",
+      "slug": "work-5",
+      "author_id": "1",
+      "description": "一个只做\"随手录一段\"这件事的音乐 App。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n团队原本想做一个大而全的音乐社区,我们建议先把\"录音—裁剪—分享\"这条最短路径做到顺手。\n\n## 我们做了什么\n\n- 录音与波形裁剪的交互设计\n- 双端一致的设计规范\n- 首版发布与埋点方案\n\n> 第一版只有 4 个页面(演示数据)。\n\n## 结果\n\n首版留存达到团队预期,后续才开始加社区功能。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2025-09-15T01:00:00.000Z",
+      "created_at": "2025-09-15T01:00:00.000Z",
+      "updated_at": "2025-09-15T01:00:00.000Z",
+      "data": {
+        "client": "Loop Inc",
+        "year": "2025",
+        "role": "UI/UX / 移动端",
+        "tech": "Flutter",
+        "link_live": "",
+        "link_source": "https://github.com/orbit-studio",
+        "gallery": "",
+        "members": "member-3"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Terra 数据可视化",
+      "slug": "work-6",
+      "author_id": "1",
+      "description": "把二十年的观测数据画成一张能看懂的图。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n研究院手里有二十年的观测记录,过去只能用 Excel 出静态图。我们做了一套可交互的时间轴视图。\n\n## 我们做了什么\n\n- 大数据量的 Canvas 渲染\n- 时间轴与图层联动\n- 导出图片与数据的工具\n\n> 十万级数据点仍能保持流畅缩放(演示数据)。\n\n## 结果\n\n成果被用在当年的年度报告与公开展览上。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2025-06-15T01:00:00.000Z",
+      "created_at": "2025-06-15T01:00:00.000Z",
+      "updated_at": "2025-06-15T01:00:00.000Z",
+      "data": {
+        "client": "Terra 研究院",
+        "year": "2025",
+        "role": "数据可视化",
+        "tech": "D3, Canvas",
+        "link_live": "https://example.com",
+        "link_source": "https://github.com/orbit-studio",
+        "gallery": "",
+        "members": "member-2"
+      }
+    },
+    {
+      "id": 7,
+      "title": "青柚茶饮 门店视觉",
+      "slug": "work-7",
+      "author_id": "1",
+      "description": "一个开在街角的茶饮品牌,从杯子到灯箱的全套视觉。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n品牌方希望在同质化严重的街边茶饮里被记住,预算又要控制在小店能承受的范围。我们把重点押在杯身与灯箱两处最高频的触点。\n\n## 我们做了什么\n\n- 品牌字与辅助图形\n- 杯身、纸袋与吸管套\n- 灯箱与菜单板的施工文件\n\n> 单店物料成本比原方案低两成(演示数据)。\n\n## 结果\n\n首店开业后,加盟商沿用同一套物料模板。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2025-03-15T01:00:00.000Z",
+      "created_at": "2025-03-15T01:00:00.000Z",
+      "updated_at": "2025-03-15T01:00:00.000Z",
+      "data": {
+        "client": "青柚茶饮",
+        "year": "2025",
+        "role": "品牌设计 / 空间物料",
+        "tech": "Illustrator, Blender",
+        "link_live": "",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-1"
+      }
+    },
+    {
+      "id": 8,
+      "title": "云栖医疗 预约小程序",
+      "slug": "work-8",
+      "author_id": "1",
+      "description": "把线下排队搬到手机上的预约与报告查询。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n门诊高峰期排队最长要一个多小时。我们把预约、叫号与报告查询三件事放进同一个小程序,并为长辈准备了大字模式。\n\n## 我们做了什么\n\n- 分时段预约与叫号提醒\n- 检查报告的查询与解读页\n- 长辈模式(大字号 / 高对比)\n\n> 现场排队时长明显下降(演示数据)。\n\n## 结果\n\n两家分院先后接入,复诊预约成为主要入口。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2024-12-15T01:00:00.000Z",
+      "created_at": "2024-12-15T01:00:00.000Z",
+      "updated_at": "2024-12-15T01:00:00.000Z",
+      "data": {
+        "client": "云栖医疗",
+        "year": "2024",
+        "role": "产品设计 / 全栈",
+        "tech": "Taro, Node, MySQL",
+        "link_live": "",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-2,member-3"
+      }
+    },
+    {
+      "id": 9,
+      "title": "城市图书馆 数字馆藏",
+      "slug": "work-9",
+      "author_id": "1",
+      "description": "给三十万册馆藏做一个搜得到、借得走的入口。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n原有的检索系统只支持精确书名,读者常常搜不到手里那本书。我们把检索体验整体重做,并把借阅状态直接放进结果列表。\n\n## 我们做了什么\n\n- 分面检索与拼音容错\n- 馆藏状态与预约到馆\n- 面向公众的无障碍改造\n\n> 检索无结果的比例大幅下降(演示数据)。\n\n## 结果\n\n成为馆内自助机与线上入口的同一套界面。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2024-09-15T01:00:00.000Z",
+      "created_at": "2024-09-15T01:00:00.000Z",
+      "updated_at": "2024-09-15T01:00:00.000Z",
+      "data": {
+        "client": "市图书馆",
+        "year": "2024",
+        "role": "网站开发 / 检索体验",
+        "tech": "Vue, Elasticsearch",
+        "link_live": "https://example.com",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-1,member-2"
+      }
+    },
+    {
+      "id": 10,
+      "title": "稻田民宿 官网重做",
+      "slug": "work-10",
+      "author_id": "1",
+      "description": "让人一眼想订下周末的那种民宿官网。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n老站点把房型参数写成了表格,却没有一张能让人心动的图。我们把内容顺序整个翻过来:先氛围,再细节,最后才是价格表。\n\n## 我们做了什么\n\n- 房型与季节内容的重排\n- 直连房态的预订入口\n- 微信分享卡片与地图导航\n\n> 官网直订占比翻了一倍(演示数据)。\n\n## 结果\n\n客户从此把平台佣金压到了可接受的水平。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2024-06-15T01:00:00.000Z",
+      "created_at": "2024-06-15T01:00:00.000Z",
+      "updated_at": "2024-06-15T01:00:00.000Z",
+      "data": {
+        "client": "稻田民宿",
+        "year": "2024",
+        "role": "网站开发",
+        "tech": "Nuxt, 微信 JS-SDK",
+        "link_live": "https://example.com",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-3"
+      }
+    },
+    {
+      "id": 11,
+      "title": "恒新智造 生产看板",
+      "slug": "work-11",
+      "author_id": "1",
+      "description": "车间墙上那块所有人抬头就能看懂的屏。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n车间原来靠白板和口头交接班,异常发现得太晚。我们做了一块常亮的看板,并把异常做成会响的提示。\n\n## 我们做了什么\n\n- 实时产量与稼动率视图\n- 异常提示与升级规则\n- 远超两米观看距离的排版\n\n> 异常平均响应时间缩短一半(演示数据)。\n\n## 结果\n\n同一套看板复制到了三条产线。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2024-03-15T01:00:00.000Z",
+      "created_at": "2024-03-15T01:00:00.000Z",
+      "updated_at": "2024-03-15T01:00:00.000Z",
+      "data": {
+        "client": "恒新智造",
+        "year": "2024",
+        "role": "前端 / 数据看板",
+        "tech": "Vue, ECharts, WebSocket",
+        "link_live": "",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-2"
+      }
+    },
+    {
+      "id": 12,
+      "title": "南方学院 开放日微站",
+      "slug": "work-12",
+      "author_id": "1",
+      "description": "为期两周的活动微站,做完就要能被下一年复用。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n活动本身只有两周,但学校希望这套东西每年都能改改就用。我们把内容全部做成可配置,交付时附了一份运营手册。\n\n## 我们做了什么\n\n- 日程与场馆地图\n- 报名表单与名额控制\n- 可复用的内容配置结构\n\n> 第二年由校方自行改版上线(演示数据)。\n\n## 结果\n\n已连续三年沿用同一套代码。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2023-11-15T01:00:00.000Z",
+      "created_at": "2023-11-15T01:00:00.000Z",
+      "updated_at": "2023-11-15T01:00:00.000Z",
+      "data": {
+        "client": "南方学院",
+        "year": "2023",
+        "role": "设计 / 前端",
+        "tech": "Vite, Tailwind",
+        "link_live": "",
+        "link_source": "https://github.com/orbit-studio",
+        "gallery": "",
+        "members": "member-1"
+      }
+    },
+    {
+      "id": 13,
+      "title": "拾光相册 影像社区",
+      "slug": "work-13",
+      "author_id": "1",
+      "description": "一个鼓励人把照片洗出来的影像社区。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n客户想做社区,但又不想变成另一个点赞机器。我们把互动从\"点赞\"改成\"写一句\"。\n\n## 我们做了什么\n\n- 社区互动机制设计\n- 相册与冲印下单流程\n- 可交互原型与用户测试\n\n> 用户测试里有八成人写了留言(演示数据)。\n\n## 结果\n\n机制被完整保留进了正式版本。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2023-08-15T01:00:00.000Z",
+      "created_at": "2023-08-15T01:00:00.000Z",
+      "updated_at": "2023-08-15T01:00:00.000Z",
+      "data": {
+        "client": "拾光科技",
+        "year": "2023",
+        "role": "产品设计",
+        "tech": "Figma, Protopie",
+        "link_live": "",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-3"
+      }
+    },
+    {
+      "id": 14,
+      "title": "万象出行 司机端重构",
+      "slug": "work-14",
+      "author_id": "1",
+      "description": "给开车的人做界面:更少的字,更大的按钮。",
+      "thumbnail": "",
+      "content": "## 项目背景\n\n司机在行驶途中只能用余光看屏幕。我们把所有操作压到三个大按钮,并把关键信息改成语音播报。\n\n## 我们做了什么\n\n- 单手可达的操作布局\n- 语音播报与免看屏流程\n- 弱网下的状态同步\n\n> 误触率显著下降(演示数据)。\n\n## 结果\n\n重构版本覆盖了全部在线司机。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 1,
+      "published_at": "2023-05-15T01:00:00.000Z",
+      "created_at": "2023-05-15T01:00:00.000Z",
+      "updated_at": "2023-05-15T01:00:00.000Z",
+      "data": {
+        "client": "万象出行",
+        "year": "2023",
+        "role": "交互设计 / 前端",
+        "tech": "React Native",
+        "link_live": "",
+        "link_source": "",
+        "gallery": "",
+        "members": "member-1,member-2"
+      }
+    },
+    {
+      "id": 15,
+      "title": "品牌设计",
+      "slug": "service-1",
+      "author_id": "1",
+      "description": "Logo、VI 视觉规范与品牌资产,让你在人群中被记住。",
+      "thumbnail": "",
+      "content": "### 品牌设计\n\nLogo、VI 视觉规范与品牌资产,让你在人群中被记住。\n\n我们相信好的品牌设计来自对细节的执着,以及对\"要给谁看\"这件事的清晰理解。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2025-12-06T02:00:00.000Z",
+      "created_at": "2025-12-06T02:00:00.000Z",
+      "updated_at": "2025-12-06T02:00:00.000Z",
+      "data": {
+        "icon": "🎨"
+      }
+    },
+    {
+      "id": 16,
+      "title": "网站开发",
+      "slug": "service-2",
+      "author_id": "1",
+      "description": "企业官网、营销站、后台系统 —— 快、稳、好看。",
+      "thumbnail": "",
+      "content": "### 网站开发\n\n企业官网、营销站、后台系统 —— 快、稳、好看。\n\n从内容结构到部署上线,交付的是一个你自己也能维护下去的站点。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2025-12-05T02:00:00.000Z",
+      "created_at": "2025-12-05T02:00:00.000Z",
+      "updated_at": "2025-12-05T02:00:00.000Z",
+      "data": {
+        "icon": "💻"
+      }
+    },
+    {
+      "id": 17,
+      "title": "应用与小程序",
+      "slug": "service-3",
+      "author_id": "1",
+      "description": "iOS / Android / 小程序,从原型到上架全流程。",
+      "thumbnail": "",
+      "content": "### 应用与小程序\n\niOS / Android / 小程序,从原型到上架全流程。\n\n先用原型验证方向,再进入开发;上架材料与合规检查也一并帮你过一遍。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2025-12-04T02:00:00.000Z",
+      "created_at": "2025-12-04T02:00:00.000Z",
+      "updated_at": "2025-12-04T02:00:00.000Z",
+      "data": {
+        "icon": "📱"
+      }
+    },
+    {
+      "id": 18,
+      "title": "产品设计",
+      "slug": "service-4",
+      "author_id": "1",
+      "description": "用户研究、交互设计、界面设计,把复杂变简单。",
+      "thumbnail": "",
+      "content": "### 产品设计\n\n用户研究、交互设计、界面设计,把复杂变简单。\n\n设计的第一步往往是删掉一半功能,剩下的那一半才值得做好。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2025-12-03T02:00:00.000Z",
+      "created_at": "2025-12-03T02:00:00.000Z",
+      "updated_at": "2025-12-03T02:00:00.000Z",
+      "data": {
+        "icon": "✏️"
+      }
+    },
+    {
+      "id": 19,
+      "title": "技术咨询",
+      "slug": "service-5",
+      "author_id": "1",
+      "description": "架构选型、性能优化、团队提效,少走弯路。",
+      "thumbnail": "",
+      "content": "### 技术咨询\n\n架构选型、性能优化、团队提效,少走弯路。\n\n按需介入:可以只是一次架构评审,也可以陪跑一个季度。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2025-12-02T02:00:00.000Z",
+      "created_at": "2025-12-02T02:00:00.000Z",
+      "updated_at": "2025-12-02T02:00:00.000Z",
+      "data": {
+        "icon": "🚀"
+      }
+    },
+    {
+      "id": 20,
+      "title": "长期维护",
+      "slug": "service-6",
+      "author_id": "1",
+      "description": "上线只是开始,我们陪你持续迭代与运维。",
+      "thumbnail": "",
+      "content": "### 长期维护\n\n上线只是开始,我们陪你持续迭代与运维。\n\n每月一次小版本、一次数据回顾,把系统留在可维护的状态里。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 2,
+      "published_at": "2025-12-01T02:00:00.000Z",
+      "created_at": "2025-12-01T02:00:00.000Z",
+      "updated_at": "2025-12-01T02:00:00.000Z",
+      "data": {
+        "icon": "🔧"
+      }
+    },
+    {
+      "id": 21,
+      "title": "林小柯",
+      "slug": "member-1",
+      "author_id": "1",
+      "description": "做品牌出身,现在负责工作室的设计方向。",
+      "thumbnail": "",
+      "content": "在两家广告公司做过六年品牌,后来发现自己更喜欢陪一个产品从零走到上线,于是有了 ORBIT。\n\n## 我在做什么\n\n现在主要负责设计方向与客户沟通:把客户嘴里那句含糊的\"想要高级一点\",翻译成能落地的视觉决策。也画插画,大多用在自己的项目里。\n\n> 好设计不是加到不能再加,而是删到不能再删。\n\n业余时间在做一套关于二十四节气的插画,画了三年,还剩五张。\n\n## 参与作品\n\n:::works\n/a/works/work-1 | 品牌全案:视觉系统、包装延展\n/a/works/work-7 | 门店视觉与导视\n/a/works/work-12 | 主视觉与插画\nhttps://www.behance.net/gallery/000000/orbit-poster | 二十四节气插画(个人项目) | 全部插画 | 2023—2026 | \n:::\n",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 3,
+      "published_at": "2025-01-04T02:00:00.000Z",
+      "created_at": "2025-01-04T02:00:00.000Z",
+      "updated_at": "2025-01-04T02:00:00.000Z",
+      "data": {
+        "sort": 1,
+        "role": "创始人 / 设计负责人",
+        "skills": "品牌,UI,策略,插画",
+        "social_github": "https://github.com/linxiaoke",
+        "social_bilibili": "https://space.bilibili.com/100000001",
+        "social_xiaohongshu": "https://www.xiaohongshu.com/user/profile/100000001",
+        "social_zhihu": "https://www.zhihu.com/people/linxiaoke",
+        "social_email": "linxiaoke@orbit.studio"
+      }
+    },
+    {
+      "id": 22,
+      "title": "陈默",
+      "slug": "member-2",
+      "author_id": "1",
+      "description": "写了十年前端,现在更多时间花在架构与代码评审上。",
+      "thumbnail": "",
+      "content": "从 jQuery 时代写到今天,经历过三轮技术栈更替,也因此对\"新框架\"这件事保持着克制的兴趣。\n\n## 我关心什么\n\n关心两件事:上线之后还改得动吗,以及新同事第一天能不能把项目跑起来。前者靠边界清晰的模块,后者靠一份认真写的 README。\n\n> 能删掉的依赖,就是不会出问题的依赖。\n\n偶尔在 B 站录一点重构过程的屏,主要是给自己看。\n\n## 参与作品\n\n:::works\n/a/works/work-2 | 前端架构、组件库\n/a/works/work-11 | 实时看板的数据层\n/a/works/work-14 | 重构与性能优化\n | 某券商内部工单系统 | 前端重构(客户未授权披露) | 2025 | \n:::\n",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 3,
+      "published_at": "2025-01-03T02:00:00.000Z",
+      "created_at": "2025-01-03T02:00:00.000Z",
+      "updated_at": "2025-01-03T02:00:00.000Z",
+      "data": {
+        "sort": 2,
+        "role": "技术负责人",
+        "skills": "Vue,Node,架构,性能",
+        "social_github": "https://github.com/chenmo",
+        "social_bilibili": "https://space.bilibili.com/100000002",
+        "social_zhihu": "https://www.zhihu.com/people/chenmo",
+        "social_email": "chenmo@orbit.studio"
+      }
+    },
+    {
+      "id": 23,
+      "title": "苏晓",
+      "slug": "member-3",
+      "author_id": "1",
+      "description": "喜欢跟真实用户坐在一起看他们怎么用产品。",
+      "thumbnail": "",
+      "content": "入行前在一家连锁书店做过两年店员,那段经历让我习惯了先看人怎么做,再想界面该怎么排。\n\n## 我的工作方式\n\n每个项目都会做至少五场一对一的用户观察。不问\"你觉得好不好用\",只看他们卡在哪一步、什么时候把手机放下。\n\n> 用户不会告诉你答案,但他们的犹豫会。\n\n动效是最近在补的一块,做完的原型都会自己录一遍看节奏。\n\n## 参与作品\n\n:::works\n/a/works/work-5 | 交互设计、可用性测试\n/a/works/work-8 | 预约流程设计\n/a/works/work-13 | 动效与原型\n:::\n",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 1,
+      "category_id": 3,
+      "published_at": "2025-01-02T02:00:00.000Z",
+      "created_at": "2025-01-02T02:00:00.000Z",
+      "updated_at": "2025-01-02T02:00:00.000Z",
+      "data": {
+        "sort": 3,
+        "role": "产品设计师",
+        "skills": "交互,原型,用研,动效",
+        "social_bilibili": "https://space.bilibili.com/100000003",
+        "social_douyin": "https://www.douyin.com/user/suxiao",
+        "social_xiaohongshu": "https://www.xiaohongshu.com/user/profile/100000003",
+        "social_email": "suxiao@orbit.studio"
+      }
+    },
+    {
+      "id": 24,
+      "title": "阿泽",
+      "slug": "member-4",
+      "author_id": "1",
+      "description": "刚加入不久,负责小程序与部署这一摊。",
+      "thumbnail": "",
+      "content": "今年春天加入工作室,之前在一家做 SaaS 的公司写后端。目前手上的项目还没有对外交付的,所以这一页暂时看不到作品。\n\n## 我在负责什么\n\n小程序端的开发,以及所有项目的部署与监控。喜欢把重复的事情写成脚本,哪怕只重复三次。\n\n> 手动做第三遍的时候,就该写脚本了。\n\n业余时间玩自建服务,家里那台小主机上跑着七八个容器。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 3,
+      "published_at": "2025-01-01T02:00:00.000Z",
+      "created_at": "2025-01-01T02:00:00.000Z",
+      "updated_at": "2025-01-01T02:00:00.000Z",
+      "data": {
+        "sort": 4,
+        "role": "全栈工程师",
+        "skills": "TypeScript,小程序,DevOps",
+        "social_github": "https://github.com/aze",
+        "social_douyin": "https://www.douyin.com/user/aze"
+      }
+    },
+    {
+      "id": 25,
+      "title": "我们如何用一周做完一个品牌",
+      "slug": "post-1",
+      "author_id": "1",
+      "description": "一次压缩到极限的品牌冲刺,以及我们踩到的坑。",
+      "thumbnail": "",
+      "content": "这是一次不太推荐、但确实完成了的尝试。\n\n## 怎么做到的\n\n把所有会议压到三场,每场都带着可否决的方案进去。真正省下来的时间不是设计,是等待反馈。\n\n- 第一天:对齐目标与禁区\n\n- 第二到四天:三版方向同时推\n\n- 第五天:定稿并出规范\n\n> 快的前提是有人能当场拍板。\n\n如果客户那边没有决策人全程在场,这个节奏是走不通的。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 4,
+      "published_at": "2026-01-20T06:00:00.000Z",
+      "created_at": "2026-01-20T06:00:00.000Z",
+      "updated_at": "2026-01-20T06:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 26,
+      "title": "关于远程协作的一些心得",
+      "slug": "post-2",
+      "author_id": "1",
+      "description": "四个人、三座城市,我们靠什么把事情推下去。",
+      "thumbnail": "",
+      "content": "工作室从第一天就是远程的,不是因为潮流,而是因为大家本来就不在一个城市。\n\n## 有用的三件事\n\n- 把结论写进文档,而不是留在会议里\n\n- 默认异步,同步只用来做决定\n\n- 每周一次不谈工作的闲聊会\n\n> 远程最大的成本不是沟通,是猜。\n\n把\"我以为你在做\"这类猜测消灭掉,远程就没那么难。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 4,
+      "published_at": "2026-02-20T06:00:00.000Z",
+      "created_at": "2026-02-20T06:00:00.000Z",
+      "updated_at": "2026-02-20T06:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 27,
+      "title": "设计系统落地的三个坑",
+      "slug": "post-3",
+      "author_id": "1",
+      "description": "组件库建好了,却没人用 —— 大概是这三个原因。",
+      "thumbnail": "",
+      "content": "我们做过四套设计系统,前两套都失败了。\n\n## 三个坑\n\n- 先做组件,后想场景\n\n- 只有设计师维护,工程师另写一套\n\n- 没有人负责回答\"这个该用哪个组件\"\n\n> 设计系统是一项服务,不是一份交付物。\n\n后两套之所以活下来,是因为每套都指定了一个人长期答疑。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 4,
+      "published_at": "2026-03-20T06:00:00.000Z",
+      "created_at": "2026-03-20T06:00:00.000Z",
+      "updated_at": "2026-03-20T06:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 28,
+      "title": "为什么我们选择 Vue",
+      "slug": "post-4",
+      "author_id": "1",
+      "description": "不是因为它更好,而是因为它更适合我们这种规模的团队。",
+      "thumbnail": "",
+      "content": "这个问题几乎每个客户都会问一遍。\n\n## 我们的理由\n\n- 单文件组件让交接成本很低\n\n- 模板语法对设计师友好,他们能直接改\n\n- 生态足够,但不至于每周都要重新学\n\n> 技术选型的第一约束是团队,不是框架。\n\n如果团队里多数人更熟别的栈,我们也会用别的栈。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 4,
+      "published_at": "2026-04-20T06:00:00.000Z",
+      "created_at": "2026-04-20T06:00:00.000Z",
+      "updated_at": "2026-04-20T06:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 29,
+      "title": "2025 年度回顾",
+      "slug": "post-5",
+      "author_id": "1",
+      "description": "交付了九个项目,拒掉了十一个 —— 以及为什么。",
+      "thumbnail": "",
+      "content": "照例做一次年度盘点。\n\n## 数字\n\n- 交付九个项目,其中三个是老客户的第二次合作\n\n- 拒掉十一个,多数是因为排期或目标不清\n\n- 团队从三人变成四人\n\n> 拒掉的项目比接下的项目更能定义一家工作室。\n\n明年想少接一点,把每个项目做得更完整一些。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 4,
+      "published_at": "2026-05-20T06:00:00.000Z",
+      "created_at": "2026-05-20T06:00:00.000Z",
+      "updated_at": "2026-05-20T06:00:00.000Z",
+      "data": null
+    },
+    {
+      "id": 30,
+      "title": "关于 ORBIT",
+      "slug": "about",
+      "author_id": "1",
+      "description": "",
+      "thumbnail": "",
+      "content": "我们是 **ORBIT STUDIO** —— 一间专注数字产品的小工作室(演示内容)。\n\n## 我们相信\n\n好的产品 = 清晰的策略 + 克制的设计 + 扎实的工程。\n\n## 我们怎么工作\n\n1. **对齐目标** —— 先聊清楚要解决什么问题\n2. **快速原型** —— 用最小成本验证方向\n3. **打磨落地** —— 把每个细节做到位\n\n## 一起做点好东西?\n\n无论是从 0 到 1,还是既有产品的升级,欢迎[联系我们](/contact)。",
+      "content_template": "",
+      "status": "visible",
+      "publish_at": null,
+      "rev_version": 0,
+      "is_top": 0,
+      "category_id": 5,
+      "published_at": "2025-06-01T00:00:00.000Z",
+      "created_at": "2025-06-01T00:00:00.000Z",
+      "updated_at": "2025-06-01T00:00:00.000Z",
+      "data": null
+    }
+  ],
+  "roles": [
+    {
+      "id": 1,
+      "name": "super_admin",
+      "label": "Super Admin",
+      "description": null,
+      "is_system": 1,
+      "weight": 100
+    },
+    {
+      "id": 2,
+      "name": "admin",
+      "label": "Admin",
+      "description": null,
+      "is_system": 1,
+      "weight": 80
+    },
+    {
+      "id": 3,
+      "name": "editor",
+      "label": "Editor",
+      "description": null,
+      "is_system": 1,
+      "weight": 50
+    },
+    {
+      "id": 4,
+      "name": "author",
+      "label": "Author",
+      "description": null,
+      "is_system": 1,
+      "weight": 30
+    }
+  ],
+  "role_permissions": [
+    {
+      "id": 1,
+      "role_id": 2,
+      "model": "articles",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 2,
+      "role_id": 2,
+      "model": "articles",
+      "action": "R",
+      "scope": "any"
+    },
+    {
+      "id": 3,
+      "role_id": 2,
+      "model": "articles",
+      "action": "U",
+      "scope": "any"
+    },
+    {
+      "id": 4,
+      "role_id": 2,
+      "model": "articles",
+      "action": "D",
+      "scope": "any"
+    },
+    {
+      "id": 5,
+      "role_id": 2,
+      "model": "articles",
+      "action": "publish",
+      "scope": "any"
+    },
+    {
+      "id": 6,
+      "role_id": 3,
+      "model": "articles",
+      "action": "R",
+      "scope": "own"
+    },
+    {
+      "id": 7,
+      "role_id": 3,
+      "model": "articles",
+      "action": "U",
+      "scope": "own"
+    },
+    {
+      "id": 8,
+      "role_id": 3,
+      "model": "articles",
+      "action": "D",
+      "scope": "own"
+    },
+    {
+      "id": 9,
+      "role_id": 3,
+      "model": "articles",
+      "action": "publish",
+      "scope": "own"
+    },
+    {
+      "id": 10,
+      "role_id": 4,
+      "model": "articles",
+      "action": "R",
+      "scope": "own"
+    },
+    {
+      "id": 11,
+      "role_id": 4,
+      "model": "articles",
+      "action": "U",
+      "scope": "own"
+    },
+    {
+      "id": 12,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 13,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "R",
+      "scope": "any"
+    },
+    {
+      "id": 14,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "U",
+      "scope": "any"
+    },
+    {
+      "id": 15,
+      "role_id": 2,
+      "model": "attachments",
+      "action": "D",
+      "scope": "any"
+    },
+    {
+      "id": 16,
+      "role_id": 3,
+      "model": "attachments",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 17,
+      "role_id": 3,
+      "model": "attachments",
+      "action": "R",
+      "scope": "any"
+    },
+    {
+      "id": 18,
+      "role_id": 3,
+      "model": "attachments",
+      "action": "D",
+      "scope": "any"
+    },
+    {
+      "id": 19,
+      "role_id": 4,
+      "model": "attachments",
+      "action": "C",
+      "scope": "any"
+    },
+    {
+      "id": 20,
+      "role_id": 4,
+      "model": "attachments",
+      "action": "R",
+      "scope": "any"
+    }
+  ],
+  "user_roles": [],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "dd3224dc3eea0354251a29849f0c304afe74c215afdff3a3849cdd724b2fad441ea81c81c370238cf12409913b410bfffdf360c6ab27b40153bbcbf2e135eebd7e179c1cc31bb4af2e28b825a3f55d36",
+      "nickname": "admin",
+      "role": "super_admin",
+      "lastontime": "2026-07-16 08:18:25"
+    },
+    {
+      "id": 2,
+      "username": "editor",
+      "password": "e0bbd115ce68c1265cdd1aa9ff307ea4634c4e02f63c1ae83df9e31af179d1d056a14e356cf6e87e97f682e444f28d18bfa4f430f799c2e7d0bd37c7ddcbcad190ee7a03bd58fbc3b84ba957a0283b40",
+      "nickname": "Demo Editor",
+      "role": "editor",
+      "lastontime": "2026-07-16 08:18:25"
+    }
+  ],
+  "attachments": [],
+  "revisions": [],
+  "resource_grants": [],
+  "schemas": []
+}

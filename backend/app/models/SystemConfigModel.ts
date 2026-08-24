@@ -81,7 +81,6 @@ export const VALID_CONFIG_KEYS = {
     "subtitle": "",
     "icp_record": "",
     "mourning_mode": "0",
-    "home_template": "DefaultHome",
     // Storage config (JSON: { provider, local: {...}, s3: {...}, tencent_cos: {...} })
     "storage_config": '{"provider": "local", "local": {"upload_dir": "static/uploads"}}',
 };

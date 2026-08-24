@@ -3,8 +3,10 @@
 .gitignore
 .gitattributes
 
-# Dependencies
-node_modules
+# Dependencies —— 必须带 **,否则只挡住根目录那一份:frontend/node_modules 会被
+# `COPY frontend/ ./` 拖进镜像(宿主机编译的原生二进制进 linux 容器 = 坏),
+# vendor/dyapi/node_modules 同理。容器里的依赖一律在构建阶段重新装。
+**/node_modules
 bun.lockb
 yarn.lock
 package-lock.json
@@ -33,10 +35,14 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Environment —— 带 ** 才能挡住 backend/.env,否则开发密钥会被 COPY 进镜像;
+# 容器里的密钥/数据库配置一律走 compose 的 environment(见 docker-compose*.yml)。
+**/.env
+**/.env.local
+**/.env.*.local
+
+# 部署实例配置(含明文密钥)
+.deploy
 
 # Docker
 Dockerfile

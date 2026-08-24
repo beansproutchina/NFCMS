@@ -5,6 +5,17 @@ import UserRoleModel from "../models/UserRoleModel.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
 import CategoryModel from "../models/CategoryModel.js";
 import { hooks } from "./HookManager.js";
+import {
+    resolveVisibility,
+    accessEffFromChain,
+    normalizeTeaser,
+    ACCESS_EFF_ANON,
+    ACCESS_EFF_AUTHED,
+    type ViewContext,
+    type Visibility,
+    type AccessEff,
+    type AudienceLevel,
+} from "../lib/audience.js";
 
 /**
  * Synthetic ResourceGrant.model for category-scoped article permissions.
@@ -13,6 +24,21 @@ import { hooks } from "./HookManager.js";
  * cascade, in every descendant category too."
  */
 export const ARTICLES_CATEGORY = "articles_category";
+
+/**
+ * Synthetic ResourceGrant.model for the AUDIENCE axis (public-site gating, see
+ * docs/public-access.md). A grant (model=ARTICLES_AUDIENCE, resource_id=<category_id>,
+ * access="V") means: "the grantee may VIEW restricted articles in that category — and, because
+ * grants cascade, in every descendant category too."
+ *
+ * Why a separate action letter `V` instead of reusing `R`: ARTICLES_CATEGORY's `R` already means
+ * "can read every article in that category from the ADMIN side, drafts included". Reusing it would
+ * silently upgrade "a member may read published content" into "a member may read drafts".
+ */
+export const ARTICLES_AUDIENCE = "articles_audience";
+
+/** The audience-axis action letter. Also usable row-level: ResourceGrant(model="articles", access="V"). */
+export const VIEW_ACTION = "V";
 
 /**
  * PolicyService — the single authority for access control.
@@ -153,13 +179,16 @@ class PolicyService {
         return { $or: or };
     }
 
-    /** Resource ids the user can `action` via ACL grants (own-user or their roles). Cached on state. */
+    /** Resource ids the user can `action` via ACL grants (own-user or their roles). Cached on state.
+     *  `model` may be a model instance or a bare tablename (the audience axis passes "articles"
+     *  without holding the model, to avoid an import cycle). */
     private async aclIds(state: any, model: any, action: string): Promise<any[]> {
-        const cacheKey = `${model.tablename}:${action}`;
+        const table = typeof model === "string" ? model : model.tablename;
+        const cacheKey = `${table}:${action}`;
         if (state._acl?.has(cacheKey)) return state._acl.get(cacheKey);
         const uid = state.user?.id;
         const roleIds: any[] = state._roleIds || [];
-        const grants = await this.app.I(ResourceGrantModel).read({ filter: { model: model.tablename } });
+        const grants = await this.app.I(ResourceGrantModel).read({ filter: { model: table } });
         const ids = grants
             .filter(
                 (g: any) =>
@@ -174,14 +203,22 @@ class PolicyService {
 
     /**
      * Category ids the user may `action` articles in, expanded to include all descendant
-     * categories (grants cascade). Merges user + role grants. Cached on state per action.
+     * categories (grants cascade). Merges user + role grants. Cached on state per (grantModel, action).
+     *
+     * `grantModel` selects the axis: ARTICLES_CATEGORY = 管辖轴 (admin reach), ARTICLES_AUDIENCE =
+     * 受众轴 (public-site view). Same shape, deliberately separate grant rows.
      */
-    private async categoryGrantIds(state: any, action: string): Promise<Set<number>> {
+    private async categoryGrantIds(
+        state: any,
+        action: string,
+        grantModel: string = ARTICLES_CATEGORY,
+    ): Promise<Set<number>> {
         state._catGrant ??= new Map<string, Set<number>>();
-        if (state._catGrant.has(action)) return state._catGrant.get(action);
+        const cacheKey = `${grantModel}:${action}`;
+        if (state._catGrant.has(cacheKey)) return state._catGrant.get(cacheKey);
         const uid = state.user?.id;
         const roleIds: any[] = state._roleIds || [];
-        const grants = await this.app.I(ResourceGrantModel).read({ filter: { model: ARTICLES_CATEGORY } });
+        const grants = await this.app.I(ResourceGrantModel).read({ filter: { model: grantModel } });
         const direct = grants
             .filter(
                 (g: any) =>
@@ -191,22 +228,35 @@ class PolicyService {
             )
             .map((g: any) => Number(g.resource_id));
         const expanded = await this.expandCategories(state, direct);
-        state._catGrant.set(action, expanded);
+        state._catGrant.set(cacheKey, expanded);
         return expanded;
+    }
+
+    /**
+     * The whole category table, read at most ONCE per request and cached on `state` along with the
+     * parent→children map and an id→row index. Both axes need it (subtree cascade for grants, parent
+     * chain for audience inheritance), so sharing the read keeps the per-request cost at one query.
+     */
+    private async categoryIndex(state: any): Promise<{ rows: any[]; childrenOf: Map<number, number[]>; byId: Map<number, any> }> {
+        if (!state._catIndex) {
+            const rows = await this.app.I(CategoryModel).read({ limit: 100000 });
+            const childrenOf = new Map<number, number[]>();
+            const byId = new Map<number, any>();
+            for (const c of rows) {
+                const p = Number(c.parent_id) || 0;
+                (childrenOf.get(p) ?? childrenOf.set(p, []).get(p)!).push(Number(c.id));
+                byId.set(Number(c.id), c);
+            }
+            state._catIndex = { rows, childrenOf, byId };
+            state._catChildren = childrenOf; // 兼容:早先的字段名
+        }
+        return state._catIndex;
     }
 
     /** Expand category ids to include their whole subtree (cascade). */
     private async expandCategories(state: any, ids: number[]): Promise<Set<number>> {
         if (!ids.length) return new Set();
-        if (!state._catChildren) {
-            const cats = await this.app.I(CategoryModel).read({ limit: 100000 });
-            const childrenOf = new Map<number, number[]>();
-            for (const c of cats) {
-                const p = Number(c.parent_id) || 0;
-                (childrenOf.get(p) ?? childrenOf.set(p, []).get(p)!).push(Number(c.id));
-            }
-            state._catChildren = childrenOf;
-        }
+        await this.categoryIndex(state);
         const out = new Set<number>();
         const stack = [...ids];
         while (stack.length) {
@@ -234,6 +284,98 @@ class PolicyService {
             for (const id of await this.categoryGrantIds(state, a)) set.add(id);
         }
         return [...set];
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════════════
+    // 受众轴(公开站门禁)。与上面的管辖轴**正交**:管辖轴回答"登录用户能改什么",受众轴回答
+    // "访客能看什么"。两轴共享 ResourceGrant 表与分类树索引,但判定互不调用。
+    // 判定规则本身是 app/lib/audience.ts 的纯函数;这里只负责把 state 组装成它需要的上下文
+    // —— 读 grants 的地方仍然只有 PolicyService 一处。设计见 docs/public-access.md。
+    // ════════════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * 组装受众判定上下文。匿名路径**一次库都不读**(匿名不可能持有 grant),这是公开流量的绝大多数。
+     * 缓存在 state 上,一个请求内多次调用免费。
+     */
+    async viewContext(state: any): Promise<ViewContext> {
+        if (state._viewCtx) return state._viewCtx;
+        const isAuthed = state.user?.id != null;
+        const unrestricted = this.isSuper(state) || state.perms?.get("articles:R") === "any";
+
+        let grantedCats = new Set<number>();
+        let grantedIds = new Set<string>();
+        if (isAuthed && !unrestricted) {
+            grantedCats = await this.categoryGrantIds(state, VIEW_ACTION, ARTICLES_AUDIENCE);
+            const raw = await this.aclIds(state, "articles", VIEW_ACTION);
+            grantedIds = new Set(raw.map((id: any) => String(id)));
+        }
+        state._viewCtx = { isAuthed, unrestricted, grantedCats, grantedIds };
+        return state._viewCtx;
+    }
+
+    /** 单条内容的可见性。返回三态而不是布尔 —— `locked` 不是拒绝,它走 200 + 剥正文。 */
+    async canView(state: any, row: any): Promise<Visibility> {
+        return resolveVisibility(row, await this.viewContext(state));
+    }
+
+    /**
+     * AND 进公开列表查询的 filter。`{}` = 无约束。
+     * 空集合的 `{$in: []}` 对 OR 无贡献(与 scopeFilter 同行为),所以无授权用户不会因此多看到东西。
+     */
+    async viewFilter(state: any): Promise<any> {
+        const ctx = await this.viewContext(state);
+        if (ctx.unrestricted) return {};
+        if (!ctx.isAuthed) return { access_eff: { $in: ACCESS_EFF_ANON } };
+        const rawIds = await this.aclIds(state, "articles", VIEW_ACTION);
+        return {
+            $or: {
+                access_eff: { $in: ACCESS_EFF_AUTHED },
+                category_id: { $in: [...ctx.grantedCats] },
+                id: { $in: rawIds },
+            },
+        };
+    }
+
+    /**
+     * 栏目自身的有效 access_eff —— 沿父链继承(取最严)。栏目上不物化派生值(栏目数量小、
+     * 每请求已经全表读进 state),所以这里现算。
+     */
+    private async categoryAccessEff(state: any, categoryId: any): Promise<AccessEff> {
+        const { byId } = await this.categoryIndex(state);
+        const chain: AudienceLevel[] = [];
+        const seen = new Set<number>();
+        let id = Number(categoryId);
+        while (Number.isFinite(id) && id > 0 && !seen.has(id)) {
+            seen.add(id);
+            const cat = byId.get(id);
+            if (!cat) break;
+            chain.unshift({ audience: cat.audience || null, teaser: normalizeTeaser(cat.teaser) });
+            id = Number(cat.parent_id) || 0;
+        }
+        return accessEffFromChain(chain);
+    }
+
+    /** 栏目对当前访客的可见性(栏目详情页 / 分类列表过滤共用)。 */
+    async canViewCategory(state: any, categoryId: any): Promise<Visibility> {
+        const ctx = await this.viewContext(state);
+        const access_eff = await this.categoryAccessEff(state, categoryId);
+        // `id: null` 是刻意的:行级 V 授权是给**文章**发的,不能让同号的栏目蹭到。
+        return resolveVisibility({ access_eff, category_id: Number(categoryId), id: null }, ctx);
+    }
+
+    /**
+     * 访客可见的栏目 id 集合(非 hidden —— teaser 栏目**要**出现在列表里,那正是它的用途)。
+     * 供 /content/categories 与分类树过滤使用。
+     */
+    async viewableCategoryIds(state: any): Promise<Set<number>> {
+        if (state._viewableCats) return state._viewableCats;
+        const { rows } = await this.categoryIndex(state);
+        const out = new Set<number>();
+        for (const c of rows) {
+            if ((await this.canViewCategory(state, c.id)) !== "hidden") out.add(Number(c.id));
+        }
+        state._viewableCats = out;
+        return out;
     }
 }
 
