@@ -23,6 +23,17 @@ export function init(_app: App) {
     link.id = id;
     link.rel = 'stylesheet';
     link.href = 'https://tdli.sjtu.edu.cn/assets/css/iconfont/iconfont.css';
+    /**
+     * **非阻塞加载**。`init()` 跑在 `app.mount()` 之前,此时 DOMContentLoaded 还没触发,
+     * 而这时插进去的 `<link rel=stylesheet>` 会把它一起挡住 —— SSG 的
+     * `page.goto(waitUntil:'domcontentloaded')` 于是要一直等这个外站请求。整站预渲染时
+     * 几十个页面并发拉同一个域名,连接排队,结果是**每一页都 15s 超时**(实测 79/79 全挂)。
+     *
+     * `media='print'` 让它不参与当前媒体的匹配,浏览器就不再拿它阻塞;下载完再切回 `all`。
+     * 图标晚一帧出现,远好过整站静态页生成不出来。
+     */
+    link.media = 'print';
+    link.onload = () => { link.media = 'all'; };
     document.head.appendChild(link);
   }
 }
