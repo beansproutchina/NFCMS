@@ -3,6 +3,7 @@ import { CMSModel } from "../lib/CMSModel.js";
 import { revisions } from "./RevisionService.js";
 import { hooks } from "./HookManager.js";
 import { isBlankDate } from "../utils/dates.js";
+import { registeredModels } from "../lib/registry.js";
 
 /**
  * SchedulerService — flips `scheduled` content to `visible` once publish_at is due.
@@ -23,8 +24,7 @@ class SchedulerService {
         if (this.running) return;
         this.running = true;
         try {
-            const dict = app.instanceDict;
-            const models = (dict instanceof Map ? [...dict.values()] : Object.values(dict)).filter(
+            const models = registeredModels(app).filter(
                 (m: any) =>
                     m instanceof CMSModel &&
                     Array.isArray(m.datafields) &&

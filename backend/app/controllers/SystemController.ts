@@ -10,7 +10,33 @@ import RoleModel from "../models/RoleModel.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
 import { ARTICLES_CATEGORY, policy } from "../services/PolicyService.js";
 import { seedDefaultRbac } from "../services/RbacSeedService.js";
+import { prerender } from "../services/PrerenderService.js";
+import { registeredModels } from "../lib/registry.js";
 
+
+/** 模型当前声明的列名(含主键 id)。 */
+function declaredColumns(model: any): string[] {
+    const names = (model?.datafields ?? []).map((f: any) => f.name).filter((n: any) => typeof n === "string");
+    return names.includes("id") ? names : ["id", ...names];
+}
+
+/**
+ * 按模型当前声明的字段过滤一行导入数据,把被丢弃的列名记进 `dropped`。
+ *
+ * `id` 永远保留 —— `restore()` 靠它保住原编号,而所有交叉引用(category_id / author_id /
+ * parent_id / role_id / grantee_id / resource_id / content_id / menus.items[].refId)都指着它。
+ */
+function stripUnknownColumns(model: any, item: any, dropped: Set<string>): Record<string, any> {
+    const allowed = new Set(declaredColumns(model));
+    const out: Record<string, any> = {};
+    for (const [k, v] of Object.entries(item)) {
+        // `a.b` 形式是 JSON 子字段寻址,按主字段判定(restore 也是这么做的)。
+        const base = k.includes(".") ? k.split(".")[0] : k;
+        if (allowed.has(base)) out[k] = v;
+        else dropped.add(k);
+    }
+    return out;
+}
 
 @ControllerRoute("system")
 export default class SystemController extends Controller {
@@ -51,13 +77,10 @@ export default class SystemController extends Controller {
      * Dynamically get all registered Model instances (static + dynamic)
      */
     private getAllModels(): any[] {
-        const app = this._app as any;
-        const staticModels = app.models ? Object.values(app.models) : [];
-        const dynamicModels = app.components ?? [];
-        // Deduplicate by tablename
+        // 动态内容类型也在 app.models 里(injectDynamicModel 走的就是 app.use),不需要第二个来源。
         const seen = new Set<string>();
         const all: any[] = [];
-        for (const m of [...staticModels, ...dynamicModels]) {
+        for (const m of registeredModels(this._app)) {
             if (m?.tablename && !seen.has(m.tablename)) {
                 seen.add(m.tablename);
                 all.push(m);
@@ -150,7 +173,7 @@ export default class SystemController extends Controller {
                 orderedKeys.push("articles");
             }
 
-            const results: Record<string, { imported: number, failed: number }> = {};
+            const results: Record<string, { imported: number, failed: number, droppedColumns?: string[] }> = {};
 
             /**
              * 这份数据的密码哈希在本机还能不能用?
@@ -184,6 +207,8 @@ export default class SystemController extends Controller {
 
                 let imported = 0;
                 let failed = 0;
+                /** 本表被丢弃的幽灵列(见下方 stripUnknownColumns 的说明),按表汇总上报一次。 */
+                const droppedCols = new Set<string>();
 
                 for (const item of items) {
                     try {
@@ -200,7 +225,24 @@ export default class SystemController extends Controller {
                          * 保 id 是唯一**不需要穷举引用关系图**就正确的做法:每条记录还在原来的编号上,
                          * 所有指针自动有效。(本次会话开头那个"角色重复"就是这个病的一个症状。)
                          */
-                        const data = { ...item };
+                        /**
+                         * **剔除模型不再声明的列。**
+                         *
+                         * DYAPI 迁移只增不减(见 CLAUDE.md):从 Model 里删掉一个字段,库表里那一列
+                         * 还在。于是导出(裸读全表)会带上这个幽灵列,而 `restore()` 对未声明的键是
+                         * `assert(f, ...)` —— **整行拒绝**。净效果:任何一张表只要历史上删过字段,
+                         * 它的导入就会全表失败。
+                         *
+                         * 真实案例:`87f838b` 删掉 `roles.weight` 之后,导出文件里每条角色都带
+                         * `weight: 100`,导入时四条角色全部 `字段weight不存在`,然后被下面的
+                         * `seedDefaultRbac` 兜底重种 —— 一次彻底失败被伪装成成功,而重种出来的
+                         * 角色 id 与源站对不上时,`role_permissions` / `user_roles` /
+                         * `resource_grants` 会静默指到错误的角色上。
+                         *
+                         * 为什么修在导入侧而不只是导出侧:**已经生成的旧导出文件救不回来**。导出侧
+                         * 也收口(见 exportData),但那只保证新文件干净。
+                         */
+                        const data = stripUnknownColumns(model, item, droppedCols);
                         /**
                          * 历史脏数据兜底:dyapi 的写入路径曾把真正的 `null` 当对象 JSON.stringify,
                          * 于是可空的 Date / Object 列里存的是**4 个字符的文本 `"null"`**(根因已在
@@ -239,6 +281,43 @@ export default class SystemController extends Controller {
                 }
 
                 results[key] = { imported, failed };
+                if (droppedCols.size) {
+                    // 汇总一条,不是每行一条 —— 幽灵列是**表级**事实,刷 N 行日志只会淹掉别的信息。
+                    results[key].droppedColumns = [...droppedCols].sort();
+                    console.warn(`[import] 表 ${key}: 丢弃了模型不再声明的列 ${results[key].droppedColumns!.join(", ")} ` +
+                        `(${items.length} 行)。多半是这些字段曾从 Model 里删除,而 DYAPI 迁移只增不减,库里列还在。`);
+                }
+            }
+
+            /**
+             * 兜底之前先拦一种情况:**dump 里明明有 roles,却一条都没导进来。**
+             *
+             * 这时候重新种默认角色是最坏的选择 —— 它会造出一批 id 与源站无关的角色,而
+             * `role_permissions` / `user_roles` / `resource_grants` 里的 role_id 是按源站编号导入的,
+             * 于是权限被静默挂到错误的角色上。「导入成功但权限错乱」比「导入失败」难查得多。
+             *
+             * 宁可硬失败:此时站点仍是未初始化状态,重置数据库重来即可。
+             */
+            const rolesInDump = Array.isArray(importData.roles) ? importData.roles.length : 0;
+            if (rolesInDump > 0 && results.roles?.imported === 0) {
+                console.error(`[import] dump 带了 ${rolesInDump} 个角色但一个都没导入,中止 —— 继续下去会让权限挂到错误的角色上。`);
+                /**
+                 * 把 `is_initialized` 摘掉再退出。
+                 *
+                 * `system_config` 是**第一个**导入的表,dump 里自带 `is_initialized=true`,所以此刻
+                 * 站点已经"看起来初始化过了" —— 不清掉的话 `/setup` 会 403,人被卡在一个 0 角色的
+                 * 半残站点上,既进不去后台也回不到向导。清掉之后至少状态是诚实的:**没装好**。
+                 * (重试仍需重置数据库 —— 表里已经有行,保 id 的 restore 会撞主键。)
+                 */
+                this.configModel.ClearCache();
+                await this.configModel.SetConfig("is_initialized", "false");
+                return {
+                    code: 500,
+                    data: results,
+                    message: `导入中止:dump 里有 ${rolesInDump} 个角色,但一个都没能导入(见 results.roles)。` +
+                        `继续下去会重新种默认角色,而权限数据仍指向源站的角色 id —— 权限会错配。` +
+                        `请重置数据库后重试。`,
+                };
             }
 
             // Safety net for dumps that carry no `roles` rows (partial/legacy export): without
@@ -338,11 +417,38 @@ export default class SystemController extends Controller {
             ]
         });
 
-        // SSG is currently unwired (see index.ts step 8) — nothing to build here. When it comes
-        // back, this seed content is created via raw model calls (no content hooks), so setup has
-        // to kick off the initial build itself: `await staticgen.regenerateAll();`
+        /**
+         * 上面的种子内容是用**裸** model 调用建的(不走 HTTP*),因此一条 content hook 都没发过
+         * —— 预渲染那边什么都不知道。这里主动踢一次全量,否则新站点要等到第一次编辑才有静态页。
+         * 不 await:全量可能几分钟,不该挡住 setup 的响应。
+         */
+        void prerender.regenerateAll().catch((e: any) => console.error("[ssg] setup 后全量失败:", e?.message));
 
         return { code: 200, message: "Setup completed successfully." };
+    }
+
+    /**
+     * 手动全量重生成公开站静态页。**super_admin only,且刻意没有后台 UI。**
+     *
+     * 为什么存在:开发环境的 `npm run ssg:preview` 需要一个触发点 —— 生成必须由后端做(要读库),
+     * 而预览服务器在前端起。备选是写一个独立 CLI 进程,但那会二次打开同一个 SQLite,正是
+     * CLAUDE.md 坑 #2 点名的 `disk I/O error` 陷阱。
+     *
+     * `baseUrl`:让生成器对着调用方指定的站点渲染(dev 指向预览服务器;生产不传,用容器内 nginx)。
+     */
+    @Route("post", "/ssg/regenerate")
+    async ssgRegenerate(ctx: any) {
+        if (!policy.isSuper(ctx.state)) {
+            return { code: 403, message: "Permission Denied. super_admin required." };
+        }
+        const baseUrl = ctx.request.body?.baseUrl;
+        try {
+            const pages = await prerender.regenerateAll({ baseUrl });
+            return { code: 200, data: { pages }, message: `generated ${pages} pages` };
+        } catch (e: any) {
+            console.error("[ssg] 手动全量失败:", e?.message);
+            return { code: 500, message: `预渲染失败:${e?.message ?? e}` };
+        }
     }
 
     @Route("get", "/export")
@@ -369,7 +475,10 @@ export default class SystemController extends Controller {
                  * 结论:导出哈希是正常做法(`mysqldump` 也如此),那层 AES 是纯粹的复杂度。
                  * 但导出文件仍应按敏感文件对待:它 + `.env` 一起泄漏 = 可离线爆破。
                  */
-                exportData[key] = await model.read({});
+                // 只导模型**当前声明**的列。库表里可能还留着历史上删过的字段(DYAPI 迁移只增不减),
+                // 裸读会把它们一起带出来,导入侧再遇到就是 `字段X不存在`。导入侧也做了容错,
+                // 但新文件不该一开始就是脏的。
+                exportData[key] = await model.read({ fields: declaredColumns(model) });
             } catch (e: any) {
                 console.warn(`Export read failed for [${key}]:`, e.message);
                 exportData[key] = [];

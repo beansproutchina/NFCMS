@@ -1,6 +1,6 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import { assert, ForbiddenError } from "dyapi/utils/error.js";
 import testContainer from "../containers/testContainer.js";
 import { policy } from "../services/PolicyService.js";
@@ -11,7 +11,6 @@ import { policy } from "../services/PolicyService.js";
  * so it must never be publicly listable.
  */
 @CRUD("revisions")
-@PopTarget("uid")
 export default class RevisionModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "revisions";

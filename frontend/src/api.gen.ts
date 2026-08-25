@@ -3,7 +3,7 @@
  *
  * Regenerate with:  dyapi gen <backend-dir> --out <this-file>
  *
- * Models: 11 · Controller routes: 28
+ * Models: 11 · Controller routes: 29
  */
 /* eslint-disable */
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
@@ -99,14 +99,85 @@ export interface DeleteResponse {
   code: number;
 }
 
-/** MongoDB-style filter passed to dyapi read/update/delete queries. */
-export type DyapiFilter = Record<string, any>;
+/**
+ * Comparison / matching operators available on a single field.
+ *
+ * Keys may carry an `_suffix` to use the same operator twice on one field,
+ * e.g. `{ age: { $gt_1: 18, $lt_2: 65 } }`.
+ *
+ * Note: `$contains` / `$ncontains` / `$start` / `$end` / `$regex` are
+ * string-only — using them on an array field is rejected with a 400. Use the
+ * array operators below instead.
+ */
+export interface DyapiFieldOps {
+  $eq?: any;
+  $ne?: any;
+  $gt?: any;
+  $gte?: any;
+  $lt?: any;
+  $lte?: any;
+  /** Value set membership. A scalar is treated as a single-element set. */
+  $in?: any | any[];
+  $nin?: any | any[];
+  /** Substring match (case-insensitive on all backends). */
+  $contains?: string;
+  $ncontains?: string;
+  /** Prefix / suffix match. */
+  $start?: string;
+  $end?: string;
+  /**
+   * Regular expression source.
+   * On the SQLite backend only pure-literal patterns with optional `^`/`$`
+   * anchors are supported (bun:sqlite has no REGEXP function); anything else
+   * returns a 400.
+   */
+  $regex?: string;
+  /** Array contains this element (exact element equality, not substring). */
+  $has?: any;
+  /** Array contains all / any of these elements. */
+  $hasAll?: any[];
+  $hasAny?: any[];
+  /** Array length equals. */
+  $size?: number;
+  /** Nested logical grouping, scoped to this field. */
+  $and?: DyapiFieldOps;
+  $or?: DyapiFieldOps;
+  $not?: DyapiFieldOps;
+  [op: `$${string}`]: any;
+}
+
+/**
+ * MongoDB-style filter passed to dyapi read/update/delete queries.
+ *
+ * Keys are field names — dot notation reaches into JSON fields and array
+ * indices (`"meta.score"`, `"tags.0"`). Values are either a literal for
+ * equality or an operator object.
+ */
+export interface DyapiFilter {
+  $and?: DyapiFilter;
+  $or?: DyapiFilter;
+  $not?: DyapiFilter;
+  [field: string]: any | DyapiFieldOps | undefined;
+}
+
+/**
+ * Sort spec: a field name, or several. Prefix a name with `~` for descending.
+ *
+ *     orderBy: "name"                  // ascending
+ *     orderBy: "~createdAt"            // descending
+ *     orderBy: ["g", "~v"]             // g ascending, then v descending
+ *     orderBy: ["~meta.score", "id"]   // JSON sub-field, then id
+ *
+ * `orderDesc` still works and sets the default direction for entries without
+ * a `~` prefix, so single-field usage is unchanged.
+ */
+export type OrderBy = string | string[];
 
 /** Query parameters accepted by dyapi CRUD read endpoints. */
 export interface ReadQuery {
   id?: string | number;
   filter?: DyapiFilter;
-  orderBy?: string;
+  orderBy?: OrderBy;
   orderDesc?: boolean;
   limit?: number;
   page?: number;
@@ -125,7 +196,9 @@ function toReadParams(q: ReadQuery & Record<string, any> = {}): Record<string, a
   const p: Record<string, any> = {};
   if (q.id !== undefined) p.id = q.id;
   if (q.filter !== undefined) p.filter = JSON.stringify(q.filter);
-  if (q.orderBy !== undefined) p.orderBy = q.orderBy;
+  // Comma-joined like fields/hideFields/pops below — the server splits commas at
+  // the HTTP boundary. Never emit a repeated query param.
+  if (q.orderBy !== undefined) p.orderBy = Array.isArray(q.orderBy) ? q.orderBy.join(",") : q.orderBy;
   if (q.orderDesc !== undefined) p.orderDesc = q.orderDesc;
   if (q.limit !== undefined) p.limit = q.limit;
   if (q.page !== undefined) p.page = q.page;
@@ -867,7 +940,7 @@ export interface ContentPreviewTokenBody {
 }
 
 /** POST /api/content/preview-token — ContentController.previewToken */
-export function contentPreviewToken(body?: ContentPreviewTokenBody): Promise<{ code: number; data: { token: string; }; }> {
+export function contentPreviewToken(body?: ContentPreviewTokenBody): Promise<{ code: number; data: { token: any; }; }> {
   return request({ method: "post", url: "/api/content/preview-token", data: body });
 }
 
@@ -962,8 +1035,18 @@ export interface SystemSetupBody {
 }
 
 /** POST /api/system/setup — SystemController.setup */
-export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; }>; saltState: "match" | "mismatch" | "unknown"; resetCredentials: { username: string; password: string; }[]; message: string; } | { code: number; message: string; }> {
+export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; droppedColumns?: string[]; }>; saltState: "match" | "mismatch" | "unknown"; resetCredentials: { username: string; password: string; }[]; message: string; } | { code: number; message: string; }> {
   return request({ method: "post", url: "/api/system/setup", data: body });
+}
+
+
+export interface SystemSsgRegenerateBody {
+  baseUrl?: any;
+}
+
+/** POST /api/system/ssg/regenerate — SystemController.ssgRegenerate */
+export function systemSsgRegenerate(body?: SystemSsgRegenerateBody): Promise<{ code: number; data: { pages: number; }; message: string; }> {
+  return request({ method: "post", url: "/api/system/ssg/regenerate", data: body });
 }
 
 

@@ -7,13 +7,15 @@ import {
     type AudienceLevel,
     type AccessEff,
 } from "../lib/audience.js";
+import { requireModelByTable } from "../lib/registry.js";
+import { hooks } from "./HookManager.js";
 
 /**
  * 受众轴派生值(`articles.access_eff`)的维护者。
  *
  * 分工:判定规则的纯函数在 `app/lib/audience.ts`(可单测);**鉴权判定**在 PolicyService(唯一
  * 鉴权权威);本服务只负责有状态的**派生数据维护**——写入前盖章、栏目变更后批量重算。与
- * SchedulerService / StaticGenService 同类。
+ * SchedulerService / PrerenderService 同类。
  *
  * 为什么要物化:公开列表 filter 因此退化成单字段 $in,不必在 SQL 里表达"字段为空则回落到栏目"。
  * 代价就是这里两个重算入口,必须都接上,否则派生值会陈旧。
@@ -26,19 +28,14 @@ class AudienceService {
     }
 
     /**
-     * 按 tablename 从容器取模型实例,**故意不 import 模型类**。
-     *
-     * ArticleModel / CategoryModel 都要调本服务(写入时盖章、栏目变更时重算),如果这里再 import
-     * 它们就成了 ESM 循环依赖 —— 实测会炸成 `Cannot access 'CMSModel' before initialization`
-     * (模型类在其基类初始化前被求值)。按 tablename 扫 instanceDict 是 ModelInjector 里已有的
-     * 做法,代价只是丢掉静态类型。
+     * 按 tablename 取模型实例,**故意不 import 模型类** —— 理由见 lib/registry.ts。
      */
     private model(tablename: string): any {
-        const dict = (this.app as any).instanceDict ?? {};
-        for (const inst of Object.values(dict) as any[]) {
-            if (inst?.tablename === tablename) return inst;
+        try {
+            return requireModelByTable(this.app, tablename);
+        } catch (e: any) {
+            throw new Error(`[audience] ${e.message}`);
         }
-        throw new Error(`[audience] model for table '${tablename}' not registered`);
     }
 
     private get categories() {
@@ -195,6 +192,7 @@ class AudienceService {
         });
 
         let changed = 0;
+        const changedIds: any[] = [];
         for (const row of rows) {
             const eff = await this.effFor(row, map);
             if (eff === row.access_eff) continue;
@@ -202,8 +200,22 @@ class AudienceService {
             // 也不触发版本快照 —— 派生值变化不是一次内容编辑。
             await this.articles.update({ id: row.id }, { access_eff: eff });
             changed++;
+            changedIds.push(row.id);
         }
-        if (changed) console.log(`[audience] recomputed access_eff for ${changed} article(s) under category ${categoryId}`);
+        if (changed) {
+            console.log(`[audience] recomputed access_eff for ${changed} article(s) under category ${categoryId}`);
+            /**
+             * **可见性变了就必须通知出去。**
+             *
+             * 上面那句「派生值变化不是一次内容编辑」对版本快照是对的,所以这里不能复用
+             * `content.saved.*`(那会让改一次栏目受众就给整棵子树刷一堆版本)。但对公开站的
+             * 静态产物来说,这是**最要紧的一种变化**:一批文章刚从 public 变成 restricted,
+             * 而它们的静态全文还躺在人人可读的目录里。
+             *
+             * 独立事件名,只有 SSG 订阅,RevisionService 不订阅 —— 两个诉求各自成立。
+             */
+            await hooks.doAction(`content.access_changed.${this.articles.tablename}`, changedIds);
+        }
         return changed;
     }
 

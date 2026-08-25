@@ -12,13 +12,8 @@ import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 import { systemAPI, contentAPI, crud, listMenu } from '../api';
 import { pages, info as themeInfo } from '../views/front/templates/theme.config';
+import { resolveTemplateChain, accessGateName } from '../views/front/templateLoader';
 import { useAuthStore } from '../stores/auth';
-
-/**
- * 受众轴的 gate 页模板名。主题可用 `info.accessGate` 指定自己的实现;缺省走约定名
- * `AccessGate`,而主题若没提供该文件,DynamicView 的 loadComponent 会回落到框架内置的兜底组件。
- */
-const accessGateTemplate = () => (themeInfo as any)?.accessGate || 'AccessGate';
 
 NProgress.configure({ showSpinner: false, speed: 400 });
 
@@ -129,7 +124,7 @@ const fetchContentData = async (to: any) => {
                 // 那样会触发全局错误 toast,而这里要的是页面内的登录引导)。整条渲染通路不变,
                 // 只把模板换成 gate 页,于是它照常套主题的 layout 链与标题解析。
                 // 见 docs/public-access.md §6。
-                if (res.data.locked) templateName = accessGateTemplate();
+                if (res.data.locked) templateName = accessGateName();
             } else {
                 to.meta.fetchedData = { ...baseData, success: false, error: res.message || 'Error loading article' };
                 return;
@@ -283,13 +278,23 @@ const fetchContentData = async (to: any) => {
     if (!pageTitle) pageTitle = baseData.config?.site_name || '';
     if (pageTitle) document.title = pageTitle;
 
+    /**
+     * 连组件一起解析好再让导航完成。
+     *
+     * 不这么做的话 DynamicView 挂载后的第一次同步渲染没有组件可渲染(它原先在 watch 里
+     * 异步 import),DOM 是空的 —— 而预渲染页恰恰要在这一帧上水合,空 DOM 对不上整页静态
+     * 内容,Vue 判 mismatch 后整棵重渲染,表现为整页闪白。见 templateLoader.ts。
+     */
+    const components = await resolveTemplateChain(templateName, layouts, viewType);
+
     to.meta.fetchedData = {
         ...baseData,
         data: pageData,
         meta,
         title: pageTitle,
         templateName,
-        layouts
+        layouts,
+        components,
     };
 };
 

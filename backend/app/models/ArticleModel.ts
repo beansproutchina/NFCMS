@@ -1,6 +1,6 @@
 import { F } from "dyapi/core/datafield.js";
 import { CMSModel } from "../lib/CMSModel.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import testContainer from "../containers/testContainer.js";
 import CategoryModel from "./CategoryModel.js";
 import { getBreadcrumbs } from "../utils/contentHelpers.js";
@@ -14,7 +14,6 @@ import { audience } from "../services/AudienceService.js";
  *   admin CRUD path (HTTP*) and the public path (ContentController). Author password is stripped.
  */
 @CRUD("articles")
-@PopTarget("uid")
 export default class ArticleModel extends CMSModel {
     @Inject(testContainer) declare container;
     @Inject(CategoryModel) declare categoryModel: CategoryModel;

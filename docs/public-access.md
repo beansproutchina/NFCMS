@@ -17,7 +17,7 @@
 
 ### 两个必须避开的错误答案
 
-**❌ 给 `status` 加第四态(如 `members_only`)。** `status` 是单值状态机(`hidden → scheduled → visible`),受众是正交维度。混进去,"定时发布 + 仅会员"就无法表达,且全站几十处 `status='visible'` 的语义会静默改变([ContentController](../backend/app/controllers/ContentController.ts#L100)、[StaticGenService](../backend/app/services/StaticGenService.ts#L91)、SchedulerService、sitemap)。
+**❌ 给 `status` 加第四态(如 `members_only`)。** `status` 是单值状态机(`hidden → scheduled → visible`),受众是正交维度。混进去,"定时发布 + 仅会员"就无法表达,且全站几十处 `status='visible'` 的语义会静默改变([ContentController](../backend/app/controllers/ContentController.ts#L100)、[PrerenderService](../backend/app/services/PrerenderService.ts)、SchedulerService、sitemap)。
 
 **❌ 复用 `role_permissions` 的 `articles:R` 表达"会员能看"。** 给 member 角色 `articles:R any` 等于给了它**后台读全站草稿**的权限。管辖权和访问权必须是两套。
 
@@ -411,7 +411,9 @@ export const info: ThemeInfo = {
 
 ## 10. 二期
 
-受限附件代理、分享 token、自助注册、访问审计,以及 SSG 恢复时的规则:**只生成 `access_eff ∈ {public, auth_teaser, restricted_teaser}` 的页面**(后两者只含摘要),sitemap 同步过滤,且内容变成非公开时要**删除**已生成文件(现在 [`regenerateArticle`](../backend/app/services/StaticGenService.ts#L91) 只在 `status` 变化时删)。teaser 页进静态正好——原本"SSG 与门禁互斥"的死结由 teaser 解开。
+受限附件代理、分享 token、自助注册、访问审计。
+
+> **SSG 已恢复**(见 [knowledge/ssg-prerender.md](knowledge/ssg-prerender.md))。落地时收窄为**只生成 `access_eff === 'public'`**,teaser 两态不进静态:它们能给匿名访客看的只是摘要,而快照落盘的是渲染出来的整页。「内容变成非公开时要删除已生成文件」这条已实现 —— 由 manifest diff 统一处理,覆盖撤下/转受限/删除/改 slug/栏目改名五种情形。
 
 ---
 

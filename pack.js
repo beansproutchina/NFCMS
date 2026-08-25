@@ -15,7 +15,6 @@ const { pipeline } = require('stream/promises');
 const { FIELDS } = require('./scripts/pack/fields');
 const { renderComposeEnv, renderAppEnv, riskyValues } = require('./scripts/pack/envfile');
 const { NETWORK_OVERRIDE_FILE, renderNetworkOverride } = require('./scripts/pack/compose');
-const { vendorDyapi } = require('./scripts/pack/vendor');
 const { adoptDeployDir } = require('./scripts/pack/adopt');
 const { ask, confirm, close } = require('./scripts/pack/prompt');
 const profiles = require('./scripts/pack/profile');
@@ -340,14 +339,8 @@ async function main() {
     console.error('没有找到要打包的文件。');
     process.exit(1);
   }
-  // dyapi 是仓库外的 file: 依赖,不快照进来的话镜像能构建成功但起不来
-  const vendored = vendorDyapi(rootDir);
-  if (vendored) {
-    console.log(`dyapi 已快照:${vendored.from} → ${vendored.dir}/(${vendored.files.length} 个文件)`);
-  }
-  const fileList = [...new Set([...tracked, ...(vendored ? vendored.files : [])])].sort((a, b) =>
-    a.localeCompare(b)
-  );
+  // dyapi / dyapi-cli 从 npm 装,镜像构建时自己拉 —— 不再需要把框架源码快照进包里。
+  const fileList = [...new Set(tracked)].sort((a, b) => a.localeCompare(b));
   const extraFiles = Object.keys(rendered);
   console.log(`\n打包 ${fileList.length} 个文件 + ${extraFiles.join('/')} → ${outputFile} ...`);
   await buildArchive({ fileList, extraDir: stageDir, extraFiles, outputFile });

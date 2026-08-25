@@ -7,6 +7,7 @@ import { hooks } from "../services/HookManager.js";
 import CategoryModel from "../models/CategoryModel.js";
 import { audience } from "../services/AudienceService.js";
 import { isBlankDate } from "../utils/dates.js";
+import { findModelByTable } from "../lib/registry.js";
 
 const STATES = ["hidden", "scheduled", "visible"];
 
@@ -19,9 +20,8 @@ const STATES = ["hidden", "scheduled", "visible"];
 export default class ContentLifecycleController extends Controller {
     /** Resolve a CMSModel instance by its tablename (the ":type" route param). */
     private resolveModel(type: string): any {
-        const dict = (this._app as any).instanceDict;
-        const models = dict instanceof Map ? [...dict.values()] : Object.values(dict);
-        return models.find((m: any) => m && m.tablename === type && m instanceof CMSModel);
+        const found = findModelByTable(this._app, type);
+        return found instanceof CMSModel ? found : undefined;
     }
 
     @Route("post", "/:type/:id/transition")

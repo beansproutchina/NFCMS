@@ -1,5 +1,6 @@
 import path from "path";
 import process from "process";
+import Koa from "koa";
 import { DYApp } from "dyapi/core/dyapiApp.js";
 import { scanFiles } from "dyapi/utils/scanFiles.js";
 import { hooks } from "./app/services/HookManager.js";
@@ -11,6 +12,7 @@ import { authMiddlewareFactory } from "./app/middlewares/authmiddleware.js";
 import { policy } from "./app/services/PolicyService.js";
 import { audience } from "./app/services/AudienceService.js";
 import { scheduler } from "./app/services/SchedulerService.js";
+import { prerender } from "./app/services/PrerenderService.js";
 
 const start = async () => {
     const jwtSecret = process.env.JWT_SECRET;
@@ -58,8 +60,14 @@ const start = async () => {
         catch (e) { console.log("[ModelInjector] live inject failed:", (e as any).message); }
     });
 
-    // 5. Bootstrap App (registers decorators, routers, etc)
-    app.koa.use(authMiddlewareFactory(app));
+    // 5. HTTP 装配。dyapi 3.2 起 DYApp 不再拥有 Koa 实例:它只是一个模块作用域,
+    //    HTTP 服务器由调用方创建并交给 `bindKoa`。自己的中间件必须放在 `bindKoa` **之前**
+    //    —— bindKoa 会把 static/body 反插到队首、把 logger/错误兜底/路由接在后面,
+    //    于是相对顺序仍是 static/body → 我们的鉴权 → 框架中间件 → 路由。
+    const koa = new Koa();
+    koa.use(authMiddlewareFactory(app));
+    app.bindKoa(koa);
+    // `bootstrap()` 现在只挂 SIGINT/SIGTERM/beforeExit 的优雅停机,不再建中间件也不再 listen。
     app.bootstrap();
     // 6. Post Bootstrap hook
     await hooks.doAction("app_ready");
@@ -76,22 +84,33 @@ const start = async () => {
         console.log("[audience] backfill skipped:", (e as any).message);
     }
 
-    // 8. Public-site SSG: DISABLED for now — the generated pages are far below the quality of the
-    //    themed SPA render, so the public site is served entirely by the SPA. `StaticGenService`
-    //    and its `docker/nginx.single.conf` locations are left in place but unwired; re-enable by
-    //    restoring the block below (and the SSG `location`s in the nginx conf).
-    //
-    // staticgen.bind(app);
-    // hooks.addAction("content.saved.articles", async (id) => {
-    //     await staticgen.regenerateArticle(id);
-    //     await staticgen.generateSitemap();
-    // });
-    // hooks.addAction("content.published.articles", async (id) => {
-    //     await staticgen.regenerateArticle(id);
-    //     await staticgen.regenerateHome();
-    //     await staticgen.generateSitemap();
-    // });
-    // await staticgen.regenerateAll();
+    // 8. 公开站预渲染。headless chromium 打开真实 SPA URL,把渲染结果落成静态 HTML,
+    //    nginx 优先命中。设计与取舍见 docs/spec/001-ssg-prerender.md。
+    //    `SSG_ENABLED=0` 可整体关掉(开发时不想每次保存都拉浏览器)。
+    if (process.env.SSG_ENABLED !== "0") {
+        prerender.bind(app);
+
+        // 发布 / 保存:该文章页 + 首页 + 它所在栏目链 + sitemap。队列会把重复项合并掉。
+        hooks.addAction("content.saved.articles", (id) => prerender.onArticleChanged(id));
+        hooks.addAction("content.published.articles", (id) => prerender.onArticleChanged(id));
+        // 删除:读不到行 → 期望产物为 null → 清掉文件,不留僵尸页。
+        hooks.addAction("content.removed.articles", (id) => prerender.onArticleChanged(id));
+        /**
+         * 受众轴批量变更。**这是安全通路**:一批文章刚从 public 变成受限,而它们的静态全文
+         * 还躺在人人可读的目录里。`AudienceService.recomputeSubtree` 走裸 update(刻意不刷
+         * 版本快照),所以只有这个独立事件能通知到。
+         */
+        hooks.addAction("content.access_changed.articles", (ids) => prerender.reconcileArticles(ids));
+        // 栏目 slug / list_template 变了 → 该栏目页 + 其下每篇文章的 URL 全变。
+        hooks.addAction("content.saved.categories", (id) => prerender.onCategoryChanged(id));
+
+        // 冷启动只在构建指纹变化(换主题/换构建)或 manifest 缺失时全量 —— 否则每次重启
+        // 都要重跑几百页。不 await:全量可能几分钟,不该挡住服务起来。
+        void prerender.regenerateIfStale();
+        // 之后继续盯着构建指纹:前端一重新构建,已生成的静态页就全部指向一个不存在的
+        // bundle,页面看起来完美却一行 JS 都跑不起来。详见 startWatchingBuild 的说明。
+        prerender.startWatchingBuild();
+    }
 
     // 9. Keepalive: keep the SQLite connection warm (from upstream).
     setInterval(() => {
@@ -100,5 +119,9 @@ const start = async () => {
             container.rawSQLQuery?.("SELECT 1;");
         } catch { /* ignore */ }
     }, 60 * 60 * 1000);
+
+    // 10. 起服务。listen 也归调用方了(见第 5 步)。
+    const port = Number(process.env.PORT) || app.settings.port;
+    koa.listen(port, () => console.log(`[nfcms] listening on http://localhost:${port}`));
 };
 start();

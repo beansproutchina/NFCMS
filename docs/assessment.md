@@ -21,7 +21,7 @@
 ```
 DYAPI(HTTP/CRUD/容器/字段级权限)
   ↑ CMSModel 基类:HTTP* 全接管 → RBAC + 版本快照 + 生命周期字段保护(唯一接缝)
-  ↑ 服务层:PolicyService(鉴权唯一权威)· RevisionService · SchedulerService · StaticGenService · HookManager
+  ↑ 服务层:PolicyService(鉴权唯一权威)· RevisionService · SchedulerService · PrerenderService · HookManager
   ↑ 数据模型:Role/RolePermission/UserRole/ResourceGrant/Revision + Article/Category/Menu/User/Attachment/SystemConfig
 前端:Vue SPA(admin+展示)+ 公开站后端 SSG
 ```
@@ -37,22 +37,29 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 - `assert(cond, ErrorType, msg)` 的 TS 类型偏松(dyapi 侧 JS),IDE 报警但 bun 运行无碍。
 - 密码为确定性 `HMAC-SHA256(env salt)`,适配等值匹配登录,非 bcrypt/argon2。
 
+### 数据层面的已知瑕疵(不是代码 bug)
+
+- **`roles` 表有 4 条孤儿重复行**(id 5–8 与 1–4 同名)。`seedDefaultRbac` 本身是幂等的(表里有任何角色就直接返回),重复来自一次**导入**:dump 自带 roles,被追加到了已播种的库上。5–8 没有任何 `user_roles` / `role_permissions` / `resource_grants` 引用,是纯孤儿。
+  影响:dyapi 3.2.1 起 `.unique()` 在 SQLite 上真的生效,而 `roles.name` 因为存在重复值**建不出唯一索引**,启动时会打一条警告并继续 —— 也就是说这个约束目前是空的,直到重复行被清掉。
+  清理(确认过无引用后):`DELETE FROM roles WHERE id IN (5,6,7,8);` 然后重启。
+  真要修的是导入语义(追加 vs 先清后灌),那是独立议题。
+
 ## ④ 前端
 
 **强项**:管理台表单控件已统一到设计系统预设 [`frontend/src/ui/presets.ts`](../frontend/src/ui/presets.ts)(`INPUT_CLASS`/`SELECT_PT`/`DATEPICKER_PT`/`BTN`),消灭了原生 `<select>` 和内联大 `:pt`;能力驱动导航(后端 `loginInfo` 下发权限);可复用 `AclEditor` + 分页搜索 `UserPicker`;回滚用全局 `ConfirmDialog`。
 
 **待还的债**:
-- 主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面);SSG 侧仅基础 strip。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。
+- 主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面)。预渲染跑的就是主题本身,所以这个面在静态页上同样存在。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。
 - 路由守卫是"装饰性"的,真正鉴权在后端(设计如此,但要认知清楚)。
 - 类型仅在 `vue-tsc -b`(build)时把关,无独立 lint 门禁。
-- 展示站是后端 SSG 静态页,未上前端 SSR(当初讨论过,判定 SSG 足够)。
+- 展示站是 chromium 预渲染出来的静态页(见 [knowledge/ssg-prerender.md](knowledge/ssg-prerender.md)),未上前端 SSR —— 预渲染保真度 100% 且主题零改造,SSR 的代价是把「SSR 安全」变成每个主题作者的长期义务。
 
 ## ⑤ 打包/部署/二次开发
 
 **强项**:单容器 `Dockerfile.single`(supervisor + nginx,推荐)或多容器 compose;二次开发路径清晰——继承 `CMSModel`、声明 `ownerField`/`categoryField`,自动获得 RBAC + 三态生命周期 + 版本 + 分类授权。
 
 **待还的债**:
-- `dyapi` 以 `file:../../dyapi3/dyapi` 本地路径 pin,改框架源码后 `backend/` 要重新 `bun install`(file: 是拷贝非软链)。
+- `dyapi` 从 npm 装并 pin 在 `~3.3.1`(只吃补丁)。它的 minor 版本里带 breaking change,所以升级是一次有意的迁移而不是 `npm update`。
 - 环境变量强依赖 `JWT_SECRET`/`PASSWORD_SALT`(缺则 `bootstrap()` 直接抛)。
 - 测试纪律靠人肉自觉(备份 DB、杀干净进程),见 [development.md](development.md)。
 

@@ -1,5 +1,6 @@
 import { ControllerRoute, Route, Inject, Auth } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
+import { registeredModels } from "../lib/registry.js";
 
 @ControllerRoute("schematools")
 export default class SchemaDevController extends Controller {
@@ -7,9 +8,7 @@ export default class SchemaDevController extends Controller {
     @Route("get", "/all")
     @Auth("super_admin")
     async getAllSchemas() {
-        const instanceDict = (this._app as any).instanceDict;
-        const components = instanceDict ? (instanceDict instanceof Map ? Array.from(instanceDict.values()) : Object.values(instanceDict)) : [];
-        const models = components.filter((c: any) => c && c.tablename && c.datafields);
+        const models = registeredModels(this._app).filter((c: any) => c?.tablename && c.datafields);
         const schemas = models.map((m: any) => {
             return {
                 modelName: m.constructor.name,

@@ -22,7 +22,7 @@
 | `src/api.ts` | 手写 | axios 实例 + 拦截器 + `configureApi` 接线 + 语义封装分组 |
 
 **重新生成**:改了后端 model/controller 后跑 `npm run gen:api`,并把 `api.gen.ts` 一起提交。
-> `dyapi-cli` 是 `file:../../dyapi3/dyapi-cli` 依赖 —— 和后端 pin `dyapi` 同款坑:改了 CLI 源码要在 `frontend/` 重新 `npm install` 才生效(file: 是拷贝不是软链)。
+> `dyapi-cli` 从 npm 装(`~0.3.0`)。生成器换版本可能让产物有细微差异(类型推断的宽窄),所以**重新生成后要看一眼 diff**,别把无关变化混进提交。
 
 **接线的两个硬约束**(改错了会静默出错,不报编译错):
 1. `api` 实例的 `baseURL` 必须是**空串**。`api.gen.ts` 产出的是含前缀的绝对路径(`/api/articles`),再叠加 `baseURL:'/api'` 会变成 `/api/api/articles`。

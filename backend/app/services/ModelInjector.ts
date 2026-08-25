@@ -1,7 +1,7 @@
 import { F } from "dyapi/core/datafield.js";
 import { Model } from "dyapi/core/model.js";
 import { CMSModel } from "../lib/CMSModel.js";
-import { CRUD, PopTarget, Inject } from "dyapi/utils/decorators.js";
+import { CRUD, Inject } from "dyapi/utils/decorators.js";
 import { assert, ForbiddenError } from "dyapi/utils/error.js";
 import testContainer from "../containers/testContainer.js";
 import { decorateClass, decorateProperty } from "dyapi/utils/dynamic.js";
@@ -9,6 +9,7 @@ import { hooks } from "./HookManager.js";
 import type { DYApp } from "dyapi/core/dyapiApp.js";
 import RolePermissionModel from "../models/RolePermissionModel.js";
 import { policy } from "./PolicyService.js";
+import { findModelByTable } from "../lib/registry.js";
 
 /**
  * 动态内容类型的属主列名。固定值,不可配置也不做推断 —— 见 injectDynamicModel 里的说明。
@@ -21,7 +22,6 @@ export const OWNER_FIELD = "author_id";
  * CMSModel at boot (and on creation, via the schema_inserted hook) by injectDynamicModel.
  */
 @CRUD("schemas")
-@PopTarget("uid")
 export class ContentSchemaModel extends Model {
     @Inject(testContainer) declare container;
     tablename = "schemas";
@@ -93,8 +93,7 @@ export async function injectDynamicModel(app: DYApp, schemaDef: any) {
     const { modelName, tableName, routePath, schemaDefinition } = schemaDef;
     if (!modelName || !tableName || !routePath || !schemaDefinition) return;
 
-    const already = Object.values((app as any).instanceDict).some((m: any) => m && m.tablename === tableName);
-    if (already) return;
+    if (findModelByTable(app, tableName)) return;
 
     const fields = typeof schemaDefinition === "string" ? JSON.parse(schemaDefinition) : schemaDefinition;
     const datafields = fields.map((f: any) => parseFieldType(f.type, f.name));
@@ -128,7 +127,7 @@ export async function injectDynamicModel(app: DYApp, schemaDef: any) {
     };
     Object.defineProperty(DynamicClass, "name", { value: modelName, writable: false });
     decorateProperty(DynamicClass, "container", Inject(testContainer));
-    const DecoratedClass = decorateClass(DynamicClass, CRUD(routePath), PopTarget("uid"));
+    const DecoratedClass = decorateClass(DynamicClass, CRUD(routePath));
 
     await app.use(DecoratedClass); // runs init() -> auto-migrate table + bindCRUD routes
 

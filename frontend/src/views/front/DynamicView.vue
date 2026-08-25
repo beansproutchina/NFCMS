@@ -11,16 +11,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, markRaw, defineComponent, h } from 'vue';
+import { ref, computed, watch, defineComponent, h, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import * as api from '../../api';
 import { useAuthStore } from '../../stores/auth';
-import DefaultHome from './templates/DefaultHome.vue';
-import DefaultCategory from './templates/DefaultCategory.vue';
-import DefaultArticle from './templates/DefaultArticle.vue';
-// 框架兜底的 gate 页。刻意放在 templates/ 之外 —— 那个目录会被主题整体覆盖(Dockerfile.single)。
-import BuiltinAccessGate from './AccessGate.vue';
-import { info as themeInfo } from './templates/theme.config';
+import { resolveTemplateChain } from './templateLoader';
 
 const NestedLayouts = defineComponent({
   props: ['layouts', 'context'],
@@ -61,21 +56,19 @@ function onRootClick(e: MouseEvent) {
   if (href !== route.fullPath) router.push(href);
 }
 const error = ref('');
-const templateComponent = ref<any>(null);
-const layoutComponents = ref<any[]>([]);
+/**
+ * 初值**同步**取自 router 已经解析好的组件(见 templateLoader.ts)。
+ *
+ * 留成 null 再异步补的话,组件挂载后的第一次渲染是空的 `<div><!----></div>` —— 普通 SPA 下
+ * 只是一帧空白,但预渲染页正是在这一帧上水合:空 DOM 对不上整页静态内容,Vue 判 mismatch 后
+ * 整棵重渲染,肉眼看到的就是整页闪白(实测 8876 → 18 → 8876 字符)。
+ */
+const initial = (useRoute().meta.fetchedData as any)?.components;
+const templateComponent = ref<any>(initial?.template ?? null);
+const layoutComponents = ref<any[]>(initial?.layouts ?? []);
 // Bumped after each successful (re)load so the page body remounts per navigation (re-reading
 // context) WITHOUT nulling templateComponent first — nulling caused a blank gap + fade-in replay.
 const renderKey = ref(0);
-
-// 默认模板映射
-const defaultTemplates: Record<string, any> = {
-  home: DefaultHome,
-  category: DefaultCategory,
-  article: DefaultArticle,
-};
-
-/** 受众轴的 gate 页模板名(主题可用 `info.accessGate` 换名)。 */
-const isAccessGate = (name: string) => name === ((themeInfo as any)?.accessGate || 'AccessGate');
 
 // 从 fetchedData 构建 context
 const context = computed(() => {
@@ -83,14 +76,10 @@ const context = computed(() => {
   if (!fetchedData || !fetchedData.success) return {};
 
   const { data, config, menus, meta } = fetchedData;
-  // 获取当前用户
-  const user = authStore.user;
-
-  // 合并通用数据到 context 中
   return {
     config: config || {},
     menus: menus || [],
-    user,
+    user: authStore.user,
     api,
     // Pagination meta per prefetch key (e.g. $meta.articles.total) — see router prefetch.
     $meta: meta || {},
@@ -98,39 +87,20 @@ const context = computed(() => {
   };
 });
 
-// 动态加载模板或布局组件
-async function loadComponent(name: string, fallbackTemplate?: any): Promise<any> {
-  console.log('Loading component:', name);
-    try {
-        if (fallbackTemplate && name === fallbackTemplate.name) {
-            return markRaw(fallbackTemplate);
-        }
-        const modules = import.meta.glob('./templates/*.vue');
-        const path = `./templates/${name}.vue`;
-        if (modules[path]) {
-            const mod: any = await modules[path]();
-            return markRaw(mod.default);
-        } else {
-            console.warn(`Component ${name} not found`);
-            return fallbackTemplate ? markRaw(fallbackTemplate) : null;
-        }
-    } catch (e) {
-        console.error('Error loading component:', e);
-        return fallbackTemplate ? markRaw(fallbackTemplate) : null;
-    }
-}
-
 // Remember the current layout chain so we only rebuild it when it actually changes.
-let lastLayoutKey = '';
+let lastLayoutKey = ((useRoute().meta.fetchedData as any)?.layouts ?? []).join('>');
 
 // 解析并加载模板
 async function resolveTemplate() {
   const fetchedData: any = route.meta.fetchedData;
+  // 导航中:数据还没写进 meta。清掉信号,免得生成器抓到上一页的 ready。
+  setSsgSignal(null);
   if (!fetchedData) { error.value = ''; templateComponent.value = null; layoutComponents.value = []; lastLayoutKey = ''; return; }
 
   if (!fetchedData.success) {
     error.value = fetchedData.error || 'Failed to load content';
     templateComponent.value = null; layoutComponents.value = []; lastLayoutKey = '';
+    setSsgSignal('error');
     return;
   }
   error.value = '';
@@ -138,32 +108,52 @@ async function resolveTemplate() {
   const viewType = route.meta.viewType as string;
   const templateName = fetchedData.templateName || 'DefaultHome';
   const layouts = fetchedData.layouts || [];
-  // 受众轴的 gate 页有专属兜底:回落到 DefaultArticle 会渲染一个没有正文的空文章页,而这里
-  // 需要的是登录引导。主题在自己目录里放 AccessGate.vue 即可覆盖(loadComponent 优先用主题的)。
-  const defaultTemplate = isAccessGate(templateName)
-    ? BuiltinAccessGate
-    : (defaultTemplates[viewType] || DefaultHome);
+
+  // router 在导航完成前已经解析好了(见 templateLoader.ts);拿不到才现取,那只发生在
+  // 绕过 router fetch 的场景(比如测试直接塞 fetchedData)。
+  const resolved = fetchedData.components
+    ?? (await resolveTemplateChain(templateName, layouts, viewType));
 
   // Only (re)build the layout chain when it changes between navigations. Rebuilding it every time
   // would remount the layout — and with it the header + logo <img> — causing a visible flash.
   // The page body (templateComponent) still swaps per navigation below.
   const layoutKey = layouts.join('>');
   if (layoutKey !== lastLayoutKey) {
-    const comps: any[] = [];
-    for (const l of layouts) {
-      const comp = await loadComponent(l);
-      if (comp) comps.push(comp);
-    }
-    layoutComponents.value = comps;
+    layoutComponents.value = resolved.layouts;
     lastLayoutKey = layoutKey;
   }
 
-  // Swap the page body atomically: load the new component, then assign + bump the key in the same
-  // tick. No intermediate null → no blank flash / fade-in replay; the key change still forces a
-  // remount so same-template navigations re-read their (non-reactive) destructured context.
-  const next = await loadComponent(templateName, defaultTemplate);
-  templateComponent.value = next;
+  // Swap the page body atomically: assign + bump the key in the same tick. No intermediate null
+  // → no blank flash / fade-in replay; the key change still forces a remount so same-template
+  // navigations re-read their (non-reactive) destructured context.
+  templateComponent.value = resolved.template;
   renderKey.value++;
+
+  // 等这一帧真的渲染出来再报就绪 —— 早一个 tick 生成器就会截到空的模板槽。
+  await nextTick();
+  setSsgSignal('ready');
+}
+
+/**
+ * SSG 就绪信号 —— 预渲染生成器唯一认的握手。
+ *
+ * 生成器怎么知道页面渲染完了?三个候选:
+ *   - `networkidle`:**直接判死**。neo 主题往 <head> 插了个指向 fonts.googleapis.com 的
+ *     link,离线内网里那个请求永远挂着,等网络空闲就是每页必超时。
+ *   - 固定 sleep:慢页截半张、快页白等,且不可证伪。
+ *   - **应用自报**(本方案):确定性,与网络无关,与耗时无关。
+ *
+ * 三态,生成器分别对应「可以截了 / 别写文件 / 再等等」:
+ *   data-ssg-ready  渲染成功
+ *   data-ssg-error  这一页渲染不出来(404、后端错误)—— 生成器**不写文件**,于是这条 URL
+ *                   回落 SPA,而不是被固化成一张「内容不存在」的静态页
+ *   两者都无        数据还没到位(导航中),别抓半张页面
+ */
+function setSsgSignal(state: 'ready' | 'error' | null) {
+  const html = document.documentElement;
+  html.removeAttribute('data-ssg-ready');
+  html.removeAttribute('data-ssg-error');
+  if (state) html.setAttribute(`data-ssg-${state}`, '1');
 }
 
 // 监听数据变化
