@@ -46,6 +46,11 @@ const PREFETCH_ALIASES: Record<string, string> = { crud: 'crudAPI', content: 'co
 const PREFETCH_WAIT_MS = 3000;
 const PREFETCH_POLL_MS = 5;
 
+/** 等页面长够以恢复滚动位置的上限。目标位置可能永远达不到,不能无限等。 */
+const SCROLL_RESTORE_MAX_MS = 1500;
+/** 高度连着这么多帧没变,就认定内容已稳定(约 130ms),不必再等满上面那个时限。 */
+const SCROLL_SETTLE_FRAMES = 8;
+
 function resolvePrefetchApi(name: string): ((...args: any[]) => Promise<any>) | undefined {
     const [ns, method] = String(name).split('.');
     return PREFETCH_APIS[`${PREFETCH_ALIASES[ns] ?? ns}.${method}`];
@@ -391,10 +396,52 @@ const router = createRouter({
   // Without this, Vue Router keeps the previous page's scroll position on every navigation.
   // New navigations start at the top; back/forward restore the saved position (delayed a little
   // so the async-rendered content has height before we scroll to it); #hash jumps to the anchor.
+  /**
+   * 后退时恢复滚动位置。
+   *
+   * 难点在于**页面内容是异步的**:导航完成的那一帧文档还只有视口那么高,浏览器根本滚不到
+   * 上次的位置。原来的做法是固定等 300ms 再滚,而 300 这个数字对谁都不准 —— 内容早就绪就
+   * 白等(用户先看见顶部,再被甩回原处),内容慢(图片撑高、列表分页)又不够,滚到一半就停。
+   *
+   * 改成**等文档真的长到那个位置就立刻滚**:按帧检查高度,够了就 resolve。内容快就快,内容
+   * 慢就等,不再赌一个固定时长。`SCROLL_RESTORE_MAX_MS` 是兜底 —— 目标位置可能永远达不到
+   * (那一页的内容变少了),不能无限等下去。
+   */
   scrollBehavior(to, _from, savedPosition) {
     if (to.hash) return { el: to.hash, behavior: 'smooth' };
-    if (savedPosition) return new Promise((resolve) => setTimeout(() => resolve(savedPosition), 300));
-    return { top: 0 };
+    if (!savedPosition) return { top: 0 };
+
+    const target = savedPosition.top ?? 0;
+    if (target <= 0) return savedPosition;
+
+    return new Promise((resolve) => {
+      const deadline = performance.now() + SCROLL_RESTORE_MAX_MS;
+      const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
+      let lastHeight = -1;
+      let stableFrames = 0;
+
+      const tick = () => {
+        const reach = maxScroll();
+        // 够得着了 —— 立刻滚,不多等一帧
+        if (reach >= target) return resolve(savedPosition);
+
+        /**
+         * 够不着,但高度已经连着若干帧没变了:那一页的内容比上次少(删了文章、换了筛选),
+         * 目标位置**永远**到不了。此时继续等只是白等满兜底时限,不如就此放手 ——
+         * 浏览器会把位置自动收敛到能滚到的最底部,这已经是最接近的结果。
+         */
+        if (reach === lastHeight) {
+          if (++stableFrames >= SCROLL_SETTLE_FRAMES) return resolve(savedPosition);
+        } else {
+          lastHeight = reach;
+          stableFrames = 0;
+        }
+
+        if (performance.now() >= deadline) return resolve(savedPosition);
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
   },
 });
 
