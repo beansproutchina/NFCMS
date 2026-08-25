@@ -9,8 +9,8 @@
 ```
 JWT_SECRET=<强随机>       # 必填,缺失 bootstrap 抛错;openssl rand -hex 32
 PASSWORD_SALT=<强随机>    # 必填,HMAC 密钥
-SITE_URL=http://localhost # SSG canonical/OG 用
-# SSG_DIR 可选,默认 backend/static/ssg
+SITE_URL=http://localhost # 预渲染的 canonical / sitemap 用
+# SSG_* 一族(生成开关、chromium 路径、目标站点…)见 backend/.env.example 末尾
 ```
 提交模板见 `backend/.env.example`。
 
@@ -26,17 +26,18 @@ cd frontend && npm run dev        # :5173,代理 /api、/static → :3000
 首次:`/setup` 建管理员 → `/login` → `/admin`。
 
 ## 数据与持久化
-- SQLite:`backend/data/test.db`(+ `-wal`/`-shm`)。上传:`backend/static/uploads`。SSG 产物:`backend/static/ssg`。均 gitignore。
+- SQLite:`backend/data/test.db`(+ `-wal`/`-shm`)。上传:`backend/static/uploads`。预渲染产物:`backend/static/ssg`(含 `.manifest.json`)。均 gitignore。
 - **迁移**:DYAPI 只增列不删列。改字段/删列时,dev 直接删 `data/test.db*` 重新 `/setup`。
 
 ## ⚠ 测试纪律(务必)
-1. **动数据库前先备份、测完还原**:
+1. **动数据库前先备份、测完还原**。库是 **WAL 模式**,所以 `cp test.db` 会备出一份**不含未 checkpoint 数据的库**(极端情况下是空库),必须用 sqlite 自己的联机备份:
    ```bash
-   cp backend/data/test.db{,.bak}          # 备份
+   mkdir -p backend/data/_bak && sqlite3 backend/data/test.db ".backup 'backend/data/_bak/test.db'"
+   sqlite3 backend/data/_bak/test.db "select count(*) from articles;"   # 验一下不是空的
    # ...破坏性测试...
-   cp backend/data/test.db.bak backend/data/test.db   # 还原
    ```
-   或用一次性库测,再还原备份。**不要直接 `rm` 用户的 `data/test.db`**。
+   还原:先 `pkill -9 -f index.ts`(SQLite 双开会炸),再把 `_bak/test.db` 连同 `-wal`/`-shm` 一起换回去。
+   跑**整库级**的测试(如导入)时,更稳的做法是把现库整个挪走、让后端新建一个空库,测完再挪回来。**不要直接 `rm` 用户的 `data/test.db`**。
 2. **重启后端前杀干净旧进程**,否则 SQLite 双开 → `disk I/O error` + 假 403/416(是幻象,不是代码 bug):
    ```bash
    pkill -9 -f "index.ts"; lsof -ti tcp:3000 | xargs kill -9; sleep 1
@@ -80,11 +81,11 @@ node pack.js --adopt <部署目录>   # 从已部署目录的 .env + app.env 反
 - 数据落在部署目录的 `data/`(`data/db` = sqlite 库,`data/uploads` = 上传件),备份就备它。
 
 ## Docker 部署
-- **单容器(推荐)**:先 `node pack.js` 出包,服务器上解包后 `cd` 进去 `docker compose up -d --build`(读同目录的 `.env` + `app.env`,文件清单来自 `COMPOSE_FILE`;缺 `app.env` 直接报错)。`Dockerfile.single` 三段构建(前端 build → 后端依赖 → oven/bun 运行时 + nginx + supervisor)。`docker/nginx.single.conf` 里那三条 SSG location(`/`、`/a/`、`/sitemap.xml`)**当前已注释**(SSG 停用),所有页面路由都落到 SPA;`/api`、`/static` 代理到 :3000。主题由 `.env` 的 `NFCMS_THEME` 传给构建参数 `THEME`,换主题要重新 `--build`。
+- **单容器(推荐)**:先 `node pack.js` 出包,服务器上解包后 `cd` 进去 `docker compose up -d --build`(读同目录的 `.env` + `app.env`,文件清单来自 `COMPOSE_FILE`;缺 `app.env` 直接报错)。`Dockerfile.single` 三段构建(前端 build → 后端依赖 → oven/bun 运行时 + nginx + supervisor)。`docker/nginx.single.conf` 的命中顺序是「真实静态资源 → 预渲染页 → SPA 壳」,并用 `map $http_x_ssg_bypass` 给生成器留了旁路;`/api`、`/static` 代理到 :3000。运行时镜像另装了 chromium 与 CJK 字体供预渲染用(见 [knowledge/ssg-prerender.md](knowledge/ssg-prerender.md))。主题由 `.env` 的 `NFCMS_THEME` 传给构建参数 `THEME`,换主题要重新 `--build`。
 - **容器里的持久化**:后端 cwd 是 `/app/backend`,所以 sqlite 在 `/app/backend/data`、上传件在 `/app/backend/static/uploads`,compose 就挂这两个到宿主机 `./data/db`、`./data/uploads`。
 - **密钥不进镜像**:`.dockerignore` 用 `**/.env` 挡掉 `backend/.env`(否则开发密钥会被 `COPY backend/` 带进镜像);容器里的密钥只从 compose 的 `env_file: app.env` 来。同理 `**/node_modules`(不带 `**` 只挡根目录那份,`frontend/node_modules` 会被 `COPY frontend/` 拖进镜像 —— 宿主机编译的原生二进制进 linux 容器必炸)。
 - **基础镜像 pin 了版本**:`node:24.10.0-alpine`(两个构建阶段)+ `oven/bun:1.3.13-alpine`(运行时)。**必须都是 alpine** —— 构建阶段的 `node_modules` 会 `COPY` 进运行时,glibc 基底(如 `1panel/node:24.10.0`,该仓库没有 alpine 变体)装出来的原生依赖在 musl 里会炸;现在后端依赖恰好全是纯 JS,但别赌下一个依赖也是。要极致可复现再钉 digest(`node:24.10.0-alpine@sha256:775ba24d…`)。遗留缺口:`backend/` 没有 `package-lock.json`(只有 `bun.lock`,npm 不认),后端依赖每次构建仍会浮动 —— 要么提交一份 lock,要么把这一阶段换成 bun + `bun install --frozen-lockfile`。
-- **多容器**:`docker-compose.yml`(backend + frontend-nginx)。**`pack.js` 不管它**,端口/容器名/密钥仍是文件里写死的,要用得自己改。注:SSG 静态文件在 backend 容器,多容器要让 nginx 能读到(共享卷),否则 SSG 只在单容器拓扑生效 —— SSG 当前停用,这条恢复 SSG 时才需要处理。
+- **多容器**:`docker-compose.yml`(backend + frontend-nginx)。**`pack.js` 不管它**,端口/容器名/密钥仍是文件里写死的,要用得自己改。注:预渲染产物在 backend 容器的 `static/ssg`,多容器要让 nginx 能读到(共享卷),否则**只有单容器拓扑能用预渲染**;而且生成器要访问得到站点自身(`SSG_BASE_URL`)。这条至今未处理 —— 单容器是推荐拓扑。
 - 生产前:把 `backend/Dockerfile` 的 `bun --hot` 改为 `bun index.ts`(热重载不该上生产),配置 `data/` 备份。
 
 ## 陷阱清单(复述)

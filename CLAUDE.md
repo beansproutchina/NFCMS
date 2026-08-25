@@ -34,6 +34,8 @@ cd frontend && npm run build        # = vue-tsc -b && vite build
 4. **env 必填**:没有 `JWT_SECRET`/`PASSWORD_SALT` 时 DYApp `bootstrap()` 直接抛错(见 `.env.example`)。
 5. **公开站只能走 `/api/content/*`**,绝不要打 `/api/articles`(已被 RBAC 管控,匿名 403)。
 6. 改了 `dyapi3/dyapi` 源码后要在 `backend/` 重新 `bun install`(file: 依赖是拷贝,不是软链)。
+6b. **重新构建前端会让已生成的静态页全部失效**,而且是**静默**失效:预渲染页里写死了带哈希的 bundle 名(`/assets/index-XXXX.js`),重新构建后那个文件就没了 —— 页面**看起来完美**(静态 HTML 照常渲染)但一行 JS 都跑不起来:没有 SPA 接管、点站内链接是整页跳转、登录态永远不纠正。服务端零报错,只有浏览器控制台一条 404。
+   后端会按 `dist/index.html` 的 hash 周期性自查并自动重生成(默认 60s,`SSG_WATCH_MS`),但**别等它** —— 本地验收直接 `cd frontend && npm run ssg:preview`。判断静态页是不是活的:`document.getElementById('app').__vue_app__` 为 `undefined` 就是这个病。
 7. DYAPI 迁移是**只增不减**;改字段/删列时,dev 直接重置 `data/test.db` 重新 `/setup`(允许 breaking change)。
 8. **动了 `backend/app/` 下的文件就要重新 `npm run scan`**。dyapi 3.2 起模块清单是构建期产物 `app/_scanFiles.js`(提交进仓库),忘了重新生成的症状**不是报错,而是新加的 Model 静默不注册** —— 表不建、路由不挂。pre-commit 会拦。
 9. **`@PopTarget` 声明的是「别的模型用哪个字段名指向本模型」,不是本模型自己的字段。** 全库只有 `UserModel` 有一条(`author_id`)。同名在同一作用域只能有一个,3.3 起撞名直接启动报错。加之前先回答「谁会 `?pops=<字段名>` 指过来」。
@@ -43,9 +45,9 @@ cd frontend && npm run build        # = vue-tsc -b && vite build
 ```
 DYAPI(HTTP/CRUD/容器/字段级权限)
   ↑  CMSModel 基类(backend/app/lib/CMSModel.ts):HTTP* 全接管 → RBAC + 版本快照 + 生命周期
-  ↑  服务层:PolicyService(鉴权唯一权威)/ RevisionService / SchedulerService / StaticGenService / HookManager
+  ↑  服务层:PolicyService(鉴权唯一权威)/ RevisionService / SchedulerService / PrerenderService / HookManager
   ↑  数据模型:Role/RolePermission/UserRole/ResourceGrant/Revision + Article/Category/Menu/User/Attachment/SystemConfig
-前端:Vue SPA(admin + 展示)  ← 公开站 SSG 当前已停用(接线注释在 index.ts 第 8 步 + nginx conf)
+前端:Vue SPA(admin + 展示)  ← 公开站由 chromium 预渲染成静态页,nginx 优先命中(index.ts 第 8 步)
 ```
 
 ## 核心约定

@@ -21,7 +21,7 @@
 6. `new Koa()` → `koa.use(authMiddlewareFactory(app))` → `app.bindKoa(koa)` → `app.bootstrap()` → `hooks.doAction("app_ready")`。
    自己的中间件必须排在 `bindKoa` **之前**:`bindKoa` 会把 static/body 反插到队首、把 logger/错误兜底/路由接在后面,于是实际顺序仍是 static/body → 鉴权 → 框架中间件 → 路由。
 7. `scheduler.start(app)`(定时发布)。
-8. ~~`staticgen.bind(app)` + hook 接线 + 初次全量 SSG~~ —— **已停用**(整块注释),见 [architecture.md](architecture.md) 的「公开站 SSG」。
+8. `prerender.bind(app)` + 五个 hook 接线 + 按构建指纹决定是否全量。见 [knowledge/ssg-prerender.md](knowledge/ssg-prerender.md)。
 
 ## CMS 核心层
 - **`app/lib/CMSModel.ts`**(命名导出,非 `app/models/`):内容模型基类。
@@ -36,7 +36,7 @@
   - `aclIds(...)`:查 `resource_grants`(user 或其角色被授予、且 access 含该动作)。
 - **`app/services/RevisionService.ts`**(`revisions`):`snapshot/list/get/rollback/diff`。`version_no` = 该内容最大版本 +1。回滚只还原内容字段(不动 status),且先把当前态存为新版本(可再撤销)。
 - **`app/services/SchedulerService.ts`**(`scheduler`):`node-cron` 每分钟把到期 `scheduled` 翻 `visible`,复用 hook+快照,幂等 + 进程内锁。
-- **`app/services/StaticGenService.ts`**(`staticgen`):见 [architecture.md](architecture.md) SSG 段。
+- **`app/services/PrerenderService.ts`**(`prerender`)+ `BrowserPool` / `PrerenderQueue`:公开站预渲染,见 [knowledge/ssg-prerender.md](knowledge/ssg-prerender.md)。
 - **`app/services/HookManager.ts`**(`hooks`):`addAction/doAction`、`addFilter/applyFilters`。约定事件:`app_init`/`app_ready`、`content.pre_save|saved|published.<tablename>`、`rbac_changed`、`schema_inserted`/`schema_updated`。
 - **`app/services/ModelInjector.ts`**:`ContentSchemaModel`(存 schema 定义)+ `injectDynamicModel(app, rec)`:用**构造函数**派生 `CMSModel` 子类(避免类字段遮蔽),自动补 `status/publish_at/rev_version`,`app.use()` 注册,给 `admin` 角色播种该模型全权限。启动加载 + `schema_inserted` 运行时热注入(免重启)。
 

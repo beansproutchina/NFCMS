@@ -21,7 +21,7 @@
 ```
 DYAPI(HTTP/CRUD/容器/字段级权限)
   ↑ CMSModel 基类:HTTP* 全接管 → RBAC + 版本快照 + 生命周期字段保护(唯一接缝)
-  ↑ 服务层:PolicyService(鉴权唯一权威)· RevisionService · SchedulerService · StaticGenService · HookManager
+  ↑ 服务层:PolicyService(鉴权唯一权威)· RevisionService · SchedulerService · PrerenderService · HookManager
   ↑ 数据模型:Role/RolePermission/UserRole/ResourceGrant/Revision + Article/Category/Menu/User/Attachment/SystemConfig
 前端:Vue SPA(admin+展示)+ 公开站后端 SSG
 ```
@@ -49,10 +49,10 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 **强项**:管理台表单控件已统一到设计系统预设 [`frontend/src/ui/presets.ts`](../frontend/src/ui/presets.ts)(`INPUT_CLASS`/`SELECT_PT`/`DATEPICKER_PT`/`BTN`),消灭了原生 `<select>` 和内联大 `:pt`;能力驱动导航(后端 `loginInfo` 下发权限);可复用 `AclEditor` + 分页搜索 `UserPicker`;回滚用全局 `ConfirmDialog`。
 
 **待还的债**:
-- 主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面);SSG 侧仅基础 strip。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。
+- 主题模板对 `article.content` 用 `v-html` **未消毒**(存储型 XSS 面)。预渲染跑的就是主题本身,所以这个面在静态页上同样存在。上线前接 DOMPurify 或后端消毒(可挂 `content.pre_save` hook)。
 - 路由守卫是"装饰性"的,真正鉴权在后端(设计如此,但要认知清楚)。
 - 类型仅在 `vue-tsc -b`(build)时把关,无独立 lint 门禁。
-- 展示站是后端 SSG 静态页,未上前端 SSR(当初讨论过,判定 SSG 足够)。
+- 展示站是 chromium 预渲染出来的静态页(见 [knowledge/ssg-prerender.md](knowledge/ssg-prerender.md)),未上前端 SSR —— 预渲染保真度 100% 且主题零改造,SSR 的代价是把「SSR 安全」变成每个主题作者的长期义务。
 
 ## ⑤ 打包/部署/二次开发
 
