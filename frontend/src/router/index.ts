@@ -46,6 +46,10 @@ const PREFETCH_ALIASES: Record<string, string> = { crud: 'crudAPI', content: 'co
 const PREFETCH_WAIT_MS = 3000;
 const PREFETCH_POLL_MS = 5;
 
+/** 等页面长够以恢复滚动位置的兜底时限。目标位置可能永远达不到,不能无限等。 */
+const SCROLL_RESTORE_MAX_MS = 1500;
+
+
 function resolvePrefetchApi(name: string): ((...args: any[]) => Promise<any>) | undefined {
     const [ns, method] = String(name).split('.');
     return PREFETCH_APIS[`${PREFETCH_ALIASES[ns] ?? ns}.${method}`];
@@ -391,10 +395,49 @@ const router = createRouter({
   // Without this, Vue Router keeps the previous page's scroll position on every navigation.
   // New navigations start at the top; back/forward restore the saved position (delayed a little
   // so the async-rendered content has height before we scroll to it); #hash jumps to the anchor.
+  /**
+   * 后退时恢复滚动位置。
+   *
+   * 这里曾经对 `savedPosition` 固定 `setTimeout(…, 300)`,理由是"页面内容异步,导航完成时
+   * 还没渲染,滚不到目标位置"。实测这个假设在本应用里不成立:`fetchContentData` 在
+   * `beforeResolve` 里 `await` 完取数才放行导航,而 vue-router 是在导航**确认之后**才调
+   * `scrollBehavior` —— 被调用时 DOM 已经 patch 完(实测 scrollHeight 2163 / target 1263)。
+   * prefetch 本来就保证了"数据没就绪不跳页",滚动恢复无须再等第二次。那 300ms 只是把新页面
+   * 在顶部多晾 300ms,再把用户甩回原处。
+   *
+   * 所以**先看高度**:够得着就立刻交还位置,这是常态。
+   *
+   * 但不能假定所有模板都如此 —— 有的会在 `onMounted` 里补内容,没有固定尺寸的图片也会在
+   * 加载后把页面撑高。这种情况下用 `ResizeObserver` 等它长够,**事件驱动,不轮询也不空等**;
+   * 目标位置也可能永远达不到(那一页内容变少了),所以留一个兜底时限。
+   *
+   * 顺带记一笔:浏览器原生的 `history.scrollRestoration` 在这里指望不上。vue-router 一旦
+   * 发现有 `scrollBehavior` 就把它设为 `manual`;即便设回 `auto`,`popstate` 那一刻文档还
+   * 只有视口那么高,浏览器会把位置收敛到 0 且之后不再补偿(实测全程停在 0)。
+   */
   scrollBehavior(to, _from, savedPosition) {
     if (to.hash) return { el: to.hash, behavior: 'smooth' };
-    if (savedPosition) return new Promise((resolve) => setTimeout(() => resolve(savedPosition), 300));
-    return { top: 0 };
+    if (!savedPosition) return { top: 0 };
+
+    const target = savedPosition.top ?? 0;
+    const canReach = () =>
+      document.documentElement.scrollHeight - window.innerHeight >= target;
+
+    if (target <= 0 || canReach()) return savedPosition;
+
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        observer.disconnect();
+        clearTimeout(timer);
+        resolve(savedPosition);
+      };
+      const observer = new ResizeObserver(() => { if (canReach()) finish(); });
+      observer.observe(document.documentElement);
+      const timer = setTimeout(finish, SCROLL_RESTORE_MAX_MS);
+    });
   },
 });
 
