@@ -295,7 +295,7 @@ getList: (route, params = {}) => (CONTENT_REDIRECT[route] ?? crud(route).list)(p
 这么做的收益是白送的:主题在 `pages` 里声明
 
 ```ts
-AccessGate: { layout: 'Layout', title: '需要登录 - $data.config.site_name' }
+AccessGate: { layout: 'Layout', title: '需要登录 - ${data.config.site_name}' }
 ```
 
 就让 gate 页**自动套上主题的页眉页脚**,并参与标题解析。特殊通路是拿不到这些的。

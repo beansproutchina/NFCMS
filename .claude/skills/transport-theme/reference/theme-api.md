@@ -52,13 +52,13 @@ export function init(_app: App) { /* 加载展示字体:判重后动态插 <link
 
 export const pages: ThemePages = {
   // PageConfig: { layout?, routes?: string[], title?: string, prefetch?: PrefetchItem[] }
-  DefaultHome:     { layout:'Layout', title:'$data.config.site_name', prefetch:[ /* ... */ ] },
-  DefaultCategory: { layout:'Layout', title:'$data.category.name - $data.config.site_name', prefetch:[
+  DefaultHome:     { layout:'Layout', title:'${data.config.site_name}', prefetch:[ /* ... */ ] },
+  DefaultCategory: { layout:'Layout', title:'${data.category.name} - ${data.config.site_name}', prefetch:[
     { key:'articles', api:'contentAPI.listArticles',
-      args:[{ filter:{ category_id:'$data.category.id' }, orderBy:'published_at', orderDesc:true, page:0, limit:12 }] },
+      args:[{ filter:{ category_id:'${data.category.id}' }, orderBy:'published_at', orderDesc:true, page:0, limit:12 }] },
   ] },
-  AboutPage:       { layout:'Layout', routes:['/about'], title:'关于 - $data.config.site_name', prefetch:[] },
-  Layout:          { title:'$data.config.site_name', prefetch:[{ key:'menus', api:'crudAPI.getList', args:['menus'] }] },
+  AboutPage:       { layout:'Layout', routes:['/about'], title:'关于 - ${data.config.site_name}', prefetch:[] },
+  Layout:          { title:'${data.config.site_name}', prefetch:[{ key:'menus', api:'crudAPI.getList', args:['menus'] }] },
 };
 
 export const configSchema: ThemeConfigSchema = [
@@ -70,7 +70,7 @@ export const configSchema: ThemeConfigSchema = [
 
 **prefetch `api` 白名单**(`frontend/src/router/index.ts` 的 `PREFETCH_APIS`):`crudAPI.getList` · `crudAPI.getOne` · `contentAPI.getHome` · `contentAPI.listArticles` · `contentAPI.getCategory` · `contentAPI.getArticle` · `systemAPI.getConfig` · `systemAPI.getStatus`(别名 `crud`/`content`/`system`)。要加新 API 得往该表登记。结果存入 `context[key]`,分页元信息进 `context.$meta[key]`。
 
-**`$` 注入**(title 与 prefetch args 通用):`$params.x` = 路由参数;`$data.a.b` = 作用域内路径。prefetch 的 `$data` 作用域 = 已取实体 + 已完成的其他 prefetch;title 的 `$data` 作用域 = `config` + 实体 + 各 prefetch key,且可**内嵌**在字符串任意位置,未命中→空串。**配置派生的数据无法进 prefetch args**(自定义路由页要在模板里用 `context.api` 自取)。
+**`${…}` 注入**(title 与 prefetch args 通用,**大括号是唯一写法**,旧的裸 `$data.x` 已废弃、不再解析):`${params.x}` = 路由参数;`${data.a.b}` = 作用域内路径。prefetch 的 `${data.*}` 作用域 = 已取实体 + 已完成的其他 prefetch;title 的 `${data.*}` 作用域 = `config` + 实体 + 各 prefetch key。两处都可**内嵌**在字符串任意位置(`'en-${params.category_slug}'` → `'en-posts'`),未命中→空串;**整串恰好是一个 token 时返回原始类型**(数字/对象不被字符串化)。**配置派生的数据无法进 prefetch args**(自定义路由页要在模板里用 `context.api` 自取)。
 
 ## 6. context(模板唯一入参)
 

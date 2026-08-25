@@ -20,7 +20,7 @@ export function init(app: App) {
 export const pages: ThemePages = {
   DefaultHome: {
     layout: 'Layout',
-    title: '$data.config.site_name',
+    title: '${data.config.site_name}',
     prefetch: [
       { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
       { key: 'articles', api: 'contentAPI.listArticles', args: [{ orderBy: 'published_at', orderDesc: true }] }
@@ -28,28 +28,28 @@ export const pages: ThemePages = {
   },
   DefaultCategory: {
     layout: 'Layout',
-    title: '$data.category.name - $data.config.site_name',
+    title: '${data.category.name} - ${data.config.site_name}',
     prefetch: [
-      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true }] }
+      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true }] }
     ]
   },
   DefaultArticle: {
     layout: 'Layout',
-    title: '$data.article.title - $data.config.site_name',
+    title: '${data.article.title} - ${data.config.site_name}',
     prefetch: []
   },
   // === Meetup (Galaxy) Templates ===
   MeetupCategory: {
     layout: 'Layout',
-    title: '$data.category.name - $data.config.site_name',
+    title: '${data.category.name} - ${data.config.site_name}',
     prefetch: [
       { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
-      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true }] }
+      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true }] }
     ]
   },
   MeetupArticle: {
     layout: 'Layout',
-    title: '$data.article.title - $data.config.site_name',
+    title: '${data.article.title} - ${data.config.site_name}',
     prefetch: [
             { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
     ]
@@ -57,15 +57,15 @@ export const pages: ThemePages = {
   // === Diary (Paper) Templates ===
   DiaryCategory: {
     layout: 'Layout',
-    title: '$data.category.name - $data.config.site_name',
+    title: '${data.category.name} - ${data.config.site_name}',
     prefetch: [
       { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
-      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true }] }
+      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true }] }
     ]
   },
   DiaryArticle: {
     layout: 'Layout',
-    title: '$data.article.title - $data.config.site_name',
+    title: '${data.article.title} - ${data.config.site_name}',
     prefetch: [
       { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
     ]
@@ -73,19 +73,19 @@ export const pages: ThemePages = {
   // === Music (Vinyl) Templates ===
   MusicCategory: {
     layout: 'Layout',
-    title: '$data.category.name - $data.config.site_name',
+    title: '${data.category.name} - ${data.config.site_name}',
     prefetch: [
-      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true }] }
+      { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true }] }
     ]
   },
   MusicArticle: {
     layout: 'Layout',
-    title: '$data.article.title - $data.config.site_name',
+    title: '${data.article.title} - ${data.config.site_name}',
     prefetch: []
   },
   // === Layout ===
   Layout: {
-    title: '$data.config.site_name',
+    title: '${data.config.site_name}',
     prefetch: [
       { key: 'menus', api: 'crudAPI.getList', args: ['menus'] }
     ]

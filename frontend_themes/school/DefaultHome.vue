@@ -133,7 +133,7 @@ const noticeCat = computed(() => ctx.noticeCat || null);
 /**
  * Rows for a prefetched panel, re-checked against the category id.
  *
- * Not paranoia: if the slug doesn't exist, `getCategory` fails, `$data.<key>.id` never resolves and
+ * Not paranoia: if the slug doesn't exist, `getCategory` fails, `${data.<key>.id}` never resolves and
  * `JSON.stringify` drops the undefined key — leaving a filter with no `category_id`, i.e. every
  * article on the site. This makes that degrade to an empty panel instead.
  */

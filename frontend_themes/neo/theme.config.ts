@@ -56,25 +56,25 @@ export const configSchema: ThemeConfigSchema = [
 
 // Prefetch used by list-style pages; page 1 (+ total via $meta) then paginate client-side.
 const listPrefetch = [
-  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id' }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
+  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
 ];
 
 // Same, but only the pinned projects — the studio's works page is a curated list, not an archive.
 // Filter comes from lib.ts so this and useArticleList (pages 2+) can never drift apart.
 const worksPrefetch = [
-  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
+  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
 ];
 
 // 团队同理:只取置顶成员。列表的**顺序**由 TeamGrid 客户端按 `data.sort` 排 —— 自定义字段在
 // JSON 列里,DYAPI 的 ORDER BY 只接列名,给不了它。
 const teamPrefetch = [
-  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.category.id', ...LISTED_TEAM_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
+  { key: 'articles', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.category.id}', ...LISTED_TEAM_FILTER }, orderBy: 'published_at', orderDesc: true, page: 0, limit: 12 }] },
 ];
 
 export const pages: ThemePages = {
   DefaultHome: {
     layout: 'Layout',
-    title: '$data.config.site_name',
+    title: '${data.config.site_name}',
     /**
      * Fully prefetched — nothing is fetched on mount, so the home page paints once, complete.
      *
@@ -84,7 +84,7 @@ export const pages: ThemePages = {
      * before first paint — versus the four serialised round trips an `onMounted` chain costs.
      *
      * Why a category must be fetched by slug first: `listArticles` filters on `category_id`, and
-     * that id can only be found by SEARCHING the category list — `$data.x.y` is a plain key-path
+     * that id can only be found by SEARCHING the category list — `${data.x.y}` is a plain key-path
      * walk with no predicate, so "the category whose list_template is WorkGrid" is inexpressible.
      * Config can't supply it either: `config` is absent from the prefetch scope (router/index.ts:163
      * merges only entityData + extraData; it is injected for `title` alone). Hence the slug
@@ -94,29 +94,29 @@ export const pages: ThemePages = {
      */
     prefetch: [
       { key: 'worksCat', api: 'contentAPI.getCategory', args: ['works'] },
-      { key: 'works', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.worksCat.id', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, limit: 4 }] },
+      { key: 'works', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.worksCat.id}', ...LISTED_WORK_FILTER }, orderBy: 'published_at', orderDesc: true, limit: 4 }] },
       { key: 'servicesCat', api: 'contentAPI.getCategory', args: ['services'] },
-      { key: 'services', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.servicesCat.id' }, orderBy: 'published_at', orderDesc: true, limit: 6 }] },
+      { key: 'services', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.servicesCat.id}' }, orderBy: 'published_at', orderDesc: true, limit: 6 }] },
       { key: 'journalCat', api: 'contentAPI.getCategory', args: ['journal'] },
-      { key: 'journal', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '$data.journalCat.id' }, orderBy: 'published_at', orderDesc: true, limit: 5 }] },
+      { key: 'journal', api: 'contentAPI.listArticles', args: [{ filter: { category_id: '${data.journalCat.id}' }, orderBy: 'published_at', orderDesc: true, limit: 5 }] },
     ],
   },
   // Blog / journal
-  DefaultCategory: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
-  DefaultArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
+  DefaultCategory: { layout: 'Layout', title: '${data.category.name} - ${data.config.site_name}', prefetch: listPrefetch },
+  DefaultArticle: { layout: 'Layout', title: '${data.article.title} - ${data.config.site_name}', prefetch: [] },
   // 受众轴:受限内容的 gate 页。声明在 pages 里就自动套上主题 Layout(页眉页脚)并参与标题解析
   // —— 它走的是和其它页面完全相同的渲染通路。主题没有 AccessGate.vue 时会回落到框架内置兜底。
-  AccessGate: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
+  AccessGate: { layout: 'Layout', title: '${data.article.title} - ${data.config.site_name}', prefetch: [] },
   // Portfolio
-  WorkGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: worksPrefetch },
-  ProjectArticle: { layout: 'Layout', title: '$data.article.title - $data.config.site_name', prefetch: [] },
+  WorkGrid: { layout: 'Layout', title: '${data.category.name} - ${data.config.site_name}', prefetch: worksPrefetch },
+  ProjectArticle: { layout: 'Layout', title: '${data.article.title} - ${data.config.site_name}', prefetch: [] },
   // Services & team
-  ServiceList: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
-  TeamGrid: { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: teamPrefetch },
+  ServiceList: { layout: 'Layout', title: '${data.category.name} - ${data.config.site_name}', prefetch: listPrefetch },
+  TeamGrid: { layout: 'Layout', title: '${data.category.name} - ${data.config.site_name}', prefetch: teamPrefetch },
   // Member profile: bare shell + the works this member is credited on.
   MemberPage: {
     layout: 'MemberLayout',
-    title: '$data.article.title - $data.config.site_name',
+    title: '${data.article.title} - ${data.config.site_name}',
     prefetch: [
       // ⚠ LIKE over the WHOLE `data` column on purpose — never `data.members` (a dotted path makes
       // SQLite json_extract throw "malformed JSON" on any row where data='', which fails the entire
@@ -125,7 +125,7 @@ export const pages: ThemePages = {
       {
         key: 'memberWorks', api: 'contentAPI.listArticles',
         args: [{
-          filter: { data: { $contains: '$data.article.slug' } },
+          filter: { data: { $contains: '${data.article.slug}' } },
           orderBy: 'published_at', orderDesc: true, page: 0, limit: 24,
         }],
       },
@@ -138,10 +138,10 @@ export const pages: ThemePages = {
   // ⚠ Never add `layout: 'Layout'` here: that wraps AHeader/AFooter back around the bare page.
   MemberLayout: {},
   // Standalone marketing pages (custom routes)
-  AboutPage: { layout: 'Layout', routes: ['/about'], title: '关于 - $data.config.site_name', prefetch: [] },
-  ContactPage: { layout: 'Layout', routes: ['/contact'], title: '联系 - $data.config.site_name', prefetch: [] },
+  AboutPage: { layout: 'Layout', routes: ['/about'], title: '关于 - ${data.config.site_name}', prefetch: [] },
+  ContactPage: { layout: 'Layout', routes: ['/contact'], title: '联系 - ${data.config.site_name}', prefetch: [] },
   Layout: {
-    title: '$data.config.site_name',
+    title: '${data.config.site_name}',
     prefetch: [{ key: 'menus', api: 'crudAPI.getList', args: ['menus'] }],
   },
 };

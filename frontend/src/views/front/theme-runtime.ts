@@ -13,7 +13,7 @@ export interface PrefetchItem {
   key: string;
   /** Dotted API name, e.g. "crudAPI.getList" / "contentAPI.listArticles". */
   api: string;
-  /** Positional args for the API. Strings may use `$params.x` / `$data.a.b` injection. */
+  /** Positional args for the API. Strings may use `${params.x}` / `${data.a.b}` injection. */
   args: any[];
 }
 
@@ -25,10 +25,10 @@ export interface PageConfig {
   routes?: string[];
   /**
    * Browser tab title. Supports the same `$` injection as prefetch args, embedded anywhere
-   * in the string: `$data.<path>` reads merged page data (config / entity / prefetched keys),
-   * `$params.<name>` reads a route param. Unresolved tokens collapse to "". The most specific
+   * in the string: `${data.<path>}` reads merged page data (config / entity / prefetched keys),
+   * `${params.<name>}` reads a route param. Unresolved tokens collapse to "". The most specific
    * template in the layout chain wins; empty result falls back to config.site_name.
-   * e.g. '$data.article.title - $data.config.site_name'
+   * e.g. '${data.article.title} - ${data.config.site_name}'
    */
   title?: string;
   /** Data to fetch before the page renders; results land on `context[key]`. */

@@ -29,7 +29,11 @@ export function ssgRoutesPlugin(themeDir = 'src/views/front/templates'): Plugin 
       } catch {
         // 没有主题槽(CI 里单跑构建)就是没有自定义路由,不该让构建失败。
       }
-      routes = [...new Set(routes)].filter((r) => r.startsWith('/'))
+      /**
+       * 参数路由(`/en/a/:category_slug`)不是一个能打开的 URL —— 交给预渲染器只会在字面量
+       * 路径下产出一张谁也命中不了的死快照。这类页面回落 SPA 是正确行为,不是缺陷。
+       */
+      routes = [...new Set(routes)].filter((r) => r.startsWith('/') && !r.includes(':'))
       const out = path.resolve('dist/ssg-routes.json')
       fs.mkdirSync(path.dirname(out), { recursive: true })
       fs.writeFileSync(out, JSON.stringify(routes, null, 2))
