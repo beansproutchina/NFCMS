@@ -10,7 +10,7 @@ declare module 'vue-router' {
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
-import { systemAPI, contentAPI, crud, listMenu } from '../api';
+import { systemAPI, contentAPI, crudAPI, crud, listMenu } from '../api';
 import { pages, info as themeInfo } from '../views/front/templates/theme.config';
 import { resolveTemplateChain, accessGateName } from '../views/front/templateLoader';
 import { useAuthStore } from '../stores/auth';
@@ -25,8 +25,16 @@ NProgress.configure({ showSpinner: false, speed: 400 });
  * for existing themes and must keep working.
  */
 const PREFETCH_APIS: Record<string, (...args: any[]) => Promise<any>> = {
-    'crudAPI.getList': (route: string, params?: any) => crud(route).list(params),
-    'crudAPI.getOne': (route: string, id: any, params?: any) => crud(route).get(id, params),
+    /**
+     * 直接复用 `api.ts` 导出的 `crudAPI`,不要在这里重新实现一遍 `crud(route)`。
+     *
+     * `crudAPI.getList` 带着 `CONTENT_REDIRECT` —— `categories` 会被改道到公开的
+     * `/api/content/categories`(裸 `/api/categories` 对匿名访客是 403/401)。重新实现就
+     * 绕过了它,于是同一个名字在模板里(`context.api.crudAPI.getList`)能用、写进 prefetch
+     * 就 401。主题作者没有任何线索能猜到这个差别。
+     */
+    'crudAPI.getList': (route: string, params?: any) => crudAPI.getList(route, params),
+    'crudAPI.getOne': (route: string, id: any, params?: any) => crudAPI.getOne(route, id, params),
     'contentAPI.getHome': () => contentAPI.getHome(),
     'contentAPI.listArticles': (params?: any) => contentAPI.listArticles(params),
     'contentAPI.getCategory': (slug: string) => contentAPI.getCategory(slug),
