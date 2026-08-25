@@ -89,7 +89,14 @@ const href = (a: any) => articleUrl(a, locale.value);
 .empty { color: var(--color-text-regular); padding: 60px 0; text-align: center; }
 
 @media (max-width: 991px) {
-  .cat-row { flex-direction: column; gap: 0; }
+  /**
+   * 转成竖排后必须显式 `align-items: stretch` + 给内容列 `width:100%`。
+   * `.cat-row` 的 `align-items: flex-start` 是为横排时让左侧菜单顶部对齐而设的,可 column
+   * 方向下它管的是**横向**尺寸 —— 子项于是按内容宽度撑开而不是填满,内容列一宽,里面
+   * `.filter-tabs` 的 `overflow-x:auto` 就失去了约束,整页横向溢出(实测 390 视口下文档宽 654)。
+   */
+  .cat-row { flex-direction: column; gap: 0; align-items: stretch; }
   .cat-row > :deep(.secondary-menu) { width: 100%; }
+  .cat-body { width: 100%; min-width: 0; }
 }
 </style>

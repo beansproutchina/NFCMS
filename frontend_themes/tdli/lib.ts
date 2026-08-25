@@ -99,11 +99,15 @@ export function useCategoryList(context: any, pageSize: number) {
     const loading = ref(false);
     const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 
+    /** 本页的取数范围。暴露出去,好让搜索/筛选在**同一范围内**查,而不是各写一套。 */
+    const baseFilter = (): Record<string, any> =>
+        aggregate ? { 'data.section': section } : { category_id: categoryId };
+
     const load = async (p: number) => {
         if (!api?.contentAPI) return;
         loading.value = true;
         try {
-            const filter = aggregate ? { 'data.section': section } : { category_id: categoryId };
+            const filter = baseFilter();
             const res = await api.contentAPI.listArticles({
                 filter, orderBy: 'published_at', orderDesc: true, page: p, limit: pageSize,
             });
@@ -122,7 +126,7 @@ export function useCategoryList(context: any, pageSize: number) {
         if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    return { items, total, page, loading, totalPages, goPage };
+    return { items, total, page, loading, totalPages, goPage, baseFilter };
 }
 
 /**

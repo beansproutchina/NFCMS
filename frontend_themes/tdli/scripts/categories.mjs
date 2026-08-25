@@ -56,7 +56,9 @@ const GUIDE  = T('DefaultCategory', 'DefaultArticle', FIELDS.guide);
  * `nav` 决定它进哪个菜单:header 主导航 / top 顶栏 / 不进导航(留空)。
  */
 export const TREE = [
-  { slug: 'posts', name: '新闻动态', en: 'News', nameEn: 'news information', ...NEWS, nav: '', children: [
+  // `indexLabel`:该栏目「总入口」在左侧菜单里的名字(原站 people 叫「人员名录」、events 叫「全部」)。
+  // 它指向父栏目自己 —— 父栏目页按 `data.section` 聚合整棵子树,本来就是"全部"。
+  { slug: 'posts', name: '新闻动态', en: 'News', nameEn: 'news information', indexLabel: '全部', indexLabelEn: 'All', ...NEWS, nav: '', children: [
     { slug: 'posts-research', name: '科学探索', en: 'Research Highlights', ...NEWS },
     { slug: 'posts-outreach', name: '科普公益', en: 'Outreach', ...NEWS },
     { slug: 'posts-institute', name: '李所新闻', en: 'Institute News', ...NEWS },
@@ -73,8 +75,7 @@ export const TREE = [
     { slug: 'about-reports', name: '年报&简报', en: 'Annual Reports & Newsletters', ...PAGE },
     { slug: 'about-gallery', name: '视觉李所', en: 'Gallery', ...PAGE },
   ] },
-  { slug: 'people', name: '人才队伍', en: 'People', nameEn: 'people', ...PEOPLE, nav: 'header', children: [
-    { slug: 'people-directory', name: '人员名录', en: 'Directory', ...PEOPLE, aliasParent: true },
+  { slug: 'people', name: '人才队伍', en: 'People', nameEn: 'people', indexLabel: '人员名录', indexLabelEn: 'Directory', ...PEOPLE, nav: 'header', children: [
     { slug: 'people-fellows', name: '学者系列', en: 'Fellows & Professors', ...PEOPLE },
     { slug: 'people-scientists', name: '研究员系列', en: 'Scientists', ...PEOPLE },
     { slug: 'people-engineers', name: '工程师系列', en: 'Engineers', ...PEOPLE },
@@ -89,7 +90,7 @@ export const TREE = [
     { slug: 'research-tech', name: '工程技术部', en: 'Technical Division', ...PAGE },
     { slug: 'research-platforms', name: '研究平台和前进基地', en: 'Research Platforms and Detection Bases', ...PAGE },
   ] },
-  { slug: 'events', name: '学术活动', en: 'Events', nameEn: 'events', ...EVENT, nav: 'header', children: [
+  { slug: 'events', name: '学术活动', en: 'Events', nameEn: 'events', indexLabel: '全部', indexLabelEn: 'All', ...EVENT, nav: 'header', children: [
     { slug: 'events-seminars', name: '学术报告', en: 'Seminars & Colloquia', ...EVENT },
     { slug: 'events-workshops', name: '学术会议', en: 'Workshops, Forums & Conferences', ...EVENT },
     { slug: 'events-schools', name: '夏季/冬季学校', en: 'Schools & Programs', ...EVENT },

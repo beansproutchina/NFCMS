@@ -16,7 +16,8 @@
             </select>
           </div>
 
-          <div v-if="shown.length" class="teacher-list">
+          <p v-if="searching" class="empty fnt18">…</p>
+          <div v-else-if="shown.length" class="teacher-list">
             <Reveal v-for="p in shown" :key="p.id">
               <a class="teacher-item" :href="href(p)">
                 <div class="left-img">
@@ -46,11 +47,15 @@
 
 <script setup lang="ts">
 /**
- * 人员名录。姓名搜索与研究部筛选都在**当前页已取到的数据上**做,不再发请求 ——
- * 分页由服务端负责,筛选是即时的辅助手段;两者一旦混在一起,"第 3 页里筛出 2 条"这种
- * 结果会比没有筛选更让人困惑。筛选生效时隐藏分页器,避免暗示还有别的页。
+ * 人员名录。
+ *
+ * **姓名搜索与研究部筛选走后端**,不是在当前页已取到的数据上过滤 —— 名录有几十上百人、
+ * 分页展示,在本页数据上过滤会让"搜第 3 页上的人"显示无结果,而那正是用户最需要搜索的时候。
+ *
+ * 查询范围与列表本身一致(父栏目按 `data.section` 聚合整棵子树,子栏目按 `category_id`),
+ * 由 `useCategoryList` 的 `baseFilter()` 给出,两处不各写一套。
  */
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import Breadcrumb from './components/Breadcrumb.vue';
 import SideMenu from './components/SideMenu.vue';
 import Pager from './components/Pager.vue';
@@ -59,27 +64,57 @@ import { useCategoryList, articleUrl, t, type Locale } from './lib';
 
 const props = withDefaults(defineProps<{ context: any; locale?: Locale }>(), { locale: 'zh' });
 const locale = computed<Locale>(() => props.locale ?? 'zh');
-const { items, page, totalPages, goPage } = useCategoryList(props.context, 12);
+const { items, page, totalPages, goPage, baseFilter } = useCategoryList(props.context, 12);
 
 const keyword = ref('');
 const division = ref('');
-const filtering = computed(() => !!keyword.value.trim() || !!division.value);
+const results = ref<any[] | null>(null);   // null = 未筛选,展示分页列表
+const searching = ref(false);
+const filtering = computed(() => results.value !== null);
 
-const divisions = computed(() => {
+/**
+ * 研究部选项优先取栏目上配好的清单(`category.data.divisions`)——它是完整的;
+ * 没配才从已加载的这一页归纳,那样只覆盖当前页,但总比一个空下拉强。
+ */
+const divisions = computed<string[]>(() => {
+    const configured = props.context?.rootCat?.data?.divisions ?? props.context?.category?.data?.divisions;
+    if (Array.isArray(configured) && configured.length) return configured.map(String);
     const set = new Set<string>();
     for (const p of items.value) { const d = p?.data?.organize_desc; if (d) set.add(String(d)); }
     return [...set];
 });
 
-const shown = computed(() => {
-    const kw = keyword.value.trim().toLowerCase();
-    return items.value.filter((p: any) => {
-        if (division.value && p?.data?.organize_desc !== division.value) return false;
-        if (!kw) return true;
-        const hay = `${p.title ?? ''} ${p.data?.name_en ?? ''}`.toLowerCase();
-        return hay.includes(kw);
-    });
+const runSearch = async () => {
+    const kw = keyword.value.trim();
+    if (!kw && !division.value) { results.value = null; return; }
+    const api = props.context?.api;
+    if (!api?.contentAPI) return;
+    searching.value = true;
+    try {
+        const filter: Record<string, any> = { ...baseFilter() };
+        if (division.value) filter['data.organize_desc'] = division.value;
+        // 中文名在 title,外籍学者常按英文名找,两边都匹配
+        if (kw) filter.$or = { title: { $contains: kw }, 'data.name_en': { $contains: kw } };
+        const res = await api.contentAPI.listArticles({
+            filter, orderBy: 'published_at', orderDesc: true, page: 0, limit: 50,
+        });
+        results.value = res.data || [];
+    } catch {
+        results.value = [];
+    } finally {
+        searching.value = false;
+    }
+};
+
+// 输入防抖:边打字边发请求既浪费也会让结果乱序返回
+let timer: any = null;
+watch([keyword, division], () => {
+    clearTimeout(timer);
+    timer = setTimeout(runSearch, 280);
 });
+onUnmounted(() => clearTimeout(timer));
+
+const shown = computed<any[]>(() => results.value ?? items.value);
 
 const PLACEHOLDER = 'https://mockimg.dev/260x330/CCCCCC/66CCFF.png';
 const avatar = (p: any) => String(p?.data?.avatar || p?.thumbnail || PLACEHOLDER);
@@ -118,8 +153,15 @@ const href = (p: any) => articleUrl(p, locale.value);
 .empty { color: var(--color-text-regular); padding: 60px 0; text-align: center; }
 
 @media (max-width: 991px) {
-  .cat-row { flex-direction: column; gap: 0; }
+  /**
+   * 转成竖排后必须显式 `align-items: stretch` + 给内容列 `width:100%`。
+   * `.cat-row` 的 `align-items: flex-start` 是为横排时让左侧菜单顶部对齐而设的,可 column
+   * 方向下它管的是**横向**尺寸 —— 子项于是按内容宽度撑开而不是填满,内容列一宽,里面
+   * `.filter-tabs` 的 `overflow-x:auto` 就失去了约束,整页横向溢出(实测 390 视口下文档宽 654)。
+   */
+  .cat-row { flex-direction: column; gap: 0; align-items: stretch; }
   .cat-row > :deep(.secondary-menu) { width: 100%; }
+  .cat-body { width: 100%; min-width: 0; }
 }
 @media (max-width: 767px) { .teacher-list { grid-template-columns: 1fr; } }
 </style>

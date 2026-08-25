@@ -51,7 +51,11 @@ const pushCat = (c) => {
     audience: 'public', teaser: 0,
     article_data_fields: c.fields ?? {},
     editor_hint: c.hint ?? '',
-    data: c.nameEn ? { name_en: c.nameEn } : {},
+    data: {
+      ...(c.nameEn ? { name_en: c.nameEn } : {}),
+      ...(c.indexLabel ? { index_label: c.indexLabel } : {}),
+      ...(c.divisions ? { divisions: c.divisions } : {}),
+    },
   });
   return id;
 };
@@ -67,6 +71,11 @@ const buildTree = (lang) => {
     const pid = pushCat({
       ...top, slug: pre + top.slug, name: nameOf(top), parent_id: 0, weight: w,
       nameEn: lang === 'en' ? '' : top.nameEn,
+      indexLabel: lang === 'en' ? top.indexLabelEn : top.indexLabel,
+      // 研究部清单要完整 —— 从本次 seed 的人员数据里归纳,而不是让前端按当前页去猜
+      divisions: top.slug === 'people'
+        ? [...new Set(src.people_cn.map(x => x.org).filter(Boolean))]
+        : undefined,
     });
     let cw = 10;
     for (const ch of top.children ?? []) {
@@ -96,10 +105,11 @@ const buildMenus = (lang) => {
   const nameOf = (n) => (lang === 'en' ? n.en : n.name);
   const pick = (nav) => TREE.filter(t => t.nav === nav && !t[skip]).map(t =>
     navItem(pre + t.slug, nameOf(t), lang,
-      (t.children ?? []).filter(c => !c[skip]).map(c =>
-        // 「人员名录」在导航里指向父栏目 —— 它就是全部人员的聚合页,不单独持有内容
-        c.aliasParent ? { ...navItem(pre + t.slug, nameOf(c), lang), children: [] }
-                      : navItem(pre + c.slug, nameOf(c), lang))));
+      [
+        // 栏目的「总入口」指向父栏目自己(它按 section 聚合整棵子树),与左侧菜单首项一致
+        ...(t.indexLabel ? [navItem(pre + t.slug, lang === 'en' ? t.indexLabelEn : t.indexLabel, lang)] : []),
+        ...(t.children ?? []).filter(c => !c[skip]).map(c => navItem(pre + c.slug, nameOf(c), lang)),
+      ]));
 
   pushMenu(lang === 'en' ? 'Main Nav' : '主导航', 'header' + suf, pick('header'));
 

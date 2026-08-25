@@ -26,7 +26,7 @@
  */
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { categoryUrl, catNameEn, type Locale } from '../lib';
+import { categoryUrl, catNameEn, t, type Locale } from '../lib';
 
 const props = withDefaults(defineProps<{ context: any; locale?: Locale }>(), { locale: 'zh' });
 const route = useRoute();
@@ -34,11 +34,22 @@ const route = useRoute();
 /** 英文侧走自定义路由,面包屑挂在 prefetch 出来的 category 上。 */
 const root = computed(() => props.context?.rootCat ?? null);
 
-const items = computed(() =>
-    (root.value?.children ?? [])
+/**
+ * 菜单项 = 「总入口」+ 各子栏目。
+ *
+ * 总入口指向**父栏目自己** —— 父栏目页按 `data.section` 聚合整棵子树,本来就是"全部"。
+ * 名字取分类的 `data.index_label`(原站 people 叫「人员名录」、events 叫「全部」),没配就
+ * 退回通用的"全部"。以前是给它单建一个空分类,点进去自然是空页。
+ */
+const items = computed(() => {
+    const kids = (root.value?.children ?? [])
         .slice()
         .sort((a: any, b: any) => Number(a.weight ?? 50) - Number(b.weight ?? 50))
-        .map((c: any) => ({ label: c.name, url: categoryUrl(c.slug, props.locale) })));
+        .map((c: any) => ({ label: c.name, url: categoryUrl(c.slug, props.locale) }));
+    if (!kids.length) return kids;
+    const label = String(root.value?.data?.index_label ?? '').trim() || t('all', props.locale);
+    return [{ label, url: categoryUrl(root.value.slug, props.locale) }, ...kids];
+});
 
 const rootName = computed(() => String(root.value?.name ?? ''));
 const rootNameEn = computed(() => catNameEn(root.value));
