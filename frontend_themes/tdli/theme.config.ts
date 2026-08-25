@@ -39,6 +39,14 @@ export function init(_app: App) {
  * (backend/app/hooks/sectionTag.ts)。
  */
 const listPrefetch = (limit: number): PrefetchItem[] => [
+  /**
+   * 左侧栏目菜单要的是「当前一级栏目下的全部子栏目」。面包屑第一段**就是**那个一级栏目
+   * (根栏目页上它是自己),所以按它的 slug 再取一次分类即可 —— 一次针对性请求,拿回来的
+   * `children` 正好是菜单项。
+   *
+   * 不要改成拉全量分类树:公开站每页多传几十上百条分类,只为了从里面挑出一个分支。
+   */
+  { key: 'rootCat', api: 'contentAPI.getCategory', args: ['${data.breadcrumbs.0.slug}'] },
   { key: 'articles', api: 'contentAPI.listArticles',
     args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true, page: 0, limit }] },
   { key: 'sectionArticles', api: 'contentAPI.listArticles',
@@ -48,6 +56,7 @@ const listPrefetch = (limit: number): PrefetchItem[] => [
 /** 英文侧同上,但分类要按 `en-` 前缀去查(前缀只活在数据层,URL 里没有)。 */
 const enListPrefetch = (limit: number): PrefetchItem[] => [
   { key: 'category', api: 'contentAPI.getCategory', args: ['en-${params.category_slug}'] },
+  { key: 'rootCat', api: 'contentAPI.getCategory', args: ['${data.category.breadcrumbs.0.slug}'] },
   { key: 'articles', api: 'contentAPI.listArticles',
     args: [{ filter: { category_id: '${data.category.id}' }, orderBy: 'published_at', orderDesc: true, page: 0, limit }] },
   { key: 'sectionArticles', api: 'contentAPI.listArticles',
@@ -105,21 +114,8 @@ export const pages: ThemePages = {
                 prefetch: [{ key: 'article', api: 'contentAPI.getArticle', args: ['en-${params.article_slug}'] }] },
   EnSearch:   { layout: 'LayoutEn', routes: ['/en/search'], title: `Search - ${SITE}`, prefetch: [] },
 
-  /**
-   * 全站共用的两条:菜单 + **全量分类树**。
-   *
-   * 分类树是给左侧栏目菜单用的:二级栏目页要列出"父栏目下的全部兄弟",而 context 只给
-   * 当前分类的 `children`(在二级页上是空的)。靠菜单猜也不行 —— 像「新闻动态」这种不进
-   * 主导航的根栏目,菜单里根本没有它。分类接口本来就返回全表(受众过滤后),取它一次最省。
-   */
-  Layout:   { title: SITE, prefetch: [
-    { key: 'menus', api: 'crudAPI.getList', args: ['menus'] },
-    { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
-  ] },
-  LayoutEn: { title: SITE, prefetch: [
-    { key: 'menus', api: 'crudAPI.getList', args: ['menus'] },
-    { key: 'categories', api: 'crudAPI.getList', args: ['categories'] },
-  ] },
+  Layout:   { title: SITE, prefetch: [{ key: 'menus', api: 'crudAPI.getList', args: ['menus'] }] },
+  LayoutEn: { title: SITE, prefetch: [{ key: 'menus', api: 'crudAPI.getList', args: ['menus'] }] },
 };
 
 /**

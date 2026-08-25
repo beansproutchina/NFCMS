@@ -15,11 +15,14 @@
 
 <script setup lang="ts">
 /**
- * 目录页左侧的栏目菜单:显示**当前所在一级栏目**及其下的全部二级栏目。
+ * 目录页左侧的栏目菜单:当前**一级栏目**及其下的全部子栏目。
  *
- * 数据源是 Layout 预取的**全量分类树**,不是 `context.children` —— 后者只给当前分类的直接
- * 子级,在二级栏目页上是空的。也不是 `menus`:像「新闻动态」这种不进主导航的根栏目,菜单
- * 里压根没有它,而它恰恰是有左侧菜单的。
+ * 数据来自 `rootCat` —— theme.config 按 `breadcrumbs[0].slug` 单独取的那一次分类查询,
+ * 它返回的 `children` 正好是菜单项。
+ *
+ * 为什么不是 `context.children`:那只是当前分类的直接子级,在二级栏目页上是空的。
+ * 为什么不是 `menus`:像「新闻动态」这种不进主导航的根栏目,菜单里压根没有它。
+ * 为什么不拉全量分类树:公开站每页多传上百条分类,只为从中挑出一个分支。
  */
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
@@ -28,17 +31,12 @@ import { categoryUrl, catNameEn, type Locale } from '../lib';
 const props = withDefaults(defineProps<{ context: any; locale?: Locale }>(), { locale: 'zh' });
 const route = useRoute();
 
-const crumbs = computed<any[]>(() => props.context?.breadcrumbs ?? []);
-/** 面包屑第一段就是一级栏目;没有面包屑时(一级栏目自己)退回当前分类。 */
-const rootCrumb = computed(() => crumbs.value[0] ?? props.context?.category ?? null);
-
-const all = computed<any[]>(() => props.context?.categories ?? []);
-/** 面包屑给的是精简对象(只有 id/name/slug),要拿 `data.name_en` 得回分类树里取整条。 */
-const root = computed(() => all.value.find((c: any) => Number(c.id) === Number(rootCrumb.value?.id)) ?? rootCrumb.value);
+/** 英文侧走自定义路由,面包屑挂在 prefetch 出来的 category 上。 */
+const root = computed(() => props.context?.rootCat ?? null);
 
 const items = computed(() =>
-    all.value
-        .filter((c: any) => Number(c.parent_id) === Number(root.value?.id))
+    (root.value?.children ?? [])
+        .slice()
         .sort((a: any, b: any) => Number(a.weight ?? 50) - Number(b.weight ?? 50))
         .map((c: any) => ({ label: c.name, url: categoryUrl(c.slug, props.locale) })));
 
