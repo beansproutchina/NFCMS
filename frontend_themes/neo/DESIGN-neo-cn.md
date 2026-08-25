@@ -167,13 +167,13 @@ const d = computed<any>(() => (article?.data && typeof article.data === 'object'
 ```ts
 prefetch: [
   { key: 'memberWorks', api: 'contentAPI.listArticles',
-    args: [{ filter: { data: { $contains: '$data.article.slug' } },
+    args: [{ filter: { data: { $contains: '${data.article.slug}' } },
              orderBy: 'published_at', orderDesc: true, page: 0, limit: 24 }] },
 ]
 ```
 硬约束与理由:
 1. **必须用整列 `data` 做 LIKE,不要写 `data.members` 点号路径**。实测地雷:只要 `articles` 表存在任意一行 `data=''`,`json_extract` 就抛 malformed JSON,**整条查询失败**;而 prefetch 的 catch 会把失败静默变成"这一区空着",极难排查。整列 LIKE 是纯文本比较,不受影响。
-2. prefetch 参数注入**递归进嵌套对象**(`router/index.ts:182-190`),`$data.article.slug` 在 prefetch 执行前已就位(实体取用 `:107` 早于 prefetch `:124`)。
+2. prefetch 参数注入**递归进嵌套对象**(`router/index.ts:182-190`),`${data.article.slug}` 在 prefetch 执行前已就位(实体取用 `:107` 早于 prefetch `:124`)。
 3. `listArticles` 的 `limit` 被服务端**硬顶 50**(`ContentController.ts:103`),24 安全。
 
 **两处客户端收尾(必写)**
@@ -621,15 +621,15 @@ const articleDataFields = computed(() => {
 ```ts
 export const pages: ThemePages = {
   // …现有条目不变…
-  TeamGrid:  { layout: 'Layout', title: '$data.category.name - $data.config.site_name', prefetch: listPrefetch },
+  TeamGrid:  { layout: 'Layout', title: '${data.category.name} - ${data.config.site_name}', prefetch: listPrefetch },
 
   // 成员个人主页:裸页外壳 + 反查该成员参与的作品
   MemberPage: {
     layout: 'MemberLayout',
-    title: '$data.article.title - $data.config.site_name',
+    title: '${data.article.title} - ${data.config.site_name}',
     prefetch: [
       { key: 'memberWorks', api: 'contentAPI.listArticles',
-        args: [{ filter: { data: { $contains: '$data.article.slug' } },
+        args: [{ filter: { data: { $contains: '${data.article.slug}' } },
                  orderBy: 'published_at', orderDesc: true, page: 0, limit: 24 }] },
     ],
   },
@@ -639,7 +639,7 @@ export const pages: ThemePages = {
   // ⚠ 唯一硬约束:绝不能写 layout: 'Layout',否则通用外壳(AHeader/AFooter)会被套回来。
   MemberLayout: {},
 
-  Layout: { title: '$data.config.site_name',
+  Layout: { title: '${data.config.site_name}',
             prefetch: [{ key: 'menus', api: 'crudAPI.getList', args: ['menus'] }] },
 };
 ```

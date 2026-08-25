@@ -39,7 +39,7 @@ const PREFETCH_APIS: Record<string, (...args: any[]) => Promise<any>> = {
 const PREFETCH_ALIASES: Record<string, string> = { crud: 'crudAPI', content: 'contentAPI', system: 'systemAPI' };
 
 /**
- * How long a prefetch may wait for a `$data.x` value that another prefetch still has to publish.
+ * How long a prefetch may wait for a `${data.x}` value that another prefetch still has to publish.
  * Only ever spent when a dependency is genuinely in flight: a waiter bails out early once every
  * remaining prefetch is also waiting, so a mistyped key costs no wall-clock time at all.
  */
@@ -62,13 +62,26 @@ function getByPath(root: any, path: string[]): any {
 }
 
 /**
- * Resolve `$data.<path>` / `$params.<name>` tokens embedded anywhere in a template string
+ * One `${data.a.b}` / `${params.x}` injection token.
+ *
+ * The braces are what make a token composable: `'en-${params.category_slug}'` has an unambiguous
+ * end, so a token can sit next to ordinary characters. The older brace-less `$data.a.b` form ended
+ * wherever the path regex stopped being greedy, which made anything written after it a guess —
+ * that form is gone, not deprecated: it no longer resolves at all.
+ */
+const TOKEN_RE = /\$\{(data|params)((?:\.[A-Za-z0-9_]+)+)\}/g;
+
+/** The string is *exactly* one token — the caller may hand back the raw value, unstringified. */
+const WHOLE_TOKEN_RE = /^\$\{(data|params)((?:\.[A-Za-z0-9_]+)+)\}$/;
+
+/**
+ * Resolve `${data.<path>}` / `${params.<name>}` tokens embedded anywhere in a template string
  * (same injection syntax as prefetch args, but usable mid-string for composed titles).
  * `data` is the merged page data (config + entity + prefetched keys); `params` is the route params.
  * Unresolved or nullish tokens collapse to "".
  */
 function resolveTemplateString(tpl: string, scope: { data: any; params: any }): string {
-    return tpl.replace(/\$(data|params)((?:\.[A-Za-z0-9_]+)+)/g, (_m, kind, pathStr) => {
+    return tpl.replace(TOKEN_RE, (_m, kind, pathStr) => {
         const path = pathStr.split('.').filter(Boolean);
         const val = getByPath(kind === 'params' ? scope.params : scope.data, path);
         return val == null ? '' : String(val);
@@ -161,7 +174,7 @@ const fetchContentData = async (to: any) => {
      * Live view of prefetch results, published the moment each one lands.
      *
      * This is what makes a prefetch able to depend on an earlier prefetch's output — e.g. fetch a
-     * category by slug, then list articles with `filter: { category_id: '$data.thatKey.id' }`.
+     * category by slug, then list articles with `filter: { category_id: '${data.thatKey.id}' }`.
      * `extraData` cannot serve that purpose: it is only filled after `Promise.all` below, so a
      * waiter reading it would block on a result that, in turn, waits for the waiter.
      *
@@ -191,39 +204,68 @@ const fetchContentData = async (to: any) => {
 
             if (apiFn) {
 
+                /**
+                 * Resolve one `${data.…}` / `${params.…}` token to its **raw** value.
+                 *
+                 * `params` is available synchronously; a `data` path may still be in flight as
+                 * another prefetch's output, so it polls `live` until that dependency lands.
+                 */
+                const resolveToken = async (kind: string, path: string[], label: string): Promise<any> => {
+                    if (kind === 'params') return to.params[path[0]];
+                    // `live` last: an already-published prefetch key beats a stale entity key.
+                    const scope = () => ({ ...entityData, ...extraData, ...live });
+
+                    let val = getByPath(scope(), path);
+                    if (val !== undefined) return val;
+
+                    // Not there yet — it may be another prefetch's output still in flight.
+                    const deadline = Date.now() + PREFETCH_WAIT_MS;
+                    blocked.set(fetchIndex, (blocked.get(fetchIndex) || 0) + 1);
+                    try {
+                        while (Date.now() < deadline) {
+                            // Every prefetch still running is itself waiting → nobody can
+                            // publish anything more. Give up now rather than at the deadline.
+                            if (blocked.size >= pending) break;
+                            await new Promise(r => setTimeout(r, PREFETCH_POLL_MS));
+                            val = getByPath(scope(), path);
+                            if (val !== undefined) return val;
+                        }
+                    } finally {
+                        const n = (blocked.get(fetchIndex) || 1) - 1;
+                        if (n > 0) blocked.set(fetchIndex, n); else blocked.delete(fetchIndex);
+                    }
+                    // Deliberately loud: silently returning undefined drops the key from the
+                    // request (JSON.stringify omits it), which for a filter means "no filter"
+                    // — i.e. a page quietly showing everything instead of one category.
+                    console.warn(`[prefetch] "${label}" never resolved for key "${fetchInfo.key}" — check the key name and that whatever provides it is prefetched too`);
+                    return undefined;
+                };
+
                 // Helper to resolve dynamically, polls for missing variables across extraData
                 const resolveArgAsync = async (arg: any): Promise<any> => {
                     if (typeof arg === 'string') {
-                        if (arg.startsWith('$params.')) return to.params[arg.split('.')[1]];
-                        if (arg.startsWith('$data.')) {
-                            const path = arg.split('.').slice(1);
-                            // `live` last: an already-published prefetch key beats a stale entity key.
-                            const scope = () => ({ ...entityData, ...extraData, ...live });
+                        /**
+                         * Whole string == one token → hand back the **raw** value. Going through
+                         * the interpolation path instead would stringify it, turning
+                         * `${data.cat.id}` into "3" and quietly breaking numeric filters.
+                         */
+                        const whole = WHOLE_TOKEN_RE.exec(arg);
+                        if (whole) return resolveToken(whole[1], whole[2].split('.').filter(Boolean), arg);
 
-                            let val = getByPath(scope(), path);
-                            if (val !== undefined) return val;
-
-                            // Not there yet — it may be another prefetch's output still in flight.
-                            const deadline = Date.now() + PREFETCH_WAIT_MS;
-                            blocked.set(fetchIndex, (blocked.get(fetchIndex) || 0) + 1);
-                            try {
-                                while (Date.now() < deadline) {
-                                    // Every prefetch still running is itself waiting → nobody can
-                                    // publish anything more. Give up now rather than at the deadline.
-                                    if (blocked.size >= pending) break;
-                                    await new Promise(r => setTimeout(r, PREFETCH_POLL_MS));
-                                    val = getByPath(scope(), path);
-                                    if (val !== undefined) return val;
-                                }
-                            } finally {
-                                const n = (blocked.get(fetchIndex) || 1) - 1;
-                                if (n > 0) blocked.set(fetchIndex, n); else blocked.delete(fetchIndex);
-                            }
-                            // Deliberately loud: silently returning undefined drops the key from the
-                            // request (JSON.stringify omits it), which for a filter means "no filter"
-                            // — i.e. a page quietly showing everything instead of one category.
-                            console.warn(`[prefetch] "${arg}" never resolved for key "${fetchInfo.key}" — check the key name and that whatever provides it is prefetched too`);
-                            return undefined;
+                        // Token(s) embedded in surrounding text → interpolate, e.g.
+                        // 'en-${params.category_slug}' → 'en-posts'. A fresh RegExp per call:
+                        // `TOKEN_RE` is module-level and /g, and these resolutions interleave.
+                        const scan = new RegExp(TOKEN_RE.source, 'g');
+                        const found: RegExpExecArray[] = [];
+                        for (let m = scan.exec(arg); m !== null; m = scan.exec(arg)) found.push(m);
+                        if (found.length) {
+                            const vals = await Promise.all(found.map(
+                                m => resolveToken(m[1], m[2].split('.').filter(Boolean), m[0])));
+                            let i = 0;
+                            return arg.replace(TOKEN_RE, () => {
+                                const v = vals[i++];
+                                return v == null ? '' : String(v);
+                            });
                         }
                     } else if (Array.isArray(arg)) {
                         return Promise.all(arg.map(resolveArgAsync));
@@ -271,7 +313,7 @@ const fetchContentData = async (to: any) => {
     const pageData = { ...entityData, ...extraData };
 
     // 3. Resolve the page title from the theme config (same $-injection as prefetch), applied
-    // now that entity + prefetched data is ready. `config` is exposed under $data.config.*.
+    // now that entity + prefetched data is ready. `config` is exposed under ${data.config.*}.
     // Fall back to site_name when no template sets a title or it resolves empty.
     const titleScope = { data: { config: baseData.config, ...pageData }, params: to.params };
     let pageTitle = titleTemplate ? resolveTemplateString(titleTemplate, titleScope).trim() : '';

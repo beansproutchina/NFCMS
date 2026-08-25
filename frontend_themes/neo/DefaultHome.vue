@@ -92,7 +92,7 @@ const ctaLink = computed(() => config?.theme_neo_hero_cta_link || (worksCat ? `/
  * Rows for one section, guarded against a missing category.
  *
  * The guard is not paranoia. If a slug in the prefetch contract doesn't exist, `getCategory` fails,
- * `$data.<cat>.id` never resolves, and `JSON.stringify` drops the undefined key — leaving a filter
+ * `${data.<cat>.id}` never resolves, and `JSON.stringify` drops the undefined key — leaving a filter
  * with no `category_id` at all, i.e. every article on the site. Re-checking `category_id` here makes
  * that degrade to an empty section instead of a leak.
  */

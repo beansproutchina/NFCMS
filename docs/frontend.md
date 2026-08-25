@@ -164,7 +164,7 @@ R13 与 R14 补的是同一个洞的两头:前者拦「调用点自己拼一套�
   - `import.meta.glob('./templates/*.vue')` 是编译期解析——换主题需重新构建,不是运行时。
 - **主题契约单一出处** `src/views/front/theme-runtime.ts`:导出 `PageConfig`/`ThemePages`/`ThemeContext` 等类型,四个主题的 `theme.config.ts` 都 `import type { ... } from '@/views/front/theme-runtime'`。往这一个接口加字段(如 `title`)→ router 与所有主题同时看到,结构上杜绝「router 比主题源新」的漂移。
 - **`@` → `src` 别名**:vite `resolve.alias` + tsconfig `paths` 双写,`@/...` 在编辑器/vue-tsc/构建三处一致解析。
-- **页面标题**:`theme.config.ts` 每页可配 `title`,支持 `$data.*`/`$params.*` 注入(同 prefetch),router 在数据就绪后写 `document.title`。见 `THEME_DEV.md`。
+- **页面标题**:`theme.config.ts` 每页可配 `title`,支持 `${data.*}`/`${params.*}` 注入(同 prefetch),router 在数据就绪后写 `document.title`。见 `THEME_DEV.md`。
 - **主题面向的 `api.crudAPI`**:`context.api` 注入整个 api 模块;为兼容存量/外部主题,`api.ts` 保留 `crudAPI` shim(转发到 `crud()`)。admin 内部已改用具名函数,新代码优先 `crud(route)`/具名函数。
 - 首页/分类/文章模板可由配置/记录字段在**当前主题已编译进包的模板中**选择(`home_template`/`list_template`/`content_template`)。
 - 深度类型检查单个主题(揪出被 `noCheck` 构建放过的主题类型债):`npx vue-tsc --noEmit -p tsconfig.app.json --noCheck false`。

@@ -88,22 +88,22 @@ const { config, menus } = props.context || {};
 
 ## 页面标题（浏览器标签页）
 
-在主题的 `theme.config.ts` 里，每个页面配置支持 `title` 字段来设置浏览器标签页标题。它与 `prefetch` 的 `args` 用**同一套 `$` 变量注入**语法，但可以嵌在字符串任意位置，便于拼接：
+在主题的 `theme.config.ts` 里，每个页面配置支持 `title` 字段来设置浏览器标签页标题。它与 `prefetch` 的 `args` 用**同一套 `${…}` 变量注入**语法，可以嵌在字符串任意位置，便于拼接：
 
 ```ts
 export const pages: Record<string, PageConfig> = {
   DefaultArticle: {
     layout: 'Layout',
-    title: '$data.article.title - $data.config.site_name',   // 「文章标题 - 站点名」
+    title: '${data.article.title} - ${data.config.site_name}',   // 「文章标题 - 站点名」
     prefetch: []
   },
   DefaultCategory: {
     layout: 'Layout',
-    title: '$data.category.name - $data.config.site_name',
+    title: '${data.category.name} - ${data.config.site_name}',
     // ...
   },
   Layout: {
-    title: '$data.config.site_name',   // 兜底:未单独设标题的页面用它
+    title: '${data.config.site_name}',   // 兜底:未单独设标题的页面用它
     // ...
   }
 };
@@ -111,8 +111,10 @@ export const pages: Record<string, PageConfig> = {
 
 注入规则：
 
-- `$data.<路径>` —— 读取当前页面数据。作用域是「`config`(站点设置) + 该页的实体(`article`/`category`/…) + 所有 prefetch 拉到的 key」的合集,例如 `$data.article.title`、`$data.config.site_name`、`$data.category.name`。
-- `$params.<名>` —— 读取路由参数,如 `$params.category_slug`。
+- `${data.<路径>}` —— 读取当前页面数据。作用域是「`config`(站点设置) + 该页的实体(`article`/`category`/…) + 所有 prefetch 拉到的 key」的合集,例如 `${data.article.title}`、`${data.config.site_name}`、`${data.category.name}`。
+- `${params.<名>}` —— 读取路由参数,如 `${params.category_slug}`。
+- **大括号是唯一写法。** 旧的裸 `$data.x` / `$params.x` 已废弃、不再解析 —— 它没有结束定界,`$data.a.b文字` 这类拼接全靠正则贪心去猜。
+- 在 `prefetch` 的 `args` 里,**整串恰好是一个 token 时返回原始类型**(`'${data.cat.id}'` → 数字 `3`,不是字符串 `"3"`);混在文本里(`'en-${params.category_slug}'`)则按字符串插值。
 - 解析在**实体与 prefetch 数据都就绪之后**执行,所以能安全引用它们。未命中的 token 会被替换成空串。
 - 布局链里**最具体的模板**(页面本身)的 `title` 优先;它没设或解析后为空,则回退到上层布局的 `title`,最终回退到 `config.site_name`。
 
