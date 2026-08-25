@@ -2,10 +2,12 @@ import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import tailwindcjs from '@tailwindcss/vite'
+import { ssgRoutesPlugin } from './scripts/ssg-routes-plugin'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), tailwindcjs()],
+  // ssgRoutesPlugin:把主题的自定义路由导出给后端预渲染用,见插件里的说明。
+  plugins: [vue(), tailwindcjs(), ssgRoutesPlugin()],
   resolve: {
     // `@` -> src, so themes (and app code) import shared types by a stable, location-independent
     // path — e.g. `import type { PageConfig } from '@/views/front/theme-runtime'`.

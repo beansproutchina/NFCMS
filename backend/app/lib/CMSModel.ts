@@ -126,6 +126,15 @@ export class CMSModel extends Model {
         const existing = (await this.read({ id }))[0];
         if (existing) assert(await policy.can(state, "D", this, existing), ForbiddenError, "没有权限");
         await this.remove({ id });
+        /**
+         * 删除也要发 hook。`HTTPCreate`/`HTTPUpdate` 都发 `content.saved.*`,唯独删除不发 ——
+         * 于是删掉一篇已生成静态页的文章,那张页面会永远留在磁盘上继续被 nginx 命中。
+         * 僵尸页比 404 坏得多:它看起来是好的。
+         *
+         * 用独立事件名而不是复用 `content.saved`:订阅方要区分「这行还在,重算它」和
+         * 「这行没了,清掉它的产物」—— 后者读不到行,复用同一个名字会让每个订阅者自己去猜。
+         */
+        await hooks.doAction(`content.removed.${this.tablename}`, id, existing);
         return { code: 200 };
     }
 }

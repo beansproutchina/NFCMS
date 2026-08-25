@@ -5,6 +5,7 @@ import { ForbiddenError } from "dyapi/utils/error.js";
 import testContainer from "../containers/testContainer.js";
 import { getBreadcrumbs, getChildren } from "../utils/contentHelpers.js";
 import { audience } from "../services/AudienceService.js";
+import { hooks } from "../services/HookManager.js";
 
 /**
  * Category Model for Category Management
@@ -53,12 +54,31 @@ export default class CategoryModel extends Model {
     async update(param, item) {
         const affectsAudience =
             item?.audience !== undefined || item?.teaser !== undefined || item?.parent_id !== undefined;
-        const result = await super.update(param, item);
-        if (affectsAudience) {
-            const ids = param?.id != null
+        /**
+         * 什么时候要通知公开站重算这个栏目:
+         *
+         * - `slug`          决定其下**每一篇文章**的 URL(`/a/<栏目slug>/<文章slug>`)
+         * - `list_template` 决定这个栏目有没有列表页
+         * - `audience`/`teaser`/`parent_id` 决定这张列表页**还能不能给匿名访客看**
+         *
+         * 最后一组尤其要紧:栏目一旦收紧,那张列着全部文章标题的旧列表页仍在磁盘上 ——
+         * 文章正文清掉了,标题却还在裸奔。此前这条路径只重算文章、不碰栏目页自己。
+         */
+        const affectsUrls = item?.slug !== undefined || item?.list_template !== undefined || affectsAudience;
+
+        const ids = (affectsAudience || affectsUrls)
+            ? (param?.id != null
                 ? [param.id]
-                : (await this.read({ ...param, fields: ["id"], limit: 100000 })).map((c: any) => c.id);
+                : (await this.read({ ...param, fields: ["id"], limit: 100000 })).map((c: any) => c.id))
+            : [];
+
+        const result = await super.update(param, item);
+
+        if (affectsAudience) {
             for (const id of ids) await audience.recomputeSubtree(id);
+        }
+        if (affectsUrls) {
+            for (const id of ids) await hooks.doAction(`content.saved.${this.tablename}`, id);
         }
         return result;
     }

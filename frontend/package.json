@@ -13,7 +13,10 @@
     "lint:list": "node scripts/lint-admin.mjs --list",
     "lint:accept": "node scripts/lint-admin.mjs --update",
     "hooks:install": "git -C .. config core.hooksPath scripts/git-hooks",
-    "prepare": "git -C .. config core.hooksPath scripts/git-hooks || true"
+    "prepare": "git -C .. config core.hooksPath scripts/git-hooks || true",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ssg:preview": "node scripts/ssg-preview.mjs"
   },
   "dependencies": {
     "@primevue/themes": "^4.5.4",
@@ -25,25 +28,28 @@
     "marked": "^18.0.0",
     "md-editor-v3": "^6.4.2",
     "nprogress": "^0.2.0",
+    "pinia": "^3.0.4",
     "postcss": "^8.5.9",
     "primevue": "^4.5.5",
     "tailwindcss": "^4.2.2",
+    "three": "^0.183.2",
     "vue": "^3.5.32",
     "vue-draggable-next": "^2.3.0",
     "vue-i18n": "^11.1.7",
-    "vue-router": "^5.0.4",
-    "pinia": "^3.0.4",
-    "three": "^0.183.2"
+    "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
     "@types/nprogress": "^0.2.3",
+    "@types/three": "^0.183.1",
     "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
     "dyapi-cli": "file:../../dyapi3/dyapi-cli",
-    "@types/three": "^0.183.1",
+    "happy-dom": "^20.11.6",
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
+    "vitest": "^4.1.11",
     "vue-tsc": "^3.2.6"
   }
 }

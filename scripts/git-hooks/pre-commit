@@ -22,8 +22,8 @@ if echo "$STAGED" | grep -q '^backend/'; then
     echo "✗ app/_scanFiles.js 与源文件不一致(已就地重新生成)。git add 它再提交。" >&2
     exit 1
   fi
-  # TODO(dev-green): SSG 那轮转绿后在这里加 `bun test`。现在加会因为红-绿流程中
-  # 故意写红的用例挡住一切提交。
+  echo "→ backend tests"
+  bun test
 fi
 
 # Nothing staged under frontend/ → nothing the rest of this gate can say anything about.
@@ -44,5 +44,8 @@ npx vue-tsc --noEmit -p tsconfig.app.json --noCheck false
 # duplicate of the type check.
 echo "→ build"
 npm run build --silent >/dev/null
+
+echo "→ frontend tests"
+npm test --silent
 
 echo "✓ gate passed"

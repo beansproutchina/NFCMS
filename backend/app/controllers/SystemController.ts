@@ -10,6 +10,7 @@ import RoleModel from "../models/RoleModel.js";
 import ResourceGrantModel from "../models/ResourceGrantModel.js";
 import { ARTICLES_CATEGORY, policy } from "../services/PolicyService.js";
 import { seedDefaultRbac } from "../services/RbacSeedService.js";
+import { prerender } from "../services/PrerenderService.js";
 import { registeredModels } from "../lib/registry.js";
 
 
@@ -416,11 +417,38 @@ export default class SystemController extends Controller {
             ]
         });
 
-        // SSG is currently unwired (see index.ts step 8) — nothing to build here. When it comes
-        // back, this seed content is created via raw model calls (no content hooks), so setup has
-        // to kick off the initial build itself: `await staticgen.regenerateAll();`
+        /**
+         * 上面的种子内容是用**裸** model 调用建的(不走 HTTP*),因此一条 content hook 都没发过
+         * —— 预渲染那边什么都不知道。这里主动踢一次全量,否则新站点要等到第一次编辑才有静态页。
+         * 不 await:全量可能几分钟,不该挡住 setup 的响应。
+         */
+        void prerender.regenerateAll().catch((e: any) => console.error("[ssg] setup 后全量失败:", e?.message));
 
         return { code: 200, message: "Setup completed successfully." };
+    }
+
+    /**
+     * 手动全量重生成公开站静态页。**super_admin only,且刻意没有后台 UI。**
+     *
+     * 为什么存在:开发环境的 `npm run ssg:preview` 需要一个触发点 —— 生成必须由后端做(要读库),
+     * 而预览服务器在前端起。备选是写一个独立 CLI 进程,但那会二次打开同一个 SQLite,正是
+     * CLAUDE.md 坑 #2 点名的 `disk I/O error` 陷阱。
+     *
+     * `baseUrl`:让生成器对着调用方指定的站点渲染(dev 指向预览服务器;生产不传,用容器内 nginx)。
+     */
+    @Route("post", "/ssg/regenerate")
+    async ssgRegenerate(ctx: any) {
+        if (!policy.isSuper(ctx.state)) {
+            return { code: 403, message: "Permission Denied. super_admin required." };
+        }
+        const baseUrl = ctx.request.body?.baseUrl;
+        try {
+            const pages = await prerender.regenerateAll({ baseUrl });
+            return { code: 200, data: { pages }, message: `generated ${pages} pages` };
+        } catch (e: any) {
+            console.error("[ssg] 手动全量失败:", e?.message);
+            return { code: 500, message: `预渲染失败:${e?.message ?? e}` };
+        }
     }
 
     @Route("get", "/export")
