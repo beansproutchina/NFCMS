@@ -59,7 +59,7 @@ DYAPI(HTTP/CRUD/容器/字段级权限)
 **强项**:单容器 `Dockerfile.single`(supervisor + nginx,推荐)或多容器 compose;二次开发路径清晰——继承 `CMSModel`、声明 `ownerField`/`categoryField`,自动获得 RBAC + 三态生命周期 + 版本 + 分类授权。
 
 **待还的债**:
-- `dyapi` 以 `file:../../dyapi3/dyapi` 本地路径 pin,改框架源码后 `backend/` 要重新 `bun install`(file: 是拷贝非软链)。
+- `dyapi` 从 npm 装并 pin 在 `~3.3.1`(只吃补丁)。它的 minor 版本里带 breaking change,所以升级是一次有意的迁移而不是 `npm update`。
 - 环境变量强依赖 `JWT_SECRET`/`PASSWORD_SALT`(缺则 `bootstrap()` 直接抛)。
 - 测试纪律靠人肉自觉(备份 DB、杀干净进程),见 [development.md](development.md)。
 

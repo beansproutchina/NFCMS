@@ -11,16 +11,17 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "dyapi-cli": "file:../../dyapi3/dyapi-cli"
+    "dyapi-cli": "~0.3.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "cos-nodejs-sdk-v5": "^2.15.4",
-    "dyapi": "file:../../dyapi3/dyapi",
+    "dyapi": "~3.3.1",
     "koa": "^2.15.3",
     "marked": "^18.0.6",
+    "mysql2": "^3.11.3",
     "node-cron": "^3.0.3",
     "playwright-core": "^1.62.1"
   }

@@ -2,7 +2,7 @@
 
 DYAPI 是自研的、约定优于配置的后端框架:**声明一个带类型字段和权限矩阵的 Model,自动得到一套带鉴权/自动建表/关系展开的 REST CRUD;需要自定义逻辑再写 Controller。** 跑在 Bun + Koa 上,TS 原生,无构建步骤。
 
-源码位置(本地 pin):`dyapi3/dyapi/`(相对 backend 是 `../../dyapi3/dyapi`)。当前版本 **3.3.1**。
+从 npm 安装,当前 pin 在 **`~3.3.1`**(只吃补丁)。**别用 `^`** —— dyapi 的 minor 版本里是带 breaking change 的(3.2.0 拆掉了 Koa 所有权,3.3.0 改了 id 类型、pop 目标唯一性与注册表结构),`^` 会让某次 `npm install` 静默把你升到一个起不来的版本。源码仓库在 `dyapi3/`,但那只是开发框架时用。
 
 ## 四个原语
 - **Container**:持久化驱动,抽象 `create/read/update/remove/setField`。内置 SQLite/MySQL/MongoDB/JSON。NFCMS 用 `SQLiteContainer`(`backend/app/containers/testContainer.ts`,`./data/test.db`)。
@@ -64,7 +64,7 @@ PUT/DELETE /api/<route>   → 批量(默认关闭:multiUpdate/multiDelete=0)
 7. `@CRUD` 的 route 名与 Controller 名不要撞(历史约定:控制器名别以复数 `s` 结尾)。
 8. 注册顺序:`scanFiles` 只注册**默认导出**且含 `init` 的类(所以 `CMSModel` 用**命名导出**且放在 `app/lib/` 而非 `app/models/`,避免被自动注册出空表)。运行时新增路由用 `app.use(Class)`(会跑 `init`→`bindCRUD`)。
 
-## 本项目修过的 dyapi 行为(改了 `dyapi3/dyapi` 源码,记得在 `backend/` 重新 `bun install`)
+## 本项目曾修过的 dyapi 行为(这些改动已随框架发布进 npm)
 
 - **`Model.restore(item)` + 容器 `createWithId(table, item)`(新增)**:插入并**保留自带 id**。`create` 里
   写死了 `delete item.id`("ID由系统生成"),容器里又跳过一次 —— 恢复数据必须绕开这两处,否则 id 重新编号、

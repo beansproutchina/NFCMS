@@ -3,7 +3,7 @@
  *
  * Regenerate with:  dyapi gen <backend-dir> --out <this-file>
  *
- * Models: 11 · Controller routes: 28
+ * Models: 11 · Controller routes: 29
  */
 /* eslint-disable */
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
@@ -906,7 +906,7 @@ export interface AclCreateBody {
 }
 
 /** POST /api/acl/:model/:resourceId — AclController.create */
-export function aclCreate(model: string | number, resourceId: string | number, body?: AclCreateBody): Promise<{ code: number; data: { id: any; updated: boolean; }; } | { code: number; data: { id: string | number | string[] | number[]; }; }> {
+export function aclCreate(model: string | number, resourceId: string | number, body?: AclCreateBody): Promise<{ code: number; data: { id: any; updated: boolean; }; } | { code: number; data: { id: any; }; }> {
   return request({ method: "post", url: `/api/acl/${model}/${resourceId}`, data: body });
 }
 
@@ -940,7 +940,7 @@ export interface ContentPreviewTokenBody {
 }
 
 /** POST /api/content/preview-token — ContentController.previewToken */
-export function contentPreviewToken(body?: ContentPreviewTokenBody): Promise<{ code: number; data: { token: string; }; }> {
+export function contentPreviewToken(body?: ContentPreviewTokenBody): Promise<{ code: number; data: { token: any; }; }> {
   return request({ method: "post", url: "/api/content/preview-token", data: body });
 }
 
@@ -1035,8 +1035,18 @@ export interface SystemSetupBody {
 }
 
 /** POST /api/system/setup — SystemController.setup */
-export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; }>; saltState: "match" | "mismatch" | "unknown"; resetCredentials: { username: string; password: string; }[]; message: string; } | { code: number; message: string; }> {
+export function systemSetup(body?: SystemSetupBody): Promise<{ code: number; data: Record<string, { imported: number; failed: number; droppedColumns?: string[]; }>; saltState: "match" | "mismatch" | "unknown"; resetCredentials: { username: string; password: string; }[]; message: string; } | { code: number; message: string; }> {
   return request({ method: "post", url: "/api/system/setup", data: body });
+}
+
+
+export interface SystemSsgRegenerateBody {
+  baseUrl?: any;
+}
+
+/** POST /api/system/ssg/regenerate — SystemController.ssgRegenerate */
+export function systemSsgRegenerate(body?: SystemSsgRegenerateBody): Promise<{ code: number; data: { pages: number; }; message: string; }> {
+  return request({ method: "post", url: "/api/system/ssg/regenerate", data: body });
 }
 
 

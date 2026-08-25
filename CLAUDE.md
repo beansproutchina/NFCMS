@@ -12,7 +12,7 @@ NFCMS 是基于自研框架 **DYAPI** 的无头 CMS:Bun + SQLite 后端 + Vue3 �
 - 公开站页面权限「受众轴」设计(**已定稿未实现**) → [docs/public-access.md](docs/public-access.md)
 
 ## 技术栈
-- **后端**:Bun + Koa + DYAPI **3.3.1**(自研框架,`backend/package.json` 里以 `file:../../dyapi3/dyapi` 本地路径 pin)+ SQLite(`backend/data/test.db`)。3.2 起 DYApp **不再拥有 Koa 实例**(`index.ts` 自己 `new Koa()` → `app.bindKoa(koa)` → `koa.listen()`),模块清单也改成构建期产物,见下。
+- **后端**:Bun + Koa + DYAPI **3.3.1**(自研框架,从 npm 装,`~3.3.1` 只吃补丁 —— 它的 minor 版本里带 breaking change)+ SQLite(`backend/data/test.db`)。3.2 起 DYApp **不再拥有 Koa 实例**(`index.ts` 自己 `new Koa()` → `app.bindKoa(koa)` → `koa.listen()`),模块清单也改成构建期产物,见下。
 - **前端**:Vue 3 + Vite 8(rolldown)+ PrimeVue(unstyled + Tailwind 4)+ vue-router 5 + **vue-i18n `^11`**(注意:不要升到 12-alpha,它需要 Vue 3.6)。
 - **部署**:Docker(单容器 `Dockerfile.single` + supervisor/nginx,推荐;或 `docker-compose.yml` 多容器)。交付运维用 `node pack.js`:按实例问一遍容器名/端口/数据库/密钥,存成 `.deploy/<实例>.json`(gitignore)复用,产出带 `.env` + `app.env` 的 `NFCMS-<实例>.tar.gz`。
 
@@ -33,7 +33,7 @@ cd frontend && npm run build        # = vue-tsc -b && vite build
 3. **`bun index.ts` 前必须 `cd backend`**,否则 "Module not found index.ts"。
 4. **env 必填**:没有 `JWT_SECRET`/`PASSWORD_SALT` 时 DYApp `bootstrap()` 直接抛错(见 `.env.example`)。
 5. **公开站只能走 `/api/content/*`**,绝不要打 `/api/articles`(已被 RBAC 管控,匿名 403)。
-6. 改了 `dyapi3/dyapi` 源码后要在 `backend/` 重新 `bun install`(file: 依赖是拷贝,不是软链)。
+6. **dyapi / dyapi-cli 从 npm 装**,不再是本地 `file:` 路径。要试框架的未发布改动,用 `npm link` 或临时改 `package.json`,别把 `file:` 提交回来 —— 那套(pack.js 快照 `vendor/dyapi`、Dockerfile 的 `--install-links` 与断链断言)已经整体删除。
 6b. **重新构建前端会让已生成的静态页全部失效**,而且是**静默**失效:预渲染页里写死了带哈希的 bundle 名(`/assets/index-XXXX.js`),重新构建后那个文件就没了 —— 页面**看起来完美**(静态 HTML 照常渲染)但一行 JS 都跑不起来:没有 SPA 接管、点站内链接是整页跳转、登录态永远不纠正。服务端零报错,只有浏览器控制台一条 404。
    后端会按 `dist/index.html` 的 hash 周期性自查并自动重生成(默认 60s,`SSG_WATCH_MS`),但**别等它** —— 本地验收直接 `cd frontend && npm run ssg:preview`。判断静态页是不是活的:`document.getElementById('app').__vue_app__` 为 `undefined` 就是这个病。
 7. DYAPI 迁移是**只增不减**;改字段/删列时,dev 直接重置 `data/test.db` 重新 `/setup`(允许 breaking change)。
