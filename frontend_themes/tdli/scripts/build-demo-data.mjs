@@ -335,7 +335,7 @@ const cfg = (configkey, configvalue) => ({ configkey, configvalue });
 const system_config = [
   cfg('site_name', '李政道研究所'),
   cfg('subtitle', 'Tsung-Dao Lee Institute'),
-  cfg('icp_record', '沪交ICP备20170129'),
+  cfg('icp_record', '沪交ICP备20170129 Copyright © 2019 TDLI'),
   cfg('mourning_mode', 'false'),
   cfg('theme_tdli_logo_white', `${S}/assets/images/logo_white.png`),
   cfg('theme_tdli_logo_dark', `${S}/assets/images/logo.png`),
@@ -345,11 +345,12 @@ const system_config = [
   cfg('theme_tdli_footer_address_en', 'Tsung-Dao Lee Institute, 1 Lisuo Road, Pudong New Area, Shanghai, 201210'),
   cfg('theme_tdli_footer_phone', '+86-21-68693100'),
   cfg('theme_tdli_footer_email', 'tdli@sjtu.edu.cn'),
-  cfg('theme_tdli_icp', '沪交ICP备20170129 Copyright © 2019 TDLI'),
   cfg('theme_tdli_qrcode_wechat', `${S}/assets/images/gzh.png`),
   cfg('theme_tdli_qrcode_wechat_label', '关注李所公众号'),
+  cfg('theme_tdli_qrcode_wechat_label_en', 'WeChat'),
   cfg('theme_tdli_qrcode_video', `${S}/assets/images/sph.png`),
   cfg('theme_tdli_qrcode_video_label', '关注李所视频号'),
+  cfg('theme_tdli_qrcode_video_label_en', 'Video Account'),
 ].map((r, i) => ({ id: i + 1, ...r }));
 
 const out = {

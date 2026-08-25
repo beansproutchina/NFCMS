@@ -134,11 +134,11 @@ export const configSchema: ThemeConfigSchema = [
   { key: 'theme_tdli_footer_address_en', label: '地址(英文)', type: 'text', group: '页脚联系方式' },
   { key: 'theme_tdli_footer_phone', label: '联系电话', type: 'text', group: '页脚联系方式' },
   { key: 'theme_tdli_footer_email', label: '联系邮箱', type: 'text', group: '页脚联系方式' },
-  { key: 'theme_tdli_icp', label: '备案 / 版权信息', type: 'text', group: '页脚联系方式',
-    hint: '如「沪交ICP备20170129 Copyright © 2019 TDLI」。留空则不显示。' },
 
   { key: 'theme_tdli_qrcode_wechat', label: '公众号二维码', type: 'image', group: '二维码' },
   { key: 'theme_tdli_qrcode_wechat_label', label: '公众号二维码说明', type: 'text', group: '二维码' },
+  { key: 'theme_tdli_qrcode_wechat_label_en', label: '公众号二维码说明(英文)', type: 'text', group: '二维码' },
   { key: 'theme_tdli_qrcode_video', label: '视频号二维码', type: 'image', group: '二维码' },
   { key: 'theme_tdli_qrcode_video_label', label: '视频号二维码说明', type: 'text', group: '二维码' },
+  { key: 'theme_tdli_qrcode_video_label_en', label: '视频号二维码说明(英文)', type: 'text', group: '二维码' },
 ];

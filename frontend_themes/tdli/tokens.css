@@ -1,4 +1,25 @@
 /**
+ * 正文字体 —— 与原站同一份 Harding。
+ *
+ * 之前误判成"上游 404、实际就是 Arial":原站的 `@font-face` 写了两条 `src`,绝对路径那条
+ * (`/css/font/...`)确实 404,但相对路径那条相对 CSS 自身解析到 `/assets/css/font/...`,
+ * 是有效的。实测原站英文标题渲染的就是 `Harding Text Web Regular`。
+ *
+ * 它只含西文字形,中文自然回落到系统字体(原站中文页实测 PingFang SC)—— 这正是原站的
+ * 中英观感差异所在,所以字体栈要连回落顺序一起对齐。
+ */
+@font-face {
+  font-family: 'Harding';
+  src: url('https://tdli.sjtu.edu.cn/assets/css/font/Harding/Harding_Text_Web_Regular_Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Harding';
+  src: url('https://tdli.sjtu.edu.cn/assets/css/font/Harding/Harding_Text_Web_Bold_Regular.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/**
  * tdli 主题设计令牌 —— 对齐 tdli.sjtu.edu.cn 的 css.css。
  *
  * **作用域是 `.tdli-scope` 类而不是 `:root`**:主题 bundle 可能和后台进同一个 chunk,
@@ -55,8 +76,7 @@
   --container-pad: 10.416667vw;
 
   /* ── 基础排版 ───────────────────────────────────────────── */
-  /* 原站声明的 Harding 字体在上游 404,实际渲染就是这套系统字体栈 */
-  font-family: Arial, "Microsoft Yahei", "微软雅黑", sans-serif;
+  font-family: 'Harding', Arial, "PingFang SC", "Microsoft Yahei", "微软雅黑", sans-serif;
   color: var(--color-text-primary);
   line-height: 1.5;
   font-size: 0.83333vw;

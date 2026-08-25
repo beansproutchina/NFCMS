@@ -62,10 +62,13 @@ onUnmounted(stop);
 .slide { position: absolute; inset: 0; opacity: 0; transition: opacity .8s ease; display: block; pointer-events: none; }
 .slide.active { opacity: 1; pointer-events: auto; }
 .slide-bg { width: 100%; height: 100%; object-fit: cover; }
-/* 底部压暗,保证白色标题在任何图上都读得清 */
-.slide-mask { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.10) 40%, rgba(0,0,0,.65) 100%); }
+/**
+ * 顶部压暗 —— 与原站 `.slide-inner` 同一条渐变(0.75 → 0,由上到下)。它保护的是压在图上的
+ * 白色 logo 与导航;底部标题靠自身的 text-shadow,原站也是这么处理的。
+ */
+.slide-mask { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.75) 0%, rgba(0,0,0,0) 100%); }
 .slide-inner { position: absolute; left: 0; right: 0; bottom: 12vh; }
-.slide-title { color: #fff; font-weight: 600; line-height: 1.35; max-width: 60%; text-shadow: 0 2px 12px rgba(0,0,0,.35); }
+.slide-title { color: #fff; font-weight: 600; line-height: 1.35; max-width: 60%; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
 
 .arrow {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;

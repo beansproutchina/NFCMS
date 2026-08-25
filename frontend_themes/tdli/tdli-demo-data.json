@@ -19,7 +19,7 @@
   {
    "id": 3,
    "configkey": "icp_record",
-   "configvalue": "沪交ICP备20170129"
+   "configvalue": "沪交ICP备20170129 Copyright © 2019 TDLI"
   },
   {
    "id": 4,
@@ -68,18 +68,18 @@
   },
   {
    "id": 13,
-   "configkey": "theme_tdli_icp",
-   "configvalue": "沪交ICP备20170129 Copyright © 2019 TDLI"
-  },
-  {
-   "id": 14,
    "configkey": "theme_tdli_qrcode_wechat",
    "configvalue": "https://tdli.sjtu.edu.cn/assets/images/gzh.png"
   },
   {
-   "id": 15,
+   "id": 14,
    "configkey": "theme_tdli_qrcode_wechat_label",
    "configvalue": "关注李所公众号"
+  },
+  {
+   "id": 15,
+   "configkey": "theme_tdli_qrcode_wechat_label_en",
+   "configvalue": "WeChat"
   },
   {
    "id": 16,
@@ -90,6 +90,11 @@
    "id": 17,
    "configkey": "theme_tdli_qrcode_video_label",
    "configvalue": "关注李所视频号"
+  },
+  {
+   "id": 18,
+   "configkey": "theme_tdli_qrcode_video_label_en",
+   "configvalue": "Video Account"
   }
  ],
  "categories": [

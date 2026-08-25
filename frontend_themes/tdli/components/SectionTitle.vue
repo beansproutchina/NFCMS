@@ -5,7 +5,7 @@
     </Reveal>
     <Reveal v-if="more" from="right">
       <a class="single-link fnt16" :href="more">
-        <span class="text">{{ moreLabel }}</span>
+        <span class="text"><span>{{ moreLabel }}</span></span>
         <i class="iconfont icon-add fnt18"></i>
       </a>
     </Reveal>
@@ -32,13 +32,16 @@ h2 span::before {
 .single-link .text {
   display: flex; align-items: center; padding: 0 .625vw 0 1.09375vw; height: 100%;
   position: relative; transition: color .3s ease-in-out; white-space: nowrap;
+  isolation: isolate;              /* 自建层叠上下文,底色不会被外层背景吃掉 */
 }
 /* hover 时主色从左铺满文字区,图标块保持不动 —— 与原站一致 */
 .single-link .text::before {
   content: ""; position: absolute; inset: 0 auto 0 0; width: 0;
-  background: var(--color-primary); transition: width .3s ease-in-out; z-index: -1;
+  background: var(--color-primary); transition: width .3s ease-in-out; z-index: 0;
 }
-.single-link .text > * { position: relative; }
+/* 文字必须自己抬到底色之上:`z-index:-1` 会把底色推到**父元素背景**之后,于是
+   hover 时只看得到字变白、看不到那块蓝底。 */
+.single-link .text > span { position: relative; z-index: 1; }
 .single-link:hover .text { color: #fff; }
 .single-link:hover .text::before { width: 100%; }
 .single-link .iconfont {

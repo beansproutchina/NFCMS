@@ -50,7 +50,8 @@ const siteName = computed(() => String(config.value.site_name ?? ''));
 const logo = computed(() => c('theme_tdli_logo_white'));
 const phone = computed(() => c('theme_tdli_footer_phone'));
 const email = computed(() => c('theme_tdli_footer_email'));
-const icp = computed(() => c('theme_tdli_icp'));
+/** 备案号走 NFCMS 的通用站点配置(设置 → 站点配置),主题不重复造一个字段。 */
+const icp = computed(() => String(config.value.icp_record ?? '').trim());
 
 /** 地址有中英两份;英文没配就回落中文,总比空着强(地址本身是可读的)。 */
 const address = computed(() =>
@@ -62,10 +63,16 @@ const bgStyle = computed(() => {
     return bg ? { backgroundImage: `url(${bg})` } : {};
 });
 
-/** 空配置 → 不渲染那一张,而不是渲染一个坏图标。 */
+/**
+ * 空配置 → 不渲染那一张,而不是渲染一个坏图标。
+ * 说明文字中英各一份;英文没填就回落中文 —— 二维码本身还是有用的,总比只剩一张无字的图好。
+ */
+const qrLabel = (base: string) =>
+    locale.value === 'en' ? (c(`${base}_en`) || c(base)) : c(base);
+
 const qrcodes = computed(() => [
-    { src: c('theme_tdli_qrcode_video'), label: c('theme_tdli_qrcode_video_label') },
-    { src: c('theme_tdli_qrcode_wechat'), label: c('theme_tdli_qrcode_wechat_label') },
+    { src: c('theme_tdli_qrcode_video'), label: qrLabel('theme_tdli_qrcode_video_label') },
+    { src: c('theme_tdli_qrcode_wechat'), label: qrLabel('theme_tdli_qrcode_wechat_label') },
 ].filter(q => q.src));
 
 const menuAt = (loc: string) => {
