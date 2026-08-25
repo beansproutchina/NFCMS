@@ -13,6 +13,7 @@ import { policy } from "./app/services/PolicyService.js";
 import { audience } from "./app/services/AudienceService.js";
 import { scheduler } from "./app/services/SchedulerService.js";
 import { prerender } from "./app/services/PrerenderService.js";
+import { sectionTag } from "./app/hooks/sectionTag.js";
 
 const start = async () => {
     const jwtSecret = process.env.JWT_SECRET;
@@ -84,7 +85,14 @@ const start = async () => {
         console.log("[audience] backfill skipped:", (e as any).message);
     }
 
-    // 8. 公开站预渲染。headless chromium 打开真实 SPA URL,把渲染结果落成静态 HTML,
+    // 8. 内容归属打标:给文章冗余出「属于哪个一级栏目」,供父栏目「全部」页做静态过滤。
+    //    优先级 5 排在预渲染(默认 10)之前 —— 否则快照会用还没打标的数据生成。
+    //    刻意不放进下面的 SSG 开关里:它是内容层的派生值,跟预渲染开不开无关。
+    sectionTag.bind(app);
+    hooks.addAction("content.saved.articles", (id) => sectionTag.onArticleSaved(id), 5);
+    hooks.addAction("content.saved.categories", (id) => sectionTag.onCategorySaved(id), 5);
+
+    // 9. 公开站预渲染。headless chromium 打开真实 SPA URL,把渲染结果落成静态 HTML,
     //    nginx 优先命中。设计与取舍见 docs/spec/001-ssg-prerender.md。
     //    `SSG_ENABLED=0` 可整体关掉(开发时不想每次保存都拉浏览器)。
     if (process.env.SSG_ENABLED !== "0") {
@@ -112,7 +120,7 @@ const start = async () => {
         prerender.startWatchingBuild();
     }
 
-    // 9. Keepalive: keep the SQLite connection warm (from upstream).
+    // 10. Keepalive: keep the SQLite connection warm (from upstream).
     setInterval(() => {
         try {
             const container = app.I(testContainer) as any;
@@ -120,7 +128,7 @@ const start = async () => {
         } catch { /* ignore */ }
     }, 60 * 60 * 1000);
 
-    // 10. 起服务。listen 也归调用方了(见第 5 步)。
+    // 11. 起服务。listen 也归调用方了(见第 5 步)。
     const port = Number(process.env.PORT) || app.settings.port;
     koa.listen(port, () => console.log(`[nfcms] listening on http://localhost:${port}`));
 };
