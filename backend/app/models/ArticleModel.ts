@@ -41,7 +41,7 @@ export default class ArticleModel extends CMSModel {
         F.Date("published_at"),
         F.Date("created_at"),
         F.Date("updated_at"),
-        F.Object("data"),                         // additional metadata
+        F.Object("data").default({}),             // 自定义字段容器。空态是空袋子 `{}`,不是 NULL
     ];
 
     /**

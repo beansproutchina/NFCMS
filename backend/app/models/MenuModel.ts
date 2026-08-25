@@ -13,7 +13,12 @@ export default class MenuModel extends Model {
     datafields = [
         F.String("name").notNull(),
         F.String("location"), // e.g. 'header', 'footer'
-        F.Object("items"),    // Store deeply nested items here
+        /**
+         * 整棵菜单树。声明成 `F.Array` 而不是 `F.Object`:这个字段存的**就是数组**,而
+         * `F.Array` 自带 `.default([])` —— 空菜单于是是 `[]`,消费方(主题的 `menus.find(...)`
+         * → `.items.map(...)`)不必先判一次 NULL。两者在 SQLite 上同为 TEXT 列,改声明不动存储。
+         */
+        F.Array("items"),
     ];
     permission = {
         "PUBLIC": "R",

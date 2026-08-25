@@ -26,7 +26,7 @@ export default class CategoryModel extends Model {
         // 受众轴(公开站门禁,见 docs/public-access.md):栏目是受众声明的主场,文章可覆盖。
         F.String("audience").default("public"), // public | authenticated | restricted
         F.Number("teaser").default(0),          // 受限时摘要是否仍进公开列表(0 隐身 / 1 摘要墙)
-        F.Object("article_data_fields"),
+        F.Object("article_data_fields").default({}),
         /**
          * 给本分类文章的**作者**看的一段 markdown,渲染在文章编辑器的正文上方。
          *
@@ -34,7 +34,7 @@ export default class CategoryModel extends Model {
          * neo 主题的成员页要求正文里有一个 `:::works` 块,不写在这里就只能靠口口相传。
          */
         F.String("editor_hint"),
-        F.Object("data"),             // Additional JSON data
+        F.Object("data").default({}), // Additional JSON data。空态是空袋子 `{}`,不是 NULL
     ];
     permission = {
         // 受众轴:匿名不再能读全表(以前 PUBLIC:"R" 会把所有栏目的名字/slug/层级泄漏出去,
