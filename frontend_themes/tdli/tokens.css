@@ -1,0 +1,179 @@
+/**
+ * tdli 主题设计令牌 —— 对齐 tdli.sjtu.edu.cn 的 css.css。
+ *
+ * **作用域是 `.tdli-scope` 类而不是 `:root`**:主题 bundle 可能和后台进同一个 chunk,
+ * `:root` 会把这里的字号/颜色泼到 `/admin` 上。类选择器在后台匹配不到任何东西。
+ *
+ * 排版是**视口宽度驱动**的(原站的 `.fntNN` 全是 vw),所以 1920 与 1440 屏上版面比例一致
+ * 而不是字变小、留白变大。三档断点:
+ *   ≥1200px  全 vw(与原站一致)
+ *   ≤1199px  固定 px —— 再按比例缩下去正文就没法读了
+ *   ≤567px   固定 px(原站在这档换成 rem,靠 JS 写 html font-size;我们不动 html,
+ *            直接按 375 宽把那些 rem 值换算成 px,视觉等价且不污染后台)
+ */
+
+.tdli-scope {
+  /* ── 颜色 ───────────────────────────────────────────────── */
+  --color-primary: #134DA3;              /* 李所蓝 */
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-text-regular: #999999;
+  --color-text-secondary-grey: #9E9E9E;
+  --color-text-placeholder: #C0C4CC;
+
+  --border-color: #E4E7ED;
+  --border-color-lighter: #EBEEF5;
+
+  --bg-grey: #F8F8F8;
+  --bg-primary: #F8F7FD;
+  --bg-third: #FAFAFA;                   /* `.main.grey` 的底色 */
+
+  --bgColor-primary: linear-gradient(219deg, #207DDD 0%, #0D3C94 100%);
+  --border-bg: linear-gradient(45deg, #162680 0%, #C0C8F3 100%);
+  --menu-active: linear-gradient(180deg, #0F3D8A 0%, #1E5FAA 50%, #1E5FAA 100%);
+
+  /* 学术活动的三类语义色(日历块、标签) */
+  --report-color: #1C9333;  --report-bg: #E4F0E6;   /* 学术报告 */
+  --meeting-color: #F76B1C; --meeting-bg: #FEF1EA;  /* 学术会议 */
+  --train-color: #3888ED;   --train-bg: #E7EFF9;    /* 夏/冬校 */
+
+  --footer-bg: #393939;                  /* 页脚背景图之下的兜底色 */
+  --pager-theme: #0499DA;                /* 分页器主题色 —— 原站刻意与主色不同 */
+  --calendar-icon: #F76B1C;
+
+  /* ── 间距 ───────────────────────────────────────────────── */
+  --size-1: 0.052083vw;   --size-2: 0.10417vw;   --size-4: 0.20833vw;
+  --size-6: 0.3125vw;     --size-9: 0.46875vw;   --size-10: 0.520835vw;
+  --size-12: 0.625vw;     --size-15: 0.78125vw;  --size-16: 0.83333vw;
+  --size-18: 0.9375vw;    --size-20: 1.04167vw;  --size-24: 1.25vw;
+  --size-30: 1.5625vw;    --size-36: 1.875vw;    --size-40: 2.083333vw;
+  --size-45: 2.234375vw;  --size-48: 2.5vw;      --size-54: 2.8125vw;
+  --size-60: 3.125vw;     --size-64: 3.3333vw;   --size-72: 3.75vw;
+  --size-80: 4.16667vw;   --size-100: 5.208333vw;
+
+  /* 容器不是固定 max-width,而是流式 + 两侧内边距(@1920 → 200px,内容宽 1520px) */
+  --container-pad: 10.416667vw;
+
+  /* ── 基础排版 ───────────────────────────────────────────── */
+  /* 原站声明的 Harding 字体在上游 404,实际渲染就是这套系统字体栈 */
+  font-family: Arial, "Microsoft Yahei", "微软雅黑", sans-serif;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  font-size: 0.83333vw;
+  background: #fff;
+}
+
+@media (max-width: 1199px) { .tdli-scope {
+  --size-4: 2px;   --size-6: 4px;   --size-9: 6px;   --size-12: 8px;
+  --size-15: 10px; --size-18: 12px; --size-24: 15px; --size-30: 18px;
+  --size-36: 22px; --size-40: 25px; --size-45: 28px;
+  font-size: 14px;
+} }
+@media (max-width: 991px) { .tdli-scope {
+  --size-2: 1px; --size-4: 2px; --size-6: 3px; --size-36: 20px;
+  --size-40: 22px; --size-45: 24px;
+} }
+@media (max-width: 567px) { .tdli-scope {
+  --container-pad: 16px;
+  font-size: 16px;
+} }
+
+/* ── 防撑开(特异性 0,主题内任意组件都能覆盖) ─────────────── */
+.tdli-scope :where(*) { min-width: 0; box-sizing: border-box; }
+.tdli-scope :where(img, svg, video, iframe, canvas) { max-width: 100%; }
+
+/* ── 字号工具类 ─────────────────────────────────────────── */
+.tdli-scope .fnt14 { font-size: 0.72916vw; }
+.tdli-scope .fnt16 { font-size: 0.83333vw; }
+.tdli-scope .fnt18 { font-size: 0.9375vw; }
+.tdli-scope .fnt20 { font-size: 1.04166vw; }
+.tdli-scope .fnt22 { font-size: 1.145833vw; }
+.tdli-scope .fnt24 { font-size: 1.25vw; }
+.tdli-scope .fnt26 { font-size: 1.354167vw; }
+.tdli-scope .fnt28 { font-size: 1.4583vw; }
+.tdli-scope .fnt30 { font-size: 1.5625vw; }
+.tdli-scope .fnt32 { font-size: 1.66667vw; }
+.tdli-scope .fnt36 { font-size: 1.875vw; }
+.tdli-scope .fnt40 { font-size: 2.08333vw; }
+.tdli-scope .fnt45 { font-size: 2.34375vw; line-height: 1.3; }
+.tdli-scope .fnt48 { font-size: 2.5vw; line-height: 1.3; }
+
+@media (max-width: 1600px) {
+  .tdli-scope .fnt14 { font-size: 13px; }
+  .tdli-scope .fnt16 { font-size: 14px; }
+  .tdli-scope .fnt18 { font-size: 15px; }
+  .tdli-scope .fnt20 { font-size: 16px; }
+  .tdli-scope .fnt22 { font-size: 17px; }
+  .tdli-scope .fnt24 { font-size: 18px; }
+  .tdli-scope .fnt26 { font-size: 19px; }
+}
+@media (max-width: 1199px) {
+  .tdli-scope .fnt14 { font-size: 13px; }
+  .tdli-scope .fnt16 { font-size: 14px; }
+  .tdli-scope .fnt18 { font-size: 15px; }
+  .tdli-scope .fnt20 { font-size: 16px; }
+  .tdli-scope .fnt22 { font-size: 17px; }
+  .tdli-scope .fnt24 { font-size: 18px; }
+  .tdli-scope .fnt26 { font-size: 18px; }
+  .tdli-scope .fnt28 { font-size: 20px; }
+  .tdli-scope .fnt30 { font-size: 22px; }
+  .tdli-scope .fnt32 { font-size: 23px; }
+  .tdli-scope .fnt36 { font-size: 24px; }
+  .tdli-scope .fnt40 { font-size: 30px; }
+  .tdli-scope .fnt45 { font-size: 33px; }
+  .tdli-scope .fnt48 { font-size: 34px; }
+}
+@media (max-width: 767px) {
+  .tdli-scope .fnt36 { font-size: 24px; }
+  .tdli-scope .fnt40 { font-size: 24px; }
+  .tdli-scope .fnt45 { font-size: 26px; }
+  .tdli-scope .fnt48 { font-size: 26px; }
+}
+@media (max-width: 567px) {
+  .tdli-scope .fnt14 { font-size: 16px; }
+  .tdli-scope .fnt16 { font-size: 16px; }
+  .tdli-scope .fnt18 { font-size: 16px; }
+  .tdli-scope .fnt20 { font-size: 18px; }
+  .tdli-scope .fnt22 { font-size: 18px; }
+  .tdli-scope .fnt24 { font-size: 19px; }
+  .tdli-scope .fnt26 { font-size: 20px; }
+  .tdli-scope .fnt28 { font-size: 20px; }
+  .tdli-scope .fnt30 { font-size: 21px; }
+  .tdli-scope .fnt32 { font-size: 21px; }
+  .tdli-scope .fnt36 { font-size: 22px; }
+  .tdli-scope .fnt40 { font-size: 23px; }
+  .tdli-scope .fnt45 { font-size: 25px; }
+  .tdli-scope .fnt48 { font-size: 27px; }
+}
+
+/* ── 布局原子 ───────────────────────────────────────────── */
+.tdli-scope .td-container { width: 100%; padding: 0 var(--container-pad); margin: 0 auto; }
+.tdli-scope .td-block { padding: 4.166667vw 0; width: 100%; position: relative; overflow: hidden; }
+.tdli-scope .td-block--big { padding: 0 0 6.25vw; overflow: visible; }
+.tdli-scope .td-main-grey { background-color: var(--bg-third); }
+@media (max-width: 1199px) {
+  .tdli-scope .td-block { padding: 50px 0; }
+  .tdli-scope .td-block--big { padding: 0 0 50px; }
+}
+@media (max-width: 767px) {
+  .tdli-scope .td-block { padding: 40px 0; }
+  .tdli-scope .td-block--big { padding: 0 0 40px; }
+}
+
+/* 统一图片盒:靠 padding-bottom 撑出比例,内部绝对定位铺满 + object-fit */
+.tdli-scope .td-img-box { position: relative; width: 100%; height: 0; overflow: hidden; }
+.tdli-scope .td-img-box > img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transition: transform .5s ease;
+}
+.tdli-scope a:hover .td-img-box > img { transform: scale(1.1); }
+
+/* 卡片 hover:顶部主色条从左展开 + 抬起阴影。原站全站方角,这里不加圆角。 */
+.tdli-scope .td-hover-card { position: relative; transition: all .3s ease-in-out; }
+.tdli-scope .td-hover-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0;
+  width: 0; height: var(--size-4); background-color: var(--color-primary);
+  transition: width .4s ease-in-out; z-index: 2;
+}
+.tdli-scope .td-hover-card:hover::before { width: 100%; }
+.tdli-scope .td-hover-card:hover { background-color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,.1); }
