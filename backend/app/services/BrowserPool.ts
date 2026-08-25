@@ -95,7 +95,33 @@ export class BrowserPool {
         }
 
         if (process.env.SSG_TRACE) console.log(`[ssg:trace] ctx ready, newPage ${urlPath}`);
-        const page = await ctx.newPage();
+
+        /**
+         * `newPage` 失败就**重建一次再试**。
+         *
+         * 这不是防御性冗余,是一个实测会发生的失效:跑满 `recycleAfter` 页触发换进程后,
+         * 后续每一次 `newPage` 都抛 "Target page, context or browser has been closed" ——
+         * 而 `ensure()` 只看 `this.context` 是否为空、页数是否到阈值,一个**已经关闭**的
+         * context 在它眼里完全正常,于是再也不会重建。整站预渲染因此在第 55 页戛然而止,
+         * 剩下 440 页全部失败,日志还是一句"complete"(实测 493 页只落地 55 页)。
+         *
+         * 兜住这里比追究 context 是怎么失效的更值:浏览器崩溃、被 OOM 杀、远端断连,
+         * 表现都是同一个 —— 手上的 context 不能用了。重建一次是唯一正确的反应。
+         */
+        let page;
+        try {
+            page = await ctx.newPage();
+        } catch (e) {
+            console.warn(`[ssg] context 失效,重建浏览器后重试: ${(e as any)?.message}`);
+            await this.close();
+            try {
+                ctx = await this.ensure();
+                page = await ctx.newPage();
+            } catch (e2) {
+                console.error(`[ssg] 浏览器重建失败:`, (e2 as any)?.message);
+                return { html: null, reason: "launch-failed" };
+            }
+        }
         this.pagesSinceLaunch++;
         try {
             const url = new URL(urlPath, this.opts.baseUrl).toString();
