@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import { scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
@@ -9,7 +9,7 @@ const { article, breadcrumbs } = props.context || {};
 
 const renderedContent = computed(() => {
   if (!article?.content) return '';
-  return marked.parse(article.content) as string;
+  return renderMarkdown(article.content);
 });
 </script>
 

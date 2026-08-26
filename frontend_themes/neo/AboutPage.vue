@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import Socials from './components/Socials.vue';
 
 const props = defineProps<{ context: any }>();
@@ -49,7 +49,7 @@ const heading = computed(() => article.value?.title || cfg.value.site_name || 'A
  * 顺带也少一份换主题后会变成孤儿的站点级配置。
  */
 const avatar = computed(() => article.value?.thumbnail || '');
-const rendered = computed(() => (article.value?.content ? (marked.parse(article.value.content) as string) : ''));
+const rendered = computed(() => (article.value?.content ? (renderMarkdown(article.value.content)) : ''));
 
 onMounted(async () => {
   if (!api?.contentAPI) return;

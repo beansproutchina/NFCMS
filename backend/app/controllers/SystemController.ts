@@ -2,7 +2,7 @@ import * as crypto from "crypto";
 import { ControllerRoute, Route, Inject } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
 import UserModel from "../models/UserModel.js";
-import SystemConfigModel, { globalConfigCache, VALID_CONFIG_KEYS, isThemeConfigKey } from "../models/SystemConfigModel.js";
+import SystemConfigModel, { globalConfigCache, VALID_CONFIG_KEYS, SENSITIVE_CONFIG_KEYS, isThemeConfigKey } from "../models/SystemConfigModel.js";
 import CategoryModel from "../models/CategoryModel.js";
 import ArticleModel from "../models/ArticleModel.js";
 import MenuModel from "../models/MenuModel.js";
@@ -91,7 +91,14 @@ export default class SystemController extends Controller {
 
     @Route("get", "/config")
     async getConfig(ctx) {
-        return { code: 200, data: await this.configModel.GetConfig() };
+        // 公开读:前台匿名访客要拿 site_name/subtitle/icp_record/theme_* 等展示项。
+        // 但敏感键(storage_config,含对象存储明文密钥)只对 super_admin 下发 ——
+        // 浅拷贝后按调用方身份剔除,不污染 GetConfig 的进程级缓存。
+        const cfg: Record<string, string> = { ...(await this.configModel.GetConfig()) };
+        if (!policy.isSuper(ctx.state)) {
+            for (const k of SENSITIVE_CONFIG_KEYS) delete cfg[k];
+        }
+        return { code: 200, data: cfg };
     }
 
     @Route("post", "/config")

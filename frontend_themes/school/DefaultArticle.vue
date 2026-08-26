@@ -37,13 +37,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 
 const props = defineProps<{ context: any }>();
 const { article, breadcrumbs } = props.context || {};
 
 // content is Markdown (see ArticleModel); render to HTML like the other themes / SSG.
-const renderedContent = computed(() => (article?.content ? (marked.parse(article.content) as string) : '<p>暂无内容</p>'));
+const renderedContent = computed(() => (article?.content ? (renderMarkdown(article.content)) : '<p>暂无内容</p>'));
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const formatDate = (s: string) => { if (!s) return ''; const d = new Date(s); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };

@@ -96,7 +96,7 @@ function resolveTemplateString(tpl: string, scope: { data: any; params: any }): 
 const fetchContentData = async (to: any) => {
     const viewType = to.meta.viewType as string;
     const [configRes, menuRes] = await Promise.all([
-        systemAPI.getConfig().catch(() => ({ data: {} })),
+        systemAPI.getConfig().catch(() => ({ data: {} as Record<string, string> })),
         listMenu().catch(() => ({ data: [] }))
     ]);
 

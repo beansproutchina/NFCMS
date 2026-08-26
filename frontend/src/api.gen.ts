@@ -3,7 +3,7 @@
  *
  * Regenerate with:  dyapi gen <backend-dir> --out <this-file>
  *
- * Models: 11 · Controller routes: 29
+ * Models: 11 · Controller routes: 27
  */
 /* eslint-disable */
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios";
@@ -471,19 +471,19 @@ export interface Menu {
   id: number;
   name: string;
   location: string;
-  items: any;
+  items: any[];
 }
 
 export interface MenuCreateInput {
   name: string;
   location?: string;
-  items?: any;
+  items?: any[];
 }
 
 export interface MenuUpdateInput {
   name?: string;
   location?: string;
-  items?: any;
+  items?: any[];
 }
 
 /** GET /api/menus — list Menu records (paginated). */
@@ -935,22 +935,6 @@ export function contentListArticles(query?: { fields?: string; filter?: string; 
 }
 
 
-export interface ContentPreviewTokenBody {
-  id?: any;
-}
-
-/** POST /api/content/preview-token — ContentController.previewToken */
-export function contentPreviewToken(body?: ContentPreviewTokenBody): Promise<{ code: number; data: { token: any; }; }> {
-  return request({ method: "post", url: "/api/content/preview-token", data: body });
-}
-
-
-/** GET /api/content/preview — ContentController.preview */
-export function contentPreview(query?: { id?: string; pt?: string }): Promise<{ code: number; data: { preview: boolean; article: any; category: any; breadcrumbs: any[]; template: any; }; }> {
-  return request({ method: "get", url: "/api/content/preview", params: query });
-}
-
-
 /** GET /api/content/category — ContentController.getCategory */
 export function contentGetCategory(query?: { slug?: string }): Promise<{ code: number; data: any; }> {
   return request({ method: "get", url: "/api/content/category", params: query });
@@ -1004,7 +988,7 @@ export function schematoolsGetAllSchemas(): Promise<{ code: number; data: { mode
 
 
 /** GET /api/system/config — SystemController.getConfig */
-export function systemGetConfig(): Promise<{ code: number; data: any; }> {
+export function systemGetConfig(): Promise<{ code: number; data: Record<string, string>; }> {
   return request({ method: "get", url: "/api/system/config" });
 }
 

@@ -20,7 +20,9 @@ export default class AttachmentModel extends CMSModel {
     ownerField = "uploader_id";
     datafields = [
         F.String("filename").notNull(),
-        F.String("url").notNull(),
+        // url 由 UploadController 的裸 create 在上传时生成,**HTTP 只读**(r,p:可读、可 pop,不可写)——
+        // 杜绝经 CRUD 改写 url 后借删除接口删到目录外(配合 LocalStorage.delete 的路径归属校验)。
+        F.String("url").notNull().setPermission("DEFAULT", "r,p"),
         F.String("mime_type"),
         F.Number("size"),
         F.String("storage_provider").default("local"), // local, s3, tencent_cos, ...

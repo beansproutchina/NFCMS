@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import { scrollToTopOnEnter } from './lib';
 
 const props = defineProps<{ context: any }>();
@@ -48,7 +48,7 @@ const { article, breadcrumbs } = props.context || {};
 const d = computed<any>(() => article?.data || {});
 const tech = computed(() => String(d.value.tech || '').split(',').map((s: string) => s.trim()).filter(Boolean));
 const gallery = computed(() => String(d.value.gallery || '').split(',').map((s: string) => s.trim()).filter(Boolean));
-const rendered = computed(() => (article?.content ? (marked.parse(article.content) as string) : ''));
+const rendered = computed(() => (article?.content ? (renderMarkdown(article.content)) : ''));
 </script>
 
 <style scoped>

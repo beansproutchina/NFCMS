@@ -75,6 +75,13 @@ export function isThemeConfigKey(key: string): boolean {
     return /^theme_[a-z0-9]+_[a-z0-9_]+$/.test(key);
 }
 
+/**
+ * 敏感配置键:含明文密钥/凭据,**绝不下发给非 super_admin**。
+ * 单一出处 —— 新增任何存密钥的配置键都往这里加。
+ * `getConfig` 对非超管会从返回值里剔除这些键(见 SystemController.getConfig)。
+ */
+export const SENSITIVE_CONFIG_KEYS = new Set<string>(["storage_config"]);
+
 export const VALID_CONFIG_KEYS = {
     "is_initialized" : "false",
     "site_name" : "NFCMS",

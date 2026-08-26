@@ -4,7 +4,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import { getArticle, createArticle, updateArticle, lifecycleAPI, uploadAPI } from '../../api';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -92,7 +92,7 @@ const ancestorCategoryIds = computed(() => {
 const editorHint = computed(() => {
     const cat = categories.value.find((c: any) => Number(c.id) === Number(form.value.category_id));
     const raw = String(cat?.editor_hint || '').trim();
-    return raw ? (marked.parse(raw) as string) : '';
+    return raw ? renderMarkdown(raw) : '';
 });
 
 const articleDataFields = computed(() => {
