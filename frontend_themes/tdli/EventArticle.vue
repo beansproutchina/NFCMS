@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import Breadcrumb from './components/Breadcrumb.vue';
 import { formatEventTime, t, type Locale } from './lib';
 
@@ -48,7 +48,7 @@ const d = computed<any>(() => article.value?.data ?? {});
 /** 两级标签:一级研究部 + 二级活动类型。缺哪个跳过哪个,不渲染空胶囊。 */
 const tags = computed(() => [d.value.division, article.value?.category?.name].filter(Boolean));
 const timeText = computed(() => (d.value.start_dt ? formatEventTime(d.value.start_dt, d.value.end_dt, locale.value) : ''));
-const rendered = computed(() => (article.value?.content ? (marked.parse(article.value.content) as string) : ''));
+const rendered = computed(() => renderMarkdown(article.value?.content));
 </script>
 
 <style scoped>

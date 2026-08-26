@@ -24,7 +24,7 @@
  * 改内容只需编辑那篇文章,不必碰主题。栏目下一篇都没有时给空态,不去抓别处的内容顶上。
  */
 import { computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import Breadcrumb from './components/Breadcrumb.vue';
 import SideMenu from './components/SideMenu.vue';
 import Reveal from './components/Reveal.vue';
@@ -40,7 +40,7 @@ const list = computed<any[]>(() => {
 const page = computed(() => list.value[0] ?? null);
 /** 标题与栏目名重复时不再显示一遍 */
 const showTitle = computed(() => page.value && page.value.title !== props.context?.category?.name);
-const rendered = computed(() => (page.value?.content ? (marked.parse(page.value.content) as string) : ''));
+const rendered = computed(() => renderMarkdown(page.value?.content));
 </script>
 
 <style scoped>

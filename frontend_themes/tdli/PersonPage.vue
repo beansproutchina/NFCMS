@@ -47,7 +47,7 @@
  * 点开是空的手风琴。默认全部展开,与原站一致。
  */
 import { ref, computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import Breadcrumb from './components/Breadcrumb.vue';
 import Reveal from './components/Reveal.vue';
 import { t, type Locale, type TextKey } from './lib';
@@ -64,7 +64,7 @@ const showNameEn = computed(() =>
 
 const PLACEHOLDER = 'https://mockimg.dev/268x341/CCCCCC/66CCFF.png';
 const avatar = computed(() => String(d.value.avatar || article.value?.thumbnail || PLACEHOLDER));
-const rendered = computed(() => (article.value?.content ? (marked.parse(article.value.content) as string) : ''));
+const rendered = computed(() => renderMarkdown(article.value?.content));
 
 const KEYS: Array<{ key: string; label: TextKey }> = [
     { key: 'education', label: 'education' },
@@ -76,7 +76,7 @@ const KEYS: Array<{ key: string; label: TextKey }> = [
 
 const sections = computed(() =>
     KEYS.filter(k => String(d.value[k.key] ?? '').trim())
-        .map(k => ({ key: k.key, label: t(k.label, locale.value), html: marked.parse(String(d.value[k.key])) as string })));
+        .map(k => ({ key: k.key, label: t(k.label, locale.value), html: renderMarkdown(String(d.value[k.key])) })));
 
 const open = ref<Record<string, boolean>>(Object.fromEntries(KEYS.map(k => [k.key, true])));
 const toggle = (k: string) => { open.value[k] = !open.value[k]; };

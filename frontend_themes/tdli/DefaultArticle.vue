@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import Breadcrumb from './components/Breadcrumb.vue';
 import { formatDate, t, type Locale } from './lib';
 
@@ -40,7 +40,7 @@ const article = computed(() => props.context?.article ?? null);
 const crumbs = computed(() => props.context?.breadcrumbs ?? article.value?.breadcrumbs ?? []);
 
 /** `content` 是 Markdown 源码,不渲染的话页面上会直接显示井号和星号。 */
-const rendered = computed(() => (article.value?.content ? (marked.parse(article.value.content) as string) : ''));
+const rendered = computed(() => renderMarkdown(article.value?.content));
 
 const weiboUrl = computed(() => {
     if (typeof window === 'undefined') return '#';
