@@ -1,6 +1,5 @@
 import { ControllerRoute, Route, Inject } from "dyapi/utils/decorators.js";
 import { Controller } from "dyapi/core/controller.js";
-import { newJwt, checkJwt } from "dyapi/utils/jwt.js";
 import ArticleModel from "../models/ArticleModel.js";
 import CategoryModel from "../models/CategoryModel.js";
 import UserModel from "../models/UserModel.js";
@@ -120,42 +119,6 @@ export default class ContentController extends Controller {
         const rows = await readPublic(this.articleModel, ctx.state, param);
         const data = await this.articleModel.enrichArticleData(rows);
         return { code: 200, data, total: param.total, pages: param.pages };
-    }
-
-    /**
-     * Issue a short-lived preview token for a non-public content item.
-     * Requires an authenticated user who can read the row (RBAC).
-     */
-    @Route("post", "/preview-token")
-    async previewToken(ctx: any) {
-        const { id } = ctx.request.body || {};
-        if (id == null) return { code: 400, message: "id is required" };
-        const article = (await this.articleModel.read({ id }))[0];
-        if (!article) return { code: 404, message: "Article Not Found" };
-        if (!(await policy.can(ctx.state, "R", this.articleModel, article))) {
-            return { code: 403, message: "没有权限" };
-        }
-        const token = newJwt({ purpose: "preview", type: "articles", id: String(id) }, this._app);
-        return { code: 200, data: { token } };
-    }
-
-    /**
-     * Render a draft/scheduled article via a valid preview token, bypassing the status filter.
-     * Returns the same payload shape as getArticle, plus preview:true.
-     *
-     * **刻意不走 readPublic**:预览的授权凭据是那枚短期 token,而它是在 previewToken 里用
-     * `policy.can(R)` 签发的 —— 授权已经发生过。再叠一层受众轴会让作者预览不了自己的受限草稿。
-     */
-    @Route("get", "/preview")
-    async preview(ctx: any) {
-        const { id, pt } = ctx.request.query;
-        const payload = checkJwt(pt, this._app);
-        if (!payload || payload.purpose !== "preview" || payload.type !== "articles" || String(payload.id) !== String(id)) {
-            return { code: 403, message: "Invalid or expired preview token" };
-        }
-        const article = (await this.articleModel.read({ id }))[0];
-        if (!article) return { code: 404, message: "Article Not Found" };
-        return { code: 200, data: { ...(await this.buildArticlePayload(article)), preview: true } };
     }
 
     @Route("get", "/category")

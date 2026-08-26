@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 
 const props = defineProps<{ context: any }>();
 const { config, article, breadcrumbs } = props.context || {};
@@ -10,7 +10,7 @@ const router = useRouter();
 
 const renderedContent = computed(() => {
     if (!article?.content) return '';
-    return marked.parse(article.content);
+    return renderMarkdown(article.content);
 });
 </script>
 

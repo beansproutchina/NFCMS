@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import DiaryEditor from './components/DiaryEditor.vue';
 import * as api from "../../../api.ts";
 
@@ -11,7 +11,7 @@ const router = useRouter();
 
 const renderedContent = computed(() => {
   if (!article?.content) return '';
-  return marked.parse(article.content);
+  return renderMarkdown(article.content);
 });
 
 const formatDate = (d: string) =>

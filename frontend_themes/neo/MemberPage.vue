@@ -53,7 +53,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { marked } from 'marked';
+import { renderMarkdown } from '@/lib/prose';
 import Socials from './components/Socials.vue';
 import { articleUrl, parseWorksBlock, scrollToTopOnEnter } from './lib';
 
@@ -73,7 +73,7 @@ const d = computed<any>(() => {
  * 不摘掉的话,marked 不认识 `:::works`,它会以字面量出现在页面上。
  */
 const parsed = computed(() => parseWorksBlock(article.value?.content || ''));
-const bio = computed(() => (parsed.value.body ? (marked.parse(parsed.value.body) as string) : ''));
+const bio = computed(() => (parsed.value.body ? (renderMarkdown(parsed.value.body)) : ''));
 const skills = computed(() => String(d.value.skills || '').split(',').map((s) => s.trim()).filter(Boolean));
 
 // Member-level links only — Socials ignores site config when `source` is given.

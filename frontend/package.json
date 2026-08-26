@@ -26,6 +26,7 @@
     "axios": "^1.15.0",
     "lucide-vue-next": "^1.0.0",
     "marked": "^18.0.0",
+    "xss": "^1.0.15",
     "md-editor-v3": "^6.4.2",
     "nprogress": "^0.2.0",
     "pinia": "^3.0.4",

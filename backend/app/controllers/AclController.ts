@@ -31,7 +31,7 @@ export default class AclController extends Controller {
     }
 
     /** Whether the caller may view/modify grants for (model, resourceId). */
-    private async canManage(state: any, model: string, resourceId: number): Promise<boolean> {
+    private async canManage(state: any, model: string, resourceId: string): Promise<boolean> {
         if (policy.isSuper(state)) return true;
         // 两个合成 model 都是站点级授权,只有 super_admin 能改。显式写出来而不是依赖
         // resolveModel 找不到就返回 false —— 后者是巧合,不是意图。
@@ -46,9 +46,10 @@ export default class AclController extends Controller {
     @Route("get", "/:model/:resourceId")
     async list(ctx: any) {
         const { model, resourceId } = ctx.params;
-        if (!(await this.canManage(ctx.state, model, Number(resourceId)))) return { code: 403, message: "没有权限" };
+        // id 一律字符串原样(雪花安全:19 位十进制 id 过 Number() 会丢精度)。
+        if (!(await this.canManage(ctx.state, model, resourceId))) return { code: 403, message: "没有权限" };
         const data = await this._app.I(ResourceGrantModel).read({
-            filter: { $and: { model, resource_id: Number(resourceId) } },
+            filter: { $and: { model, resource_id: resourceId } },
         });
         return { code: 200, data };
     }
@@ -57,13 +58,13 @@ export default class AclController extends Controller {
     async create(ctx: any) {
         const { model, resourceId } = ctx.params;
         const { grantee_type, grantee_id, access } = ctx.request.body || {};
-        if (!(await this.canManage(ctx.state, model, Number(resourceId)))) return { code: 403, message: "没有权限" };
+        if (!(await this.canManage(ctx.state, model, resourceId))) return { code: 403, message: "没有权限" };
         if (!["user", "role"].includes(grantee_type)) return { code: 400, message: "grantee_type 必须是 user|role" };
         if (grantee_id == null) return { code: 400, message: "缺少 grantee_id" };
         if (!access) return { code: 400, message: "缺少 access (如 \"R\" 或 \"C,R,U,D\")" };
         // Avoid duplicate (model, resource, grantee) rows — update access if one exists.
         const existing = (await this._app.I(ResourceGrantModel).read({
-            filter: { $and: { model, resource_id: Number(resourceId), grantee_type, grantee_id: Number(grantee_id) } },
+            filter: { $and: { model, resource_id: resourceId, grantee_type, grantee_id: String(grantee_id) } },
         }))[0];
         if (existing) {
             await this._app.I(ResourceGrantModel).update({ id: existing.id }, { access });
@@ -71,9 +72,9 @@ export default class AclController extends Controller {
         }
         const id = await this._app.I(ResourceGrantModel).create({
             model,
-            resource_id: Number(resourceId),
+            resource_id: resourceId,
             grantee_type,
-            grantee_id: Number(grantee_id),
+            grantee_id: String(grantee_id),
             access,
             granted_by: ctx.state.user?.id,
             created_at: new Date(),
@@ -84,8 +85,14 @@ export default class AclController extends Controller {
     @Route("delete", "/:model/:resourceId/:grantId")
     async remove(ctx: any) {
         const { model, resourceId, grantId } = ctx.params;
-        if (!(await this.canManage(ctx.state, model, Number(resourceId)))) return { code: 403, message: "没有权限" };
-        await this._app.I(ResourceGrantModel).remove({ id: Number(grantId) });
+        if (!(await this.canManage(ctx.state, model, resourceId))) return { code: 403, message: "没有权限" };
+        // IDOR 修复:grantId 必须真属于本次已授权的 (model, resourceId),否则可借它删除全站任意授权行
+        // (含 super 配的分类/受众管辖授权)。id 用字符串比较,雪花安全。
+        const grant = (await this._app.I(ResourceGrantModel).read({ id: grantId }))[0];
+        if (!grant || grant.model !== model || String(grant.resource_id) !== String(resourceId)) {
+            return { code: 404, message: "授权不存在" };
+        }
+        await this._app.I(ResourceGrantModel).remove({ id: grantId });
         return { code: 200 };
     }
 }

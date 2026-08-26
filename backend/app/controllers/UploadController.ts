@@ -115,11 +115,18 @@ export default class UploadController extends Controller {
             return { code: 403, message: "Authentication required." };
         }
 
+        // id 保持字符串原样(雪花安全:19 位十进制 id 过 parseInt 会丢精度)。
         const id = ctx.params.id;
-        const records = await this.attachmentModel.read({ filter: { id: parseInt(id) } });
+        const records = await this.attachmentModel.read({ filter: { id } });
 
         if (records && records.length > 0) {
             const record = records[0];
+
+            // 越权修复:删除必须经 RBAC 复核(own/any/super),否则任意登录用户可删任意附件(IDOR)。
+            if (!(await policy.can(ctx.state, "D", this.attachmentModel, record))) {
+                return { code: 403, message: "没有权限" };
+            }
+
             const providerName = record.storage_provider || "local";
 
             try {
@@ -132,7 +139,7 @@ export default class UploadController extends Controller {
                 // Continue to remove DB record even if file delete fails
             }
 
-            await this.attachmentModel.remove({ id: parseInt(id) });
+            await this.attachmentModel.remove({ id });
             return { code: 200, message: "File deleted successfully." };
         }
 

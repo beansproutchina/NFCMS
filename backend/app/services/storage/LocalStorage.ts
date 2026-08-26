@@ -26,9 +26,14 @@ export class LocalStorage implements StorageProvider {
     }
 
     async delete(url: string): Promise<void> {
-        // url is like /static/uploads/xxx.jpg
-        const filePath = path.join(process.cwd(), url);
-        if (fs.existsSync(filePath)) {
+        // url is like /static/uploads/xxx.jpg。
+        // 只允许删除 uploadDir 内的文件:取 basename 再拼进 uploadDir,任何 `../` 都被剥掉。
+        // 纵深防御 —— 即使 DB 里的 url 被篡改成 "/../.env" 或 "/../data/test.db",也删不到目录外。
+        const base = path.resolve(this.uploadDir);
+        const name = path.basename(url || "");
+        if (!name || name === "." || name === "..") return;
+        const filePath = path.resolve(base, name);
+        if (filePath !== base && filePath.startsWith(base + path.sep) && fs.existsSync(filePath)) {
             await fsp.unlink(filePath);
         }
     }
